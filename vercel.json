@@ -1,17 +1,9 @@
 {
-  "outputDirectory": "dist",
-  "rewrites": [
+  "version": 2,
+  "routes": [
     {
-      "source": "/",
-      {
-        "source": "/",
-        "destination": "/HomeScreen.html"
-      }
-
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/$1.html"
+      "src": "/(.*)",
+      "dest": "/HomeScreen.html"
     }
   ]
 }

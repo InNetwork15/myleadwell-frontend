@@ -14,7 +14,7 @@ export default function HomeScreen() {
             const token = await AsyncStorage.getItem('token');
             if (token) {
                 try {
-                    const res = await axios.get('http://localhost:5000/account', {
+                    const res = await axios.get('https://myleadwell.onrender.com/account', {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     console.log('🔍 Loaded user profile:', res.data);

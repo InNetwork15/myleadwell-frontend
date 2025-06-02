@@ -1,13 +1,16 @@
 {
   "expo": {
-    "name": "MyLeadWell",
-    "slug": "MyLeadWell",
+    "name": "MyLeadWellFrontend",
+    "slug": "MyLeadWellFrontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash-icon.png",
+      "imageWidth": 200,
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -24,24 +27,47 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.positiveyou.MyLeadWell"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "oneSignalAppId": "c1e3d67e-7566-40c9-b3c2-d5c6cb3618be"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static"
     },
     "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
       [
         "onesignal-expo-plugin",
         {
           "mode": "development"
         }
       ]
-    ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "experimental": {
+      "router": {
+        "ssr": false
+      }
+    },
+    "extra": {
+      "oneSignalAppId": "c1e3d67e-7566-40c9-b3c2-d5c6cb3618be",
+      "routes": {
+        "/AffiliateEarningsScreen": "AffiliateEarningsScreen"
+      }
+    }
   }
 }

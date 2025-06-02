@@ -1,6 +1,6 @@
 ﻿import { useEffect } from 'react';
 import { router } from 'expo-router';
-import { loadAuthData } from '../utils/auth'; // ✅ already correct
+import { loadAuthData } from '../utils/auth';
 
 export default function Index() {
     useEffect(() => {
@@ -20,11 +20,9 @@ export default function Index() {
                     router.replace('/login');
                 }
             };
-
             loadUserData();
-        }, 100); // ⏳ Wait 100 milliseconds before starting navigation
-
-        return () => clearTimeout(timeout); // ✅ Clean up timeout
+        }, 100);
+        return () => clearTimeout(timeout);
     }, []);
 
     return null;

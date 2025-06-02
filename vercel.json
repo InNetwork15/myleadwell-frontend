@@ -1,14 +1,9 @@
 {
-  "version": 2,
-  "public": true,
-  "builds": [],
-  "routes": [
+  "redirects": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/",
+      "destination": "/HomeScreen",
+      "permanent": false
     }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "outputDirectory": "dist"
+  ]
 }

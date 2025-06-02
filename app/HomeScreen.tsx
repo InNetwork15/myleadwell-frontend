@@ -12,16 +12,14 @@ export default function HomeScreen() {
     useEffect(() => {
         const loadUser = async () => {
             const token = await AsyncStorage.getItem('token');
-
             if (token) {
                 try {
                     const res = await axios.get('http://localhost:5000/account', {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     console.log('🔍 Loaded user profile:', res.data);
-
                     setUser(res.data);
-                    setRoles(res.data.roles || []); // ✅ Grab and set roles immediately
+                    setRoles(res.data.roles || []);
                 } catch (error) {
                     console.error('Failed to fetch user profile:', error);
                 }
@@ -41,50 +39,40 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.container}>
+            <Text style={styles.placeholder}>[Image with "LEAD" will go here]</Text>
             <Text style={styles.title}>MyLeadWell</Text>
-
             <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads-created')}>
                 <Text style={styles.buttonText}>My Leads Created</Text>
             </TouchableOpacity>
-
             <TouchableOpacity style={styles.button} onPress={() => router.push('/AvailableLeadsScreen')}>
                 <Text style={styles.buttonText}>View Available Leads</Text>
             </TouchableOpacity>
-
             <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads')}>
                 <Text style={styles.buttonText}>My Purchased Leads</Text>
             </TouchableOpacity>
-
             <TouchableOpacity style={styles.button} onPress={() => router.push('/account')}>
                 <Text style={styles.buttonText}>My Account</Text>
             </TouchableOpacity>
-
-            {/* Affiliate Earnings button */}
             {(roles.includes('affiliate_marketer') || roles.includes('admin')) && (
                 <TouchableOpacity style={styles.button} onPress={() => router.push('/AffiliateEarningsScreen')}>
                     <Text style={styles.buttonText}>Affiliate Earnings</Text>
                 </TouchableOpacity>
             )}
-
-            {/* Provider Conversion Metrics button */}
             {(roles.includes('provider') || roles.includes('admin')) && (
                 <TouchableOpacity style={styles.button} onPress={() => router.push('/ProviderConversionScreen')}>
                     <Text style={styles.buttonText}>Provider Conversion Metrics</Text>
                 </TouchableOpacity>
             )}
-
             {roles.includes('admin') && (
                 <>
                     <TouchableOpacity style={styles.button} onPress={() => router.push('/Admin-leads')}>
                         <Text style={styles.buttonText}>Admin: View All Leads</Text>
                     </TouchableOpacity>
-
                     <TouchableOpacity style={styles.button} onPress={() => router.push('/admin-users')}>
                         <Text style={styles.buttonText}>Admin: Manage Users</Text>
                     </TouchableOpacity>
                 </>
             )}
-
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                 <Text style={styles.buttonText}>Log Out</Text>
             </TouchableOpacity>
@@ -99,6 +87,11 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         backgroundColor: '#f9f9f9',
+    },
+    placeholder: {
+        fontSize: 16,
+        color: '#888',
+        marginBottom: 10,
     },
     title: {
         fontSize: 28,

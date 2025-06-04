@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     View, Text, TextInput, StyleSheet, Pressable,
     ScrollView, ToastAndroid, Platform, TouchableOpacity,
-    Button, Alert, Linking, ActivityIndicator
+    Button, Alert, ActivityIndicator
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
-import * as Linking from 'expo-linking';
+import * as Linking from 'expo-linking'; // Keep only one Linking import
 
 const retry = async (fn: () => Promise<any>, retries: number = 3, delay: number = 1000) => {
     for (let i = 0; i < retries; i++) {
@@ -467,20 +467,24 @@ const AccountScreen = () => {
                 <Button
                     title="Refresh Stripe Status"
                     onPress={fetchProfile}
-                    color="#007bff""
+                    color="#007bff"
                     disabled={loading}
                 />
             </View>
 
-            {/* Logout Button */} */}
-            <Pressable style={styles.logoutButton} onPress={handleLogout}>style={styles.button} onPress={handleSave}>
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>🚪 Logout</Text>xt style={styles.buttonText}>💾 Save Profile</Text>
-            </Pressable>le>
+            {/* Logout Button */}
+            <Pressable style={styles.logoutButton} onPress={handleLogout}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>🚪 Logout</Text>
+            </Pressable>
+            {/* Save Profile Button */}
+            <Pressable style={styles.button} onPress={handleSave}>
+                <Text style={styles.buttonText}>💾 Save Profile</Text>
+            </Pressable>
         </ScrollView>
-    );      {/* Logout */}
-};leOpacity style={styles.logoutButton} onPress={handleLogout}>
-{styles.buttonText}>Log Out</Text>
-const styles = StyleSheet.create({Opacity>
+    );
+};
+
+const styles = StyleSheet.create({
     container: { padding: 16, backgroundColor: '#fff' },
     header: { fontSize: 26, fontWeight: 'bold', marginVertical: 10 },
     label: { fontWeight: 'bold', marginTop: 10 },
@@ -488,44 +492,24 @@ const styles = StyleSheet.create({Opacity>
         borderColor: '#ccc',
         borderWidth: 1,
         padding: 8,
-        marginTop: 4,ding: 16, backgroundColor: '#fff' },
-        borderRadius: 5,26, fontWeight: 'bold', marginVertical: 10 },
-    },d', marginTop: 10 },
+        marginTop: 4,
+        borderRadius: 5,
+        backgroundColor: '#fff'
+    },
     pickerWrapper: {
-        borderColor: '#ccc',  borderColor: '#ccc',
-        borderWidth: 1,: 1,
+        borderColor: '#ccc',
+        borderWidth: 1,
         borderRadius: 5,
         marginTop: 4,
         marginBottom: 10,
     },
     picker: { height: 48, width: '100%' },
     button: {
-        backgroundColor: '#007bff',  borderWidth: 1,
+        backgroundColor: '#007bff',
         padding: 12,
         borderRadius: 8,
         alignItems: 'center',
         marginTop: 10, },
-    },    picker: { height: 48, width: '100%' },
-    logoutButton: {
-
-
-
-
-
-
-
-
-
-
-
-
-
-export default AccountScreen;});    link: { color: 'blue', marginBottom: 8 },    previewLabel: { fontWeight: 'bold', marginTop: 20 },    buttonText: { color: '#fff', fontWeight: 'bold' },    },        alignItems: 'center',        marginTop: 30,        borderRadius: 8,        paddingHorizontal: 32,        paddingVertical: 12,        backgroundColor: '#dc3545',        backgroundColor: '#007bff',
-        padding: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 10,
-    },
     logoutButton: {
         backgroundColor: '#dc3545',
         paddingVertical: 12,

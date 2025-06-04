@@ -17,7 +17,7 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 
 
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || '${apiBaseUrl}';
 
 const formatCurrency = (value: string | number | null) => {
   if (!value) return '';

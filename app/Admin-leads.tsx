@@ -17,7 +17,7 @@ import Toast from 'react-native-toast-message';
 import { useNavigation, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const apiBaseUrl = 'http://localhost:5000';
+const apiBaseUrl = '${apiBaseUrl}';
 
 type Purchase = {
   status?: string;

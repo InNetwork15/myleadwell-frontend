@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || '${apiBaseUrl}';
 
 export default function ManagePaymentsScreen() {
   const [loading, setLoading] = useState(false);

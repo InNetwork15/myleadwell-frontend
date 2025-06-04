@@ -129,7 +129,7 @@ export default function AdminUsersScreen() {
     try {
       console.log('📤 Creating user with:', newUser);
 
-      await axios.post('http://localhost:5000/create-user', newUser, {
+      await axios.post('${apiBaseUrl}/create-user', newUser, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

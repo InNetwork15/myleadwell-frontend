@@ -22,7 +22,7 @@ import CheckBox from "expo-checkbox";
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
 
 const refBaseUrl = FRONTEND_BASE_URL; // Use FRONTEND_BASE_URL from config
-const API_URL = 'http://localhost:5000';
+const API_URL = `${apiBaseUrl}/api/your-endpoint`;
 
 export default function SubmitLeadScreen() {
     console.log("✅ SubmitLeadScreen mounted");

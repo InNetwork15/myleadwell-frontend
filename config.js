@@ -1,4 +1,4 @@
-﻿// config.js explicitly at root of MyLeadWellFrontend
-// config.ts or .env for frontend (Expo)
-export const API_URL = 'https://myleadwell.com';
+﻿const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+
+export { API_BASE_URL };
 

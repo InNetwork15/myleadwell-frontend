@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native'; // <-- Add Image import
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -75,7 +75,11 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.placeholder}>[Image with "LEAD" will go here]</Text>
+            <Image
+                source={require('../assets/leadwellimage.png')}
+                style={styles.logo}
+                resizeMode="contain"
+            />
             <Text style={styles.title}>MyLeadWell</Text>
             <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads-created')}>
                 <Text style={styles.buttonText}>My Leads Created</Text>
@@ -124,6 +128,11 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         backgroundColor: '#f9f9f9',
+    },
+    logo: {
+        width: 200,
+        height: 100,
+        marginBottom: 20,
     },
     placeholder: {
         fontSize: 16,

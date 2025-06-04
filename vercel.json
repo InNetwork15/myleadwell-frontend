@@ -11,6 +11,5 @@
         "buildCommand": "npm run build"
       }
     }
-  ],
-  "framework": "expo"
+  ]
 }

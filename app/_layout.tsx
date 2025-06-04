@@ -1,10 +1,13 @@
 ﻿import { Slot } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function RootLayout() {
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
+    setIsClient(true); // Set to true after component mounts on client
     const checkAuth = async () => {
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('user_id');
@@ -17,7 +20,7 @@ export default function RootLayout() {
   return (
     <>
       <Slot />
-      <Toast />
+      {isClient && <Toast />}
     </>
   );
 }

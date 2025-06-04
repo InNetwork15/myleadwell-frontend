@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/dist/HomeScreen.html"
+      "dest": "/dist/HomeScreen.tsx"
     },
     {
       "src": "/(.*)",

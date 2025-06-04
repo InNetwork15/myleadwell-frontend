@@ -1,2 +1,2 @@
-export const API_URL = '${apiBaseUrl}'; // Use environment variable or fallback
-export const FRONTEND_BASE_URL = 'https://MyLeadWell.com'; // Use environment variable or fallback
+import Constants from "expo-constants";
+export const apiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl ?? "https://www.myleadwell.com/api";

@@ -12,6 +12,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
+import * as Linking from 'expo-linking';
+
+const retry = async (fn: () => Promise<any>, retries: number = 3, delay: number = 1000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (err) {
+            if (i === retries - 1) throw err;
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+};
 
 const AccountScreen = () => {
     const [firstName, setFirstName] = useState('');
@@ -27,49 +39,54 @@ const AccountScreen = () => {
     const [serviceAreas, setServiceAreas] = useState<{ state: string; county: string }[]>([]);
     const [user, setUser] = useState<any>(null);
     const [isStripeConnected, setStripeConnected] = useState(false);
+    const [stripeStatus, setStripeStatus] = useState<'not_connected' | 'pending' | 'connected'>('not_connected');
     const [loading, setLoading] = useState(true);
     const [selectedCounty, setSelectedCounty] = useState('');
+    const [polling, setPolling] = useState(false);
     const router = useRouter();
-    const apiBaseUrl = 'http://localhost:5000';
+    const apiBaseUrl = 'https://myleadwell.onrender.com';
+
+    const fetchProfile = async () => {
+        const token = await AsyncStorage.getItem('token');
+        console.log('🔑 JWT Token:', token); // Add this line
+        if (!token || token === 'null' || token === 'undefined') {
+            console.warn('⛔ Skipping API call — no token loaded');
+            setLoading(false);
+            router.push('/login');
+            return;
+        }
+
+        try {
+            const res = await axios.get(`${apiBaseUrl}/account`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const userData = res.data;
+            console.log("🔍 Fetched user profile:", userData);
+
+            if (userData) {
+                setUser(userData);
+                setFirstName(userData.first_name || '');
+                setLastName(userData.last_name || '');
+                setEmail(userData.email || '');
+                setPhone(userData.phone || '');
+                setJobTitle(userData.job_title || '');
+                setCustomRef(userData.affiliate_link || '');
+                setSelectedState(userData.state || '');
+                setServiceAreas(userData.service_areas || []);
+                setStripeConnected(!!userData.stripe_account_id);
+                setStripeStatus(userData.stripe_onboarding_status || 'not_connected');
+                setUserId(userData.id || '');
+            }
+        } catch (err) {
+            console.error('❌ Failed to load profile:', err);
+            Toast.show({ type: 'error', text1: 'Failed to load account profile' });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            const token = await AsyncStorage.getItem('token');
-            if (!token || token === 'null' || token === 'undefined') {
-                console.warn('⛔ Skipping API call — no token loaded');
-                setLoading(false);
-                return;
-            }
-
-            try {
-                const res = await axios.get(`${apiBaseUrl}/account`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
-                const userData = res.data;
-                console.log("🔍 Fetched user profile:", userData);
-
-                if (userData) {
-                    setUser(userData);
-                    setFirstName(userData.first_name || '');
-                    setLastName(userData.last_name || '');
-                    setEmail(userData.email || '');
-                    setPhone(userData.phone || '');
-                    setJobTitle(userData.job_title || '');
-                    setCustomRef(userData.affiliate_link || '');
-                    setSelectedState(userData.state || '');
-                    setServiceAreas(userData.service_areas || []);
-                    setStripeConnected(!!userData.stripe_account_id);
-                    setUserId(userData.id || '');
-                }
-            } catch (err) {
-                console.error('❌ Failed to load profile:', err);
-                Toast.show({ type: 'error', text1: 'Failed to load account profile' });
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchProfile();
     }, []);
 
@@ -151,7 +168,7 @@ const AccountScreen = () => {
         const refLink = `https://MyLeadWell.com/submit-lead?ref=${encodeURIComponent(customRef || userId)}`;
         try {
             await Clipboard.setStringAsync(refLink);
-            console.log('📋 Copied link:', refLink); // Log to verify the copied link
+            console.log('📋 Copied link:', refLink);
             Toast.show({
                 type: 'success',
                 text1: 'Link copied to clipboard!',
@@ -162,35 +179,59 @@ const AccountScreen = () => {
         }
     };
 
+    const startPolling = () => {
+        setPolling(true);
+        const interval = setInterval(async () => {
+            await fetchProfile();
+            if (stripeStatus === 'connected') {
+                setPolling(false);
+                clearInterval(interval);
+                Toast.show({ type: 'success', text1: 'Stripe account connected!' });
+            }
+        }, 5000); // Poll every 5 seconds
+
+        // Stop polling after 2 minutes if no update
+        setTimeout(() => {
+            setPolling(false);
+            clearInterval(interval);
+            Toast.show({ type: 'info', text1: 'Stripe status check timed out. Please refresh manually.' });
+        }, 120000);
+    };
+
     const handleStripeConnect = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (!token) {
                 Toast.show({ type: 'error', text1: 'No authentication token found' });
+                router.push('/login');
                 return;
             }
 
             setLoading(true);
-            const response = await fetch(`${apiBaseUrl}/api/stripe/onboard`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+            const response = await retry(() =>
+                axios.post(
+                    `${apiBaseUrl}/api/stripe/onboard`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                )
+            );
 
-            const data = await response.json();
             setLoading(false);
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to initiate Stripe onboarding');
+            if (response.data.status === 'connected') {
+                setStripeStatus('connected');
+                setStripeConnected(true);
+                Toast.show({ type: 'success', text1: 'Stripe account is fully connected!' });
+                return;
             }
 
-            if (data.url) {
-                await Linking.openURL(data.url);
+            if (response.data.url) {
+                await Linking.openURL(response.data.url);
+                setStripeStatus('pending');
                 Toast.show({ type: 'success', text1: 'Redirecting to Stripe onboarding' });
+                startPolling(); // Start polling after redirecting
             } else {
-                console.error('No Stripe onboarding URL returned:', data);
+                console.error('No Stripe onboarding URL returned:', response.data);
                 Toast.show({ type: 'error', text1: 'No Stripe onboarding URL provided' });
             }
         } catch (error) {
@@ -210,6 +251,34 @@ const AccountScreen = () => {
             Toast.show({ type: 'error', text1: 'Failed to log out' });
         }
     };
+
+    useEffect(() => {
+        const handleDeepLink = async (event: { url: string }) => {
+            const { path } = Linking.parse(event.url);
+            console.log('🔗 Deep link received:', event.url, path);
+            if (path === 'account') {
+                await fetchProfile();
+            }
+        };
+
+        // Add listener for deep links
+        const subscription = Linking.addEventListener('url', handleDeepLink);
+
+        // Check if the app was opened with a deep link
+        Linking.getInitialURL().then((url) => {
+            if (url) {
+                const { path } = Linking.parse(url);
+                if (path === 'account') {
+                    fetchProfile();
+                }
+            }
+        });
+
+        // Cleanup listener on unmount
+        return () => {
+            subscription.remove();
+        };
+    }, []);
 
     if (loading) {
         return (
@@ -377,29 +446,41 @@ const AccountScreen = () => {
             <View style={{ marginTop: 40 }}>
                 <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Stripe Integration</Text>
                 <Text style={{ marginBottom: 10 }}>
-                    {isStripeConnected ? `Connected: ${user?.stripe_account_id}` : 'Not connected to Stripe'}
+                    {stripeStatus === 'connected'
+                        ? '✅ Stripe account connected and ready for payouts'
+                        : stripeStatus === 'pending'
+                        ? '⚠️ Stripe account created but onboarding incomplete. Complete setup to receive payouts.'
+                        : '🔌 Not connected to Stripe. Connect to receive payouts for leads.'}
                 </Text>
                 <Button
-                    title={isStripeConnected ? 'Edit Stripe Settings' : 'Connect with Stripe'}
+                    title={
+                        stripeStatus === 'connected'
+                            ? 'Manage Stripe Account'
+                            : stripeStatus === 'pending'
+                            ? 'Complete Stripe Setup'
+                            : 'Connect with Stripe'
+                    }
                     onPress={handleStripeConnect}
-                    color="#28a745" // Green color for the button
+                    color="#28a745"
+                    disabled={loading}
+                />
+                <Button
+                    title="Refresh Stripe Status"
+                    onPress={fetchProfile}
+                    color="#007bff""
+                    disabled={loading}
                 />
             </View>
 
-            {/* Save Profile */}
-            <Pressable style={styles.button} onPress={handleSave}>
-                <Text style={styles.buttonText}>💾 Save Profile</Text>
-            </Pressable>
-
-            {/* Logout */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.buttonText}>Log Out</Text>
-            </TouchableOpacity>
+            {/* Logout Button */} */}
+            <Pressable style={styles.logoutButton} onPress={handleLogout}>style={styles.button} onPress={handleSave}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>🚪 Logout</Text>xt style={styles.buttonText}>💾 Save Profile</Text>
+            </Pressable>le>
         </ScrollView>
-    );
-};
-
-const styles = StyleSheet.create({
+    );      {/* Logout */}
+};leOpacity style={styles.logoutButton} onPress={handleLogout}>
+{styles.buttonText}>Log Out</Text>
+const styles = StyleSheet.create({Opacity>
     container: { padding: 16, backgroundColor: '#fff' },
     header: { fontSize: 26, fontWeight: 'bold', marginVertical: 10 },
     label: { fontWeight: 'bold', marginTop: 10 },
@@ -407,19 +488,39 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderWidth: 1,
         padding: 8,
-        marginTop: 4,
-        borderRadius: 5,
-    },
+        marginTop: 4,ding: 16, backgroundColor: '#fff' },
+        borderRadius: 5,26, fontWeight: 'bold', marginVertical: 10 },
+    },d', marginTop: 10 },
     pickerWrapper: {
-        borderColor: '#ccc',
-        borderWidth: 1,
+        borderColor: '#ccc',  borderColor: '#ccc',
+        borderWidth: 1,: 1,
         borderRadius: 5,
         marginTop: 4,
         marginBottom: 10,
     },
     picker: { height: 48, width: '100%' },
     button: {
-        backgroundColor: '#007bff',
+        backgroundColor: '#007bff',  borderWidth: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 10, },
+    },    picker: { height: 48, width: '100%' },
+    logoutButton: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+export default AccountScreen;});    link: { color: 'blue', marginBottom: 8 },    previewLabel: { fontWeight: 'bold', marginTop: 20 },    buttonText: { color: '#fff', fontWeight: 'bold' },    },        alignItems: 'center',        marginTop: 30,        borderRadius: 8,        paddingHorizontal: 32,        paddingVertical: 12,        backgroundColor: '#dc3545',        backgroundColor: '#007bff',
         padding: 12,
         borderRadius: 8,
         alignItems: 'center',

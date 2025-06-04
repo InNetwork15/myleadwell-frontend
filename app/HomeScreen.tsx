@@ -1,40 +1,76 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
 export default function HomeScreen() {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [roles, setRoles] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [stripeStatus, setStripeStatus] = useState<'not_connected' | 'pending' | 'connected'>('not_connected');
 
     useEffect(() => {
         const loadUser = async () => {
             const token = await AsyncStorage.getItem('token');
-            if (token) {
-                try {
-                    const res = await axios.get('https://myleadwell.onrender.com/account', {
-                        headers: { Authorization: `Bearer ${token}` },
+            if (!token) {
+                console.warn('⛔ No token found, redirecting to login');
+                router.replace('/login');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const res = await axios.get('https://myleadwell.onrender.com/account', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                console.log('🔍 Loaded user profile:', res.data);
+                setUser(res.data);
+                setRoles(res.data.roles || []);
+
+                // Check Stripe status
+                if (res.data.stripe_account_id) {
+                    const stripeResponse = await axios.post(
+                        'https://myleadwell.onrender.com/api/stripe/onboard',
+                        {},
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setStripeStatus(stripeResponse.data.status || 'pending');
+                    if (stripeResponse.data.status === 'pending') {
+                        Toast.show({
+                            type: 'info',
+                            text1: 'Complete Stripe Setup',
+                            text2: 'Connect your Stripe account to receive payouts. Go to My Account to set it up.',
+                        });
+                    }
+                } else {
+                    setStripeStatus('not_connected');
+                    Toast.show({
+                        type: 'info',
+                        text1: 'Connect with Stripe',
+                        text2: 'Set up your Stripe account to receive payouts. Go to My Account to connect.',
                     });
-                    console.log('🔍 Loaded user profile:', res.data);
-                    setUser(res.data);
-                    setRoles(res.data.roles || []);
-                } catch (error) {
-                    console.error('Failed to fetch user profile:', error);
                 }
+            } catch (error) {
+                console.error('Failed to fetch user profile:', error);
+                Toast.show({ type: 'error', text1: 'Failed to load user profile' });
+            } finally {
+                setLoading(false);
             }
         };
         loadUser();
     }, []);
 
-    if (!roles) {
+    if (loading || !roles) {
         return <ActivityIndicator size="large" color="#007bff" />;
     }
 
     const handleLogout = async () => {
         await AsyncStorage.clear();
         router.replace('/login');
+        Toast.show({ type: 'success', text1: 'Logged out successfully' });
     };
 
     return (
@@ -76,6 +112,7 @@ export default function HomeScreen() {
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                 <Text style={styles.buttonText}>Log Out</Text>
             </TouchableOpacity>
+            <Toast />
         </View>
     );
 }

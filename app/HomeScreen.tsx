@@ -76,7 +76,7 @@ export default function HomeScreen() {
     return (
         <View style={styles.container}>
             <Image
-                source={require('../assets/leadwellimage.png')}
+                source={require('/myleadwellfrontend/assets/leadwellimage.png')}
                 style={styles.logo}
                 resizeMode="contain"
             />

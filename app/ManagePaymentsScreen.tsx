@@ -79,7 +79,7 @@ export default function ManagePaymentsScreen() {
       {loading ? (
         <ActivityIndicator size="large" />
       ) : (
-        <Button title="Set Up / Manage Payments" onPress={handleSetupStripe} />
+        <Button title="Setup Payments" onPress={handleSetupStripe} />
       )}
     </ScrollView>
   );

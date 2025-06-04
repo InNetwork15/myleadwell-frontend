@@ -37,7 +37,7 @@
     "glob": "^11.0.2",
     "inflight": "^1.0.6",
     "jwt-decode": "^4.0.0",
-    "onesignal-expo-plugin": "^2.0.3",
+    "onesignal-expo-plugin": "^1.1.2",
     "osenv": "^0.1.5",
     "querystring": "^0.2.1",
     "react": "18.2.0",

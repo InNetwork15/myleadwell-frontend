@@ -1,2 +1,4 @@
 ﻿// config.js explicitly at root of MyLeadWellFrontend
-export const apiBaseUrl = '${apiBaseUrl}';
+// config.ts or .env for frontend (Expo)
+export const API_URL = 'https://myleadwell.onrender.com';
+

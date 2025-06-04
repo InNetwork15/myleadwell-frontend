@@ -1,1 +1,1 @@
-export const BASE_URL = '${apiBaseUrl}';
+export const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;

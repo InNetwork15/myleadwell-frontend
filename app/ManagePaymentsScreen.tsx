@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || '${apiBaseUrl}';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://api.myleadwell.com';
+
 
 export default function ManagePaymentsScreen() {
   const [loading, setLoading] = useState(false);

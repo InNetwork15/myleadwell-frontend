@@ -1,5 +1,9 @@
-{
+import Constants from "expo-constants";
   "expo": {
+export const apiBaseUrl =ontend",
+  Constants.expoConfig?.extra?.apiBaseUrl ??
+  process.env.EXPO_PUBLIC_API_BASE_URL ??
+  "https://myleadwell.onrender.com"; // fallback URL
     "name": "MyLeadWellFrontend",
     "slug": "MyLeadWellFrontend",
     "version": "1.0.0",
@@ -59,7 +63,7 @@
       "routes": {
         "/AffiliateEarningsScreen": "AffiliateEarningsScreen"
       },
-      "apiBaseUrl": "https://myleadwell-backend.onrender.com"
+      "apiBaseUrl": "https://myleadwell.onrender.com"
     }
   }
 }

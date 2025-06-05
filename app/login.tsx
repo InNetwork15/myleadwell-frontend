@@ -2,7 +2,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router'; // ✅ Only import useRouter
-import { BASE_URL } from '../utils/config';
+import { API_BASE_URL } from '../utils/config';
 import { saveAuthData } from '../utils/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -13,7 +13,7 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${BASE_URL}/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/login`, { email, password });
       const { token, user } = response.data;
 
       await AsyncStorage.setItem('token', token);

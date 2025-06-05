@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
 import * as Linking from 'expo-linking'; // Keep only one Linking import
+import { apiBaseUrl } from '../config';
 
 const retry = async (fn: () => Promise<any>, retries: number = 3, delay: number = 1000) => {
     for (let i = 0; i < retries; i++) {
@@ -44,7 +45,6 @@ const AccountScreen = () => {
     const [selectedCounty, setSelectedCounty] = useState('');
     const [polling, setPolling] = useState(false);
     const router = useRouter();
-    const apiBaseUrl = 'https://myleadwell.onrender.com';
 
     const fetchProfile = async () => {
         const token = await AsyncStorage.getItem('token');

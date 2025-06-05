@@ -1,6 +1,6 @@
-import Constants from "expo-constants";
+import Constants from 'expo-constants';
 
-export const apiBaseUrl =
+export const API_BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl ??
   process.env.EXPO_PUBLIC_API_BASE_URL ??
-  "https://myleadwell.onrender.com"; // fallback URL
+  'https://myleadwell-backend.onrender.com';

@@ -1,10 +1,12 @@
 ﻿import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
-import { useRouter } from 'expo-router'; // ✅ Only import useRouter
-import { BASE_URL } from '../utils/config';
+import { useRouter } from 'expo-router';
+import { API_BASE_URL} } from '../utils/config';
 import { saveAuthData } from '../utils/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+console.log("🚀 Using API base:", API_BASE_URL}); // <-- TEMP LOG
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -13,15 +15,15 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${BASE_URL}/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}}/login`, { email, password });
       const { token, user } = response.data;
 
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
-      await AsyncStorage.setItem('user_id', user.id.toString()); // ✅ Add this line
+      await AsyncStorage.setItem('user_id', user.id.toString());
 
       setTimeout(() => {
-        router.replace('/HomeScreen'); // ✅ Safe navigation after login
+        router.replace('/HomeScreen');
       }, 100);
       
     } catch (error) {
@@ -32,7 +34,7 @@ const LoginScreen = () => {
 
   const handleGoToSignUp = () => {
     setTimeout(() => {
-      router.push('/SignupScreen'); // ✅ Safe navigation to signup
+      router.push('/SignupScreen');
     }, 100);
   };
 

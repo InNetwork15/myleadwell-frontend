@@ -1,2 +1,3 @@
-export const API_URL = 'http://localhost:5000'; // Use environment variable or fallback
-export const FRONTEND_BASE_URL = 'https://MyLeadWell.com'; // Use environment variable or fallback
+import Constants from 'expo-constants';
+
+export const API_BASE_URL = 'https://myleadwell-backend.onrender.com';

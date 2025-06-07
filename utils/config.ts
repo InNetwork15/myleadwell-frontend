@@ -1,1 +1,4 @@
-export const BASE_URL = 'http://localhost:5000';
+import Constants from "expo-constants";
+
+export const API_BASE_URL = 'https://myleadwell-backend.onrender.com';
+

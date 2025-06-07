@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
+import { API_BASE_URL } from '../utils/config';
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -23,7 +24,7 @@ export default function HomeScreen() {
             }
 
             try {
-                const res = await axios.get('https://myleadwell.onrender.com/account', {
+                const res = await axios.get(`${API_BASE_URL}/account`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 console.log('🔍 Loaded user profile:', res.data);
@@ -33,7 +34,7 @@ export default function HomeScreen() {
                 // Check Stripe status
                 if (res.data.stripe_account_id) {
                     const stripeResponse = await axios.post(
-                        'https://myleadwell.onrender.com/api/stripe/onboard',
+                        `${API_BASE_URL}/api/stripe/onboard`,
                         {},
                         { headers: { Authorization: `Bearer ${token}` } }
                     );

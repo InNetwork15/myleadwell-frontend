@@ -17,7 +17,9 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 
 
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL} = process.env.EXPO_PUBLIC_API_URL || 'https://api.myleadwell.com';
+
+
 
 const formatCurrency = (value: string | number | null) => {
   if (!value) return '';
@@ -57,7 +59,7 @@ export default function MyLeadsScreen() {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('Missing token');
 
-      const res = await axios.get(`${apiBaseUrl}/my-purchased-leads`, {
+      const res = await axios.get(`${API_BASE_URL}}/my-purchased-leads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -119,7 +121,7 @@ export default function MyLeadsScreen() {
       setSavingLeadId(lead.lead_id); // ✅ Show saving indicator for this lead
 
       const res = await axios.patch(
-        `${apiBaseUrl}/lead-purchases/${lead.purchase_id}/status`,
+        `${API_BASE_URL}}/lead-purchases/${lead.purchase_id}/status`,
         { status: newStatus, provider_revenue: provider_revenue || 0 },
         { headers: { Authorization: `Bearer ${token}` } }
       );

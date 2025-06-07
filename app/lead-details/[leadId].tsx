@@ -32,7 +32,7 @@ const LeadDetailsScreen = () => {
                     return;
                 }
 
-                const res = await axios.get(`http://localhost:5000/leads/${leadId}`, {
+                const res = await axios.get(`${API_BASE_URL}}/leads/${leadId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setLead(res.data);

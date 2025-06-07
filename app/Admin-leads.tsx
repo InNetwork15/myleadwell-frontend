@@ -17,7 +17,8 @@ import Toast from 'react-native-toast-message';
 import { useNavigation, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const apiBaseUrl = 'http://localhost:5000';
+const API_BASE_URL} = process.env.EXPO_PUBLIC_API_URL || 'https://api.myleadwell.com';
+
 
 type Purchase = {
   status?: string;
@@ -107,7 +108,7 @@ export default function AdminLeadsScreen(): JSX.Element {
         if (stateFilter !== 'all') params.state = stateFilter;
         if (affiliateFilter !== 'all') params.submitted_by = affiliateFilter;
 
-        const res = await axios.get(`${apiBaseUrl}/admin/leads`, {
+        const res = await axios.get(`${API_BASE_URL}}/admin/leads`, {
           headers: { Authorization: `Bearer ${token}` },
           params,
         });
@@ -140,7 +141,7 @@ export default function AdminLeadsScreen(): JSX.Element {
           console.error('❌ No token found for fetching active providers');
           throw new Error('No authentication token found');
         }
-        const res = await axios.get(`${apiBaseUrl}/admin/active-providers`, {
+        const res = await axios.get(`${API_BASE_URL}}/admin/active-providers`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('✅ Active Providers Response:', res.data);
@@ -169,7 +170,7 @@ export default function AdminLeadsScreen(): JSX.Element {
       const fetchGiftCardStatus = async () => {
         try {
           const token = await AsyncStorage.getItem('token');
-          const res = await axios.get(`${apiBaseUrl}/admin/leads/${expandedId}/gift-card-status`, {
+          const res = await axios.get(`${API_BASE_URL}}/admin/leads/${expandedId}/gift-card-status`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setGiftCardStatus(res.data.status);
@@ -185,7 +186,7 @@ export default function AdminLeadsScreen(): JSX.Element {
   const refreshLeads = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const res = await axios.get(`${apiBaseUrl}/admin/leads`, {
+      const res = await axios.get(`${API_BASE_URL}}/admin/leads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLeads(res.data);
@@ -360,7 +361,7 @@ export default function AdminLeadsScreen(): JSX.Element {
         }
       });
 
-      await axios.put(`${apiBaseUrl}/admin/leads/${leadId}`, payload, {
+      await axios.put(`${API_BASE_URL}}/admin/leads/${leadId}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -370,7 +371,7 @@ export default function AdminLeadsScreen(): JSX.Element {
         text2: 'Lead updated successfully.',
       });
 
-      const res = await axios.get(`${apiBaseUrl}/admin/leads`, {
+      const res = await axios.get(`${API_BASE_URL}}/admin/leads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLeads(res.data);
@@ -407,7 +408,7 @@ export default function AdminLeadsScreen(): JSX.Element {
     try {
       const token = await AsyncStorage.getItem('token');
       await axios.patch(
-        `${apiBaseUrl}/admin/leads/${leadId}/status`,
+        `${API_BASE_URL}}/admin/leads/${leadId}/status`,
         { lead_status: newLeadStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -416,7 +417,7 @@ export default function AdminLeadsScreen(): JSX.Element {
         text1: 'Status Updated',
         text2: 'Lead status updated successfully.',
       });
-      const res = await axios.get(`${apiBaseUrl}/admin/leads`, {
+      const res = await axios.get(`${API_BASE_URL}}/admin/leads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLeads(res.data);
@@ -1082,14 +1083,14 @@ export default function AdminLeadsScreen(): JSX.Element {
           onPress={async () => {
             try {
               const token = await AsyncStorage.getItem('token');
-              const res = await fetch(`${apiBaseUrl}/admin/process-affiliate-payouts`, {
+              const res = await fetch(`${API_BASE_URL}}/admin/process-affiliate-payouts`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
               });
               const data = await res.json();
               if (res.ok) {
                 Alert.alert('Success', `Processed ${data.processed} payouts.`);
-                const leadsRes = await axios.get(`${apiBaseUrl}/admin/leads`, {
+                const leadsRes = await axios.get(`${API_BASE_URL}}/admin/leads`, {
                   headers: { Authorization: `Bearer ${token}` },
                 });
                 setLeads(leadsRes.data);

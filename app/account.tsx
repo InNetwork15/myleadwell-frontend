@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
 import * as Linking from 'expo-linking'; // Keep only one Linking import
+import { API_BASE_URL} } from '../config';
 
 const retry = async (fn: () => Promise<any>, retries: number = 3, delay: number = 1000) => {
     for (let i = 0; i < retries; i++) {
@@ -44,7 +45,6 @@ const AccountScreen = () => {
     const [selectedCounty, setSelectedCounty] = useState('');
     const [polling, setPolling] = useState(false);
     const router = useRouter();
-    const apiBaseUrl = 'https://myleadwell.onrender.com';
 
     const fetchProfile = async () => {
         const token = await AsyncStorage.getItem('token');
@@ -57,7 +57,7 @@ const AccountScreen = () => {
         }
 
         try {
-            const res = await axios.get(`${apiBaseUrl}/account`, {
+            const res = await axios.get(`${API_BASE_URL}}/account`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -153,7 +153,7 @@ const AccountScreen = () => {
 
             console.log('📤 Saving Account:', payload);
 
-            await axios.put(`${apiBaseUrl}/account`, payload, {
+            await axios.put(`${API_BASE_URL}}/account`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -210,7 +210,7 @@ const AccountScreen = () => {
             setLoading(true);
             const response = await retry(() =>
                 axios.post(
-                    `${apiBaseUrl}/api/stripe/onboard`,
+                    `${API_BASE_URL}}/api/stripe/onboard`,
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 )

@@ -20,7 +20,8 @@ import Toast from 'react-native-toast-message';
 import * as WebBrowser from 'expo-web-browser';
 import { getUserFromToken } from '../utils/auth';
 
-const apiBaseUrl = 'http://localhost:5000';
+import { API_BASE_URL} } from '../config'; // adjust path if needed
+
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {
   if (Platform.OS === 'android') {
@@ -64,7 +65,7 @@ const AvailableLeadsScreen = () => {
   const fetchAvailableLeads = async (token: string, user: any) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${apiBaseUrl}/api/leads/available`, {
+      const res = await axios.get(`${API_BASE_URL}}/api/leads/available`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -113,7 +114,7 @@ const AvailableLeadsScreen = () => {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await axios.get(`${apiBaseUrl}/me`, {
+      const response = await axios.get(`${API_BASE_URL}}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('✅ Loaded user profile:', response.data);
@@ -141,7 +142,7 @@ const AvailableLeadsScreen = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `${apiBaseUrl}/api/stripe/create-checkout-session`,
+        `${API_BASE_URL}}/api/stripe/create-checkout-session`,
         {
           lead_id: lead.id,
           provider_id: user.id,
@@ -171,7 +172,7 @@ const AvailableLeadsScreen = () => {
       console.log('🌐 WebBrowser result:', result);
 
       await fetchAvailableLeads(token, user);
-      const availableResponse = await axios.get(`${apiBaseUrl}/api/leads/available`, {
+      const availableResponse = await axios.get(`${API_BASE_URL}}/api/leads/available`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLeads(Array.isArray(availableResponse.data) ? availableResponse.data : []);
@@ -180,7 +181,7 @@ const AvailableLeadsScreen = () => {
       const startTime = Date.now();
       const timeout = 30000; // 30 seconds
       while (Date.now() - startTime < timeout) {
-        const purchaseCheck = await axios.get(`${apiBaseUrl}/my-purchased-leads`, {
+        const purchaseCheck = await axios.get(`${API_BASE_URL}}/my-purchased-leads`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         isPurchased = purchaseCheck.data.some(p => p.lead_id === lead.id);

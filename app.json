@@ -59,7 +59,7 @@
       "routes": {
         "/AffiliateEarningsScreen": "AffiliateEarningsScreen"
       },
-      "apiBaseUrl": "https://myleadwell-backend.onrender.com"
+      "API_BASE_URL}": "https://myleadwell-backend.onrender.com"
     }
   }
 }

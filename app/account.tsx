@@ -208,13 +208,18 @@ const AccountScreen = () => {
             }
 
             setLoading(true);
-            const response = await retry(() =>
-                axios.post(
-                    `${API_BASE_URL}/api/stripe/onboard`,
-                    {},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                )
-            );
+
+            // Temporarily disabled Stripe connection
+            // const response = await retry(() =>
+            //     axios.post(
+            //         `${API_BASE_URL}/api/stripe/onboard`,
+            //         {},
+            //         { headers: { Authorization: `Bearer ${token}` } }
+            //     )
+            // );
+
+            // Dummy response for testing navigation
+            const response = { data: { url: 'https://myleadwell.com/account' } };
 
             setLoading(false);
 

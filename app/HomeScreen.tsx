@@ -33,15 +33,10 @@ export default function HomeScreen() {
 
                 // Check Stripe status
                 if (res.data.stripe_account_id) {
-                    // Temporarily disabled Stripe connection
-                    // const stripeResponse = await axios.get(
-                    //     `${API_BASE_URL}/api/stripe/onboard`,
-                    //     { headers: { Authorization: `Bearer ${token}` } }
-                    // );
-
-                    // Dummy response for testing navigation
-                    const stripeResponse = { data: { url: 'https://myleadwell.com/account', status: 'pending' } };
-
+                    const stripeResponse = await axios.get(
+                        `${API_BASE_URL}/api/stripe/onboard`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
                     setStripeStatus(stripeResponse.data.status || 'pending');
                     if (stripeResponse.data.url) {
                         // For React Native, use Linking:

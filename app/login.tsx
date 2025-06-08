@@ -22,6 +22,8 @@ const LoginScreen = () => {
         throw new Error('Invalid login response');
       }
 
+      // Save all auth data in one object for easy retrieval
+      await AsyncStorage.setItem('authData', JSON.stringify({ token, user }));
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
       await AsyncStorage.setItem('user_id', user.id.toString());

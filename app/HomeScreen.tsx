@@ -33,13 +33,20 @@ export default function HomeScreen() {
 
                 // Check Stripe status
                 if (res.data.stripe_account_id) {
-                    const stripeResponse = await axios.post(
+                    const stripeResponse = await axios.get(
                         `${API_BASE_URL}/api/stripe/onboard`,
-                        {},
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     setStripeStatus(stripeResponse.data.status || 'pending');
-                    if (stripeResponse.data.status === 'pending') {
+                    if (stripeResponse.data.url) {
+                        // For React Native, use Linking:
+                        // import * as Linking from 'expo-linking';
+                        // await Linking.openURL(stripeResponse.data.url);
+                        // For web:
+                        if (typeof window !== "undefined") {
+                            window.location.href = stripeResponse.data.url;
+                        }
+                    } else if (stripeResponse.data.status === 'pending') {
                         Toast.show({
                             type: 'info',
                             text1: 'Complete Stripe Setup',

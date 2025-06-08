@@ -17,7 +17,7 @@ import Toast from 'react-native-toast-message';
 import { useNavigation, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_BASE_URL} = process.env.EXPO_PUBLIC_API_URL || 'https://api.myleadwell.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com';
 
 
 type Purchase = {

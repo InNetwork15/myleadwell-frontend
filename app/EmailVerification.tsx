@@ -1,6 +1,6 @@
 ﻿import axios from 'axios';
 import Toast from 'react-native-toast-message';
-import { BASE_URL } from '../utils/config'; // ✅ Import API base URL
+import { API_BASE_URL } from '../utils/config'; // ✅ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com'; base URL
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';

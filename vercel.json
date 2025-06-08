@@ -11,5 +11,11 @@
         "buildCommand": "npm run build"
       }
     }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
   ]
 }

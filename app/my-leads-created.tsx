@@ -82,6 +82,15 @@ export default function MyLeadsCreatedAccordion() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // ✅ Type check before mapping
+      if (!Array.isArray(response.data)) {
+        console.error('❌ Expected an array of leads but got:', response.data);
+        showToast('Failed to load leads: unexpected response format.', 'error');
+        setLeads([]);
+        setLoading(false);
+        return;
+      }
+
       const leadsWithProperData: Lead[] = response.data.map((lead: any) => ({
         lead_id: lead.lead_id,
         purchase_id: lead.purchase_id,

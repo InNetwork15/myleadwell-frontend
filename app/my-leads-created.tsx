@@ -82,12 +82,6 @@ export default function MyLeadsCreatedAccordion() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Add this log and check:
-      console.log('📥 Raw response from /my-leads-created:', response.data);
-      if (!Array.isArray(response.data)) {
-        throw new Error('Expected an array of leads but got: ' + JSON.stringify(response.data));
-      }
-
       const leadsWithProperData: Lead[] = response.data.map((lead: any) => ({
         lead_id: lead.lead_id,
         purchase_id: lead.purchase_id,

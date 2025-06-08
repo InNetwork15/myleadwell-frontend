@@ -2,11 +2,11 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { API_BASE_URL} } from '../utils/config';
+import {API_BASE_URL} from '../utils/config';
 import { saveAuthData } from '../utils/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-console.log("🚀 Using API base:", API_BASE_URL}); // <-- TEMP LOG
+console.log("🚀 Using API base:", {API_BASE_URL}); // <-- TEMP LOG
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');

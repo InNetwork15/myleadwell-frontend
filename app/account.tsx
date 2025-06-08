@@ -210,7 +210,7 @@ const AccountScreen = () => {
             setLoading(true);
             const response = await retry(() =>
                 axios.post(
-                    `${API_BASE_URL}/stripe/onboard`,
+                    `${API_BASE_URL}/api/stripe/onboard`,
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 )

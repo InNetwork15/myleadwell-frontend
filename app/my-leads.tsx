@@ -17,7 +17,7 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native'; // Import navigation hook
 
 
-const API_BASE_URL} = process.env.EXPO_PUBLIC_API_URL || 'https://api.myleadwell.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com';
 
 
 

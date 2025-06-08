@@ -20,7 +20,7 @@ import Toast from 'react-native-toast-message';
 import * as WebBrowser from 'expo-web-browser';
 import { getUserFromToken } from '../utils/auth';
 
-import { API_BASE_URL} } from '../config'; // adjust path if needed
+import { API_BASE_URL} from '../config'; // adjust path if needed
 
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {

@@ -15,8 +15,12 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-      const { token, user } = response.data;
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+      const { token, user } = response.data || {};
+
+      if (!token || !user) {
+        throw new Error('Invalid login response');
+      }
 
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(user));

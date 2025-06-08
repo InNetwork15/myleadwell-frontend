@@ -78,6 +78,11 @@ export default function MyLeadsCreatedAccordion() {
         return;
       }
       console.log('👤 User ID:', user.id);
+
+      // ✅ Add logging before the request
+      console.log('📤 Fetching leads from:', `${BASE_URL}/my-leads-created/${user.id}`);
+      console.log('🔐 Sending token:', token);
+
       const response = await axios.get(`${BASE_URL}/my-leads-created/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

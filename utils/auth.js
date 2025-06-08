@@ -58,5 +58,10 @@ export const loadAuthData = async () => {
   const token = await AsyncStorage.getItem('token');
   const userJson = await AsyncStorage.getItem('user');
   const user = userJson ? JSON.parse(userJson) : null;
+
+  // ✅ Temporary debug logging
+  console.log('📦 Loaded token:', token);
+  console.log('📦 Loaded user:', user);
+
   return { token, user };
 };

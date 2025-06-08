@@ -15,7 +15,7 @@ function LeadsDashboard({ token }) {
             setError(null);
             try {
                 console.log('Fetching leads with token:', token); // Debugging log
-                const response = await axios.get('${API_BASE_URL}}/admin/leads', {
+                const response = await axios.get('${API_BASE_URL}/admin/leads', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

@@ -23,7 +23,7 @@ export default function ManagePaymentsScreen() {
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('user_id');
 
-      const res = await fetch(`${API_BASE_URL}}/stripe/create-account-link`, {
+      const res = await fetch(`${API_BASE_URL}/stripe/create-account-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

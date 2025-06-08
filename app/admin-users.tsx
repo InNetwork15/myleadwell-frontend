@@ -37,7 +37,7 @@ export default function AdminUsersScreen() {
     const currentUserId = await AsyncStorage.getItem('user_id');
 
     try {
-      const res = await axios.get(`${API_BASE_URL}}/all-users`, {
+      const res = await axios.get(`${API_BASE_URL}/all-users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -45,7 +45,7 @@ export default function AdminUsersScreen() {
 
       // Add fallback for current user if not included in /all-users
       if (currentUserId && !usersList.find((user: { id: number }) => user.id === parseInt(currentUserId, 10))) {
-        const userRes = await axios.get(`${API_BASE_URL}}/users/${currentUserId}`, {
+        const userRes = await axios.get(`${API_BASE_URL}/users/${currentUserId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         usersList = [...usersList, userRes.data];
@@ -104,7 +104,7 @@ export default function AdminUsersScreen() {
     console.log('📤 Saving edited user:', payload);
 
     try {
-      await axios.put(`${API_BASE_URL}}/update-user/${editUser.id}`, payload, { // ✅ Updated route
+      await axios.put(`$/update-user/${editUser.id}`, payload, { // ✅ Updated route
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -129,7 +129,7 @@ export default function AdminUsersScreen() {
     try {
       console.log('📤 Creating user with:', newUser);
 
-      await axios.post('${API_BASE_URL}}/create-user', newUser, {
+      await axios.post('${API_BASE_URL}/create-user', newUser, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

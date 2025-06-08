@@ -55,10 +55,7 @@
       }
     },
     "extra": {
-      "oneSignalAppId": "c1e3d67e-7566-40c9-b3c2-d5c6cb3618be",
-      "routes": {
-        "/AffiliateEarningsScreen": "AffiliateEarningsScreen"
-      },
+
       "API_BASE_URL": "https://myleadwell-backend.onrender.com"
     }
   }

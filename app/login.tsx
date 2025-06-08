@@ -42,6 +42,21 @@ const LoginScreen = () => {
     }, 100);
   };
 
+  const loadAuthData = async () => {
+    try {
+      const raw = await AsyncStorage.getItem('authData');
+      if (!raw) {
+        console.warn('⚠️ No auth data found');
+        return;
+      }
+
+      const data = JSON.parse(raw); // ✅ Only happens if data exists
+      // Proceed with using `data.token` and `data.user`
+    } catch (error) {
+      console.error('❌ Error loading auth data:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>

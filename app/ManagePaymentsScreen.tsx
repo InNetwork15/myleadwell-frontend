@@ -80,7 +80,9 @@ export default function ManagePaymentsScreen() {
       {loading ? (
         <ActivityIndicator size="large" />
       ) : (
-        <Button title="Setup Payments" onPress={handleSetupStripe} />
+        // Temporarily disabled Stripe setup button
+        // <Button title="Setup Payments" onPress={handleSetupStripe} />
+        null
       )}
     </ScrollView>
   );

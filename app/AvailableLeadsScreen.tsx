@@ -71,11 +71,13 @@ const AvailableLeadsScreen = () => {
 
       console.log('📦 Leads returned from /api/leads/available:', res.data);
 
-      if (!Array.isArray(res.data) || res.data.length === 0) {
-        // No toast, just show empty state in UI
+      // Updated logic to handle both array and object with leads property
+      const leadsArray = Array.isArray(res.data) ? res.data : res.data.leads;
+
+      if (!Array.isArray(leadsArray) || leadsArray.length === 0) {
         setLeads([]);
       } else {
-        setLeads(res.data);
+        setLeads(leadsArray);
       }
     } catch (error: any) {
       console.error('❌ Error fetching leads:', {

@@ -34,7 +34,7 @@ export default function HomeScreen() {
                 // Check Stripe status
                 if (res.data.stripe_account_id) {
                     const stripeResponse = await axios.get(
-                        `${API_BASE_URL}/api/stripe/onboard`,
+                        `${API_BASE_URL}/stripe/onboard`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     setStripeStatus(stripeResponse.data.status || 'pending');

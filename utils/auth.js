@@ -1,28 +1,29 @@
-﻿// utils/auth.js
+﻿// auth.js
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const loginUser = async (token, user) => {
+export const storeAuthData = async (token) => {
   try {
     await AsyncStorage.setItem('token', token);
-    await AsyncStorage.setItem('user', JSON.stringify(user));
-    return true;
   } catch (error) {
     console.error('❌ Error storing token:', error);
-    return false;
+    throw new Error('Failed to store login data');
   }
 };
 
 export const loadAuthData = async () => {
   try {
-    const token = await AsyncStorage.getItem('token');
-    const user = await AsyncStorage.getItem('user');
-    return {
-      token,
-      user: user ? JSON.parse(user) : null,
-    };
+    return await AsyncStorage.getItem('token');
   } catch (error) {
     console.error('❌ Error loading auth data:', error);
-    return { token: null, user: null };
+    return null;
+  }
+};
+
+export const clearAuthData = async () => {
+  try {
+    await AsyncStorage.removeItem('token');
+  } catch (error) {
+    console.error('❌ Error clearing auth data:', error);
   }
 };

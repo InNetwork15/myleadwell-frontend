@@ -71,14 +71,16 @@ export default function MyLeadsCreatedAccordion() {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const { token, user } = await loadAuthData();
+const { token, user: userId } = await loadAuthData();
+
       if (!token || !user) {
         console.error('❌ Missing token or user');
         showToast('Please log in to view your created leads.', 'error');
         return;
       }
       console.log('👤 User ID:', user.id);
-      const response = await axios.get(`${API_BASE_URL}/my-leads-created/${user.id}`, {
+  const response = await axios.get(`${API_BASE_URL}/my-leads-created/${userId}`);
+
         headers: { Authorization: `Bearer ${token}` },
       });
 

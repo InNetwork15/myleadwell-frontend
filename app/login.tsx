@@ -136,6 +136,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
-// Run this once to clear all storage
-await AsyncStorage.clear();

@@ -79,10 +79,12 @@ const { token, user: userId } = await loadAuthData();
         return;
       }
       console.log('👤 User ID:', user.id);
-  const response = await axios.get(`${API_BASE_URL}/my-leads-created/${userId}`);
-
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const response = await axios.get(
+    `${API_BASE_URL}/my-leads-created/${userId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
 
       // ✅ Type check before mapping
       if (!Array.isArray(response.data)) {

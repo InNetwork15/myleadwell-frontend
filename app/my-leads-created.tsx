@@ -9,7 +9,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { loadAuthData } from '../utils/auth';
-import { BASE_URL } from '../utils/config';
+import { API_BASE_URL } from '../utils/config';
 
 const JOB_TITLES = [
   'Real Estate Agent',
@@ -78,7 +78,7 @@ export default function MyLeadsCreatedAccordion() {
         return;
       }
       console.log('👤 User ID:', user.id);
-      const response = await axios.get(`${BASE_URL}/my-leads-created/${user.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/my-leads-created/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -123,7 +123,7 @@ export default function MyLeadsCreatedAccordion() {
   const fetchProviders = async () => {
     try {
       const { token } = await loadAuthData();
-      const response = await axios.get(`${BASE_URL}/providers`, {
+      const response = await axios.get(`${API_BASE_URL}/providers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProviders(response.data);
@@ -230,7 +230,7 @@ export default function MyLeadsCreatedAccordion() {
       console.log('🔍 Saving lead with payload:', payload);
 
       setSavingLeadId(leadId);
-      const response = await axios.put(`${BASE_URL}/leads/${leadId}/update`, payload, {
+      const response = await axios.put(`${API_BASE_URL}/leads/${leadId}/update`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

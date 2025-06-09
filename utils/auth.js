@@ -1,29 +1,24 @@
-﻿// auth.js
+﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export const storeAuthData = async (token) => {
+// ✅ Named export
+export const loginUser = async (token) => {
   try {
     await AsyncStorage.setItem('token', token);
+    return true;
   } catch (error) {
     console.error('❌ Error storing token:', error);
-    throw new Error('Failed to store login data');
+    return false;
   }
 };
 
+// ✅ Optional: Also add named export for loading auth data if needed later
 export const loadAuthData = async () => {
   try {
-    return await AsyncStorage.getItem('token');
+    const token = await AsyncStorage.getItem('token');
+    const user = await AsyncStorage.getItem('user_id');
+    return { token, user };
   } catch (error) {
     console.error('❌ Error loading auth data:', error);
-    return null;
-  }
-};
-
-export const clearAuthData = async () => {
-  try {
-    await AsyncStorage.removeItem('token');
-  } catch (error) {
-    console.error('❌ Error clearing auth data:', error);
+    return {};
   }
 };

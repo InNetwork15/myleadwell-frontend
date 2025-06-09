@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { BASE_URL } from '../utils/config';
+import { API_BASE_URL} from '../config';
 import { loadAuthData } from '../utils/auth';
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {

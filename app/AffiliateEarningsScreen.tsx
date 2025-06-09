@@ -44,7 +44,7 @@ const AffiliateEarningsScreen = () => {
       const paidSum = paidRes.data.reduce((acc, lead) => acc + parseFloat(lead.payout_amount || 0), 0);
       setTotalPaid(paidSum);
 
-      const pendingRes = await axios.get(`${BASE_URL}/affiliate-earnings-pending`, {
+      const pendingRes = await axios.get(`${API_BASE_URL}/affiliate-earnings-pending`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       console.log('Pending earnings:', JSON.stringify(pendingRes.data, null, 2));

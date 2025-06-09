@@ -56,11 +56,11 @@ const ProviderConversionScreen = () => {
     setLoading(true);
     try {
       const { token, user } = await loadAuthData();
-      if (!token || !user) {
-        console.error('❌ Missing token or user');
-        showToast('Please log in to view your conversion data.', 'error');
-        return;
-      }
+if (!token || !user || !user.id) {
+  console.error('❌ Missing token or user.id:', { token, user });
+  showToast('Please log in to view your conversion data.', 'error');
+  return;
+}
 
       console.log('👤 Fetching conversion data for user ID:', user.id);
       const response = await axios.get(`${API_BASE_URL}/provider/conversion/${user.id}`, {

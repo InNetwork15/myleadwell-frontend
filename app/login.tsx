@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '../utils/config';
-import * as Auth from '../utils/auth'; // ✅ Fixed import
+import { loginUser } from '../utils/auth'; // ✅ Correct import for named export
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -23,7 +23,7 @@ const LoginScreen = () => {
         throw new Error('Invalid login response');
       }
 
-      const success = await Auth.loginUser(token); // ✅ use fixed reference
+      const success = await loginUser(token); // ✅ use correct named import
 
       if (!success) {
         throw new Error('Failed to store login data');

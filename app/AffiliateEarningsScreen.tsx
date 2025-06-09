@@ -36,7 +36,7 @@ const AffiliateEarningsScreen = () => {
 
   const fetchEarnings = async (authToken: string, userId: string) => {
     try {
-      const paidRes = await axios.get(`${BASE_URL}/affiliate-earnings`, {
+      const paidRes = await axios.get(`${API_BASE_URL}/affiliate-earnings`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       console.log('Paid earnings:', JSON.stringify(paidRes.data, null, 2));

@@ -79,12 +79,12 @@ if (!token || !user) {
   return;
 }
 console.log('👤 User ID:', user.id);
-  const response = await axios.get(
-    `${API_BASE_URL}/my-leads-created/${user.id}`
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+const response = await axios.get(
+  `${API_BASE_URL}/my-leads-created/${userId}`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
 
       // ✅ Type check before mapping
       if (!Array.isArray(response.data)) {

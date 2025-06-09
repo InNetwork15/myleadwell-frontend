@@ -1,4 +1,4 @@
-import Constants from "expo-constants";
+import Constants from 'expo-constants';
 
-export const API_BASE_URL = 'https://myleadwell-backend.onrender.com';
-
+export const BASE_URL = 'https://myleadwell-backend.onrender.com';
+export const API_BASE_URL = BASE_URL;

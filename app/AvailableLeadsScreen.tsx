@@ -71,20 +71,10 @@ const AvailableLeadsScreen = () => {
 
       console.log('📦 Leads returned from /api/leads/available:', res.data);
 
-      // Extra safe handling for leads array
-      let leadsArray: Lead[] = [];
+      // Updated logic to handle both array and object with leads property
+      const leadsArray = Array.isArray(res.data) ? res.data : res.data.leads;
 
-      if (Array.isArray(res.data)) {
-        leadsArray = res.data;
-      } else if (Array.isArray(res.data?.leads)) {
-        leadsArray = res.data.leads;
-      } else {
-        showToast('Unexpected lead format from server', 'error');
-        console.error('⚠️ Unexpected format:', res.data);
-        leadsArray = [];
-      }
-
-      if (leadsArray.length === 0) {
+      if (!Array.isArray(leadsArray) || leadsArray.length === 0) {
         setLeads([]);
       } else {
         setLeads(leadsArray);

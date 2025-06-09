@@ -3,7 +3,7 @@ import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { BASE_URL } from '../utils/config';
+import { API_BASE_URL} from '../config';
 
 const AffiliateEarningsScreen = () => {
   const router = useRouter();

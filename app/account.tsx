@@ -47,7 +47,9 @@ const AccountScreen = () => {
     const router = useRouter();
 
     const fetchProfile = async () => {
-        const token = await AsyncStorage.getItem('token');
+const stored = await AsyncStorage.getItem('authData');
+const parsed = JSON.parse(stored || '{}');
+const token = parsed.token;
         console.log('🔑 JWT Token:', token); // Add this line
         if (!token || token === 'null' || token === 'undefined') {
             console.warn('⛔ Skipping API call — no token loaded');
@@ -58,8 +60,8 @@ const AccountScreen = () => {
 
         try {
             const res = await axios.get(`${API_BASE_URL}/account`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+  headers: { Authorization: `Bearer ${token}` },
+});
 
             const userData = res.data;
             console.log("🔍 Fetched user profile:", userData);

@@ -71,16 +71,16 @@ export default function MyLeadsCreatedAccordion() {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-const { token, user: userId } = await loadAuthData();
+const { token, user } = await loadAuthData();
 
-      if (!token || !user) {
-        console.error('❌ Missing token or user');
-        showToast('Please log in to view your created leads.', 'error');
-        return;
-      }
-      console.log('👤 User ID:', user.id);
+if (!token || !user) {
+  console.error('❌ Missing token or user');
+  showToast('Please log in to view your created leads.', 'error');
+  return;
+}
+console.log('👤 User ID:', user.id);
   const response = await axios.get(
-    `${API_BASE_URL}/my-leads-created/${userId}`,
+    `${API_BASE_URL}/my-leads-created/${user.id}`
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -138,12 +138,46 @@ const { token, user: userId } = await loadAuthData();
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchLeads();
-      fetchProviders();
-    }, [])
-  );
+useEffect(() => {
+    const fetchLeads = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const userId = await AsyncStorage.getItem('user_id');
+
+            if (!token || !userId) {
+                throw new Error('Token or User ID not found');
+            }
+
+            const response = await axios.get(`${API_BASE_URL}/my-leads-created/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const formattedLeads = response.data.map((e) => ({
+                ...e,
+                distribution_method: e.distribution_method || 'UNSPECIFIED',
+                preferred_providers: e.preferred_providers || {},
+                last_updated: e.last_updated || null,
+            }));
+
+            console.log('📦 Loaded leads with defaults:', formattedLeads);
+            setLeads(formattedLeads);
+        } catch (e) {
+            console.error('❌ Failed to fetch leads:', e.response?.data || e.message);
+            const errorMsg =
+                e.response?.status === 401
+                    ? 'Unauthorized. Please log in again.'
+                    : e.response?.data?.error || 'Failed to load your created leads. Please try again.';
+            showToast(errorMsg, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchLeads();
+}, []);
+
 
   const toggleAccordion = (id: string) => {
     setExpandedLeadId(expandedLeadId === id ? null : id);

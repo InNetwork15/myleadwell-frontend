@@ -7,7 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 
 const handleResend = async () => {
   try {
-    const res = await axios.post(`${BASE_URL}/resend-verification`, { email });
+    const res = await axios.post(`${API_BASE_URL}/resend-verification`, { email });
     if (res.data?.success) {
       Toast.show({
         type: 'success',

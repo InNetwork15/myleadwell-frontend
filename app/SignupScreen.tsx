@@ -6,7 +6,7 @@ import {
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
-import { BASE_URL } from '../utils/config';
+import { API_BASE_URL } from '../utils/config';
 import Toast from 'react-native-toast-message';
 import { useRouter } from 'expo-router';
 
@@ -132,7 +132,7 @@ export default function SignupScreen() {
                 }
             };
 
-            const response = await retry(() => axios.post(`${BASE_URL}/signup`, payload));
+            const response = await retry(() => axios.post(`${API_BASE_URL}/signup`, payload));
 
             console.log('✅ Signup response:', response.data);
 

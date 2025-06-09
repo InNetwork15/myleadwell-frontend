@@ -24,7 +24,8 @@ const LoginScreen = () => {
       }
 
       // Use centralized loginUser to store token and user
-const success = await auth.loginUser(token);
+const success = await loginUser(token); // ✅ CORRECT
+
 
       if (!success) {
         throw new Error('Failed to store login data');

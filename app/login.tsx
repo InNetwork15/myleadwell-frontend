@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import {API_BASE_URL} from '../utils/config';
-import { saveAuthData } from '../utils/auth';
+import { loginUser } from '../utils/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 console.log("🚀 Using API base:", {API_BASE_URL}); // <-- TEMP LOG
@@ -22,10 +22,14 @@ const LoginScreen = () => {
         throw new Error('Invalid login response');
       }
 
-      // Save all auth data in one object for easy retrieval
+      // Use centralized loginUser to store token and user
+      const success = await loginUser(token);
+      if (!success) {
+        throw new Error('Failed to store login data');
+      }
+
+      // Optionally, still store authData if you want
       await AsyncStorage.setItem('authData', JSON.stringify({ token, user }));
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
       await AsyncStorage.setItem('user_id', user.id.toString());
 
       setTimeout(() => {
@@ -84,6 +88,16 @@ const LoginScreen = () => {
       <TouchableOpacity onPress={handleGoToSignUp} style={styles.secondaryButton}>
         <Text style={styles.secondaryButtonText}>Don't have an account? Sign Up</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={async () => {
+          await AsyncStorage.clear();
+          Alert.alert('Storage cleared!');
+        }}
+        style={[styles.button, { backgroundColor: '#ccc' }]}
+      >
+        <Text style={styles.buttonText}>Clear Storage</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -132,3 +146,6 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+
+// Run this once to clear all storage
+await AsyncStorage.clear();

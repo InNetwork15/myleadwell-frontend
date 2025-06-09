@@ -10,9 +10,9 @@ export const loginUser = async (token) => {
     }
 
     await AsyncStorage.setItem('token', token); // Store token in AsyncStorage
-    console.log("✅ Token stored successfully:", token);
-
     const decoded = jwtDecode(token);
+    await AsyncStorage.setItem('user', JSON.stringify(decoded)); // ✅ STORE USER
+    console.log("✅ Token stored successfully:", token);
     console.log("✅ Decoded token:", decoded);
 
     return true; // Indicate successful login

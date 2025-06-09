@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import {API_BASE_URL} from '../utils/config';
-import { loginUser } from '../utils/auth';
+import auth from '../utils/auth'; // ✅ correct for default export
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 console.log("🚀 Using API base:", {API_BASE_URL}); // <-- TEMP LOG
@@ -23,7 +24,8 @@ const LoginScreen = () => {
       }
 
       // Use centralized loginUser to store token and user
-      const success = await loginUser(token);
+const success = await auth.loginUser(token);
+
       if (!success) {
         throw new Error('Failed to store login data');
       }

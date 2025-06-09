@@ -81,27 +81,8 @@ const ProviderConversionScreen = () => {
   };
 
   useEffect(() => {
-    const fetchConversion = async () => {
-      if (!conversionData || !conversionData.userId) {
-        console.warn("🔍 User not loaded yet.");
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/provider/conversion/${conversionData.userId}`,
-          {
-            headers: { Authorization: `Bearer ${conversionData.token}` }
-          }
-        );
-        setConversionData(response.data);
-      } catch (error) {
-        console.error("❌ Error fetching provider conversion:", error);
-      }
-    };
-
-    fetchConversion();
-  }, [conversionData]);
+    fetchConversionData();
+  }, []);
 
   if (loading) {
     return <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 50 }} />;

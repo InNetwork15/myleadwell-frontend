@@ -88,16 +88,6 @@ const LoginScreen = () => {
       <TouchableOpacity onPress={handleGoToSignUp} style={styles.secondaryButton}>
         <Text style={styles.secondaryButtonText}>Don't have an account? Sign Up</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={async () => {
-          await AsyncStorage.clear();
-          Alert.alert('Storage cleared!');
-        }}
-        style={[styles.button, { backgroundColor: '#ccc' }]}
-      >
-        <Text style={styles.buttonText}>Clear Storage</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -147,3 +137,5 @@ const styles = StyleSheet.create({
 
 export default LoginScreen;
 
+// Run this once to clear all storage
+await AsyncStorage.clear();

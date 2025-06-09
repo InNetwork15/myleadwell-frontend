@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import {API_BASE_URL} from '../utils/config';
-import auth from '../utils/auth'; // ✅ correct for default export
+import { loginUser } from '../utils/auth'; // ✅ correct
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -63,7 +63,7 @@ const ProviderConversionScreen = () => {
       }
 
       console.log('👤 Fetching conversion data for user ID:', user.id);
-      const response = await axios.get(`${BASE_URL}/provider/conversion/${user.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/provider/conversion/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

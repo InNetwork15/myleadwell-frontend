@@ -73,6 +73,7 @@ export default function MyLeadsCreatedAccordion() {
     setLoading(true);
     try {
       const { token, user } = await loadAuthData();
+      console.log('🔑 Loaded auth data:', { token, user });
       let userObj: any = user;
       if (typeof user === 'string') {
         try {
@@ -81,8 +82,9 @@ export default function MyLeadsCreatedAccordion() {
           userObj = {};
         }
       }
+      console.log('👤 Parsed userObj:', userObj);
       if (!token || !userObj || !userObj.id) {
-        console.error('❌ Missing token or user');
+        console.error('❌ Missing token or user', { token, userObj });
         showToast('Please log in to view your created leads.', 'error');
         return;
       }

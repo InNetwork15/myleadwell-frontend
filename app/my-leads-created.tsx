@@ -775,18 +775,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export const loadAuthData = async () => {
-  try {
-    const token = await AsyncStorage.getItem('authToken');
-    const user = await AsyncStorage.getItem('user');
-    console.log('🔍 loadAuthData:', { token, user });
-    if (!token) {
-      console.warn('⚠️ No auth token found in AsyncStorage');
-    }
-    return { token, user };
-  } catch (error) {
-    console.error('❌ Failed to load auth data:', error);
-    return { token: null, user: null };
-  }
-};

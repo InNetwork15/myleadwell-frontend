@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
-import { loadAuthData } from '../utils/auth';
+import { logout, loadAuthData } from '../utils/auth';
 import { API_BASE_URL } from '../utils/config';
 
 

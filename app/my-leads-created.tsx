@@ -84,7 +84,6 @@ const response = await axios.get(
   {
     headers: { Authorization: `Bearer ${token}` },
   }
-);
 
       // ✅ Type check before mapping
       if (!Array.isArray(response.data)) {
@@ -154,7 +153,7 @@ useEffect(() => {
                 },
             });
 
-            const formattedLeads = response.data.map((e) => ({
+            const formattedLeads = response.data.map((e: any) => ({
                 ...e,
                 distribution_method: e.distribution_method || 'UNSPECIFIED',
                 preferred_providers: e.preferred_providers || {},
@@ -163,7 +162,7 @@ useEffect(() => {
 
             console.log('📦 Loaded leads with defaults:', formattedLeads);
             setLeads(formattedLeads);
-        } catch (e) {
+        } catch (e: any) {
             console.error('❌ Failed to fetch leads:', e.response?.data || e.message);
             const errorMsg =
                 e.response?.status === 401
@@ -632,10 +631,13 @@ useEffect(() => {
                 </View>
               )}
              </View>
-          ))
-        ) : (
+          )
+        );
+      })
+      : (
         <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
-      )}
+      )
+      }
       <Toast />
     </ScrollView>
   );

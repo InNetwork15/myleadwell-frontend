@@ -1,14 +1,16 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   ActivityIndicator, StyleSheet, ToastAndroid, Platform, Switch,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
+import { loadAuthData } from '../utils/auth';
 import { API_BASE_URL } from '../utils/config';
+
 
 const JOB_TITLES = [
   'Real Estate Agent',
@@ -56,9 +58,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
 };
 
 export default function MyLeadsCreatedAccordion() {
-  const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,34 +67,34 @@ export default function MyLeadsCreatedAccordion() {
   const [showRecent, setShowRecent] = useState(false);
   const [showAvailableRoles, setShowAvailableRoles] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const fetchUserProfile = async (token: string) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('✅ Loaded user profile:', response.data);
-      setUser(response.data);
-      return response.data;
-    } catch (error: any) {
-      console.error('❌ Error fetching user profile:', error?.response?.data || error);
-      showToast('Failed to load user profile. Please try again.', 'error');
-      return null;
-    }
-  };
+  const [providersLoading, setProvidersLoading] = useState(true);
+  const router = useRouter();
 
   const fetchLeads = async () => {
-    if (!token || !user) {
-      showToast('Please log in to view your created leads.', 'error');
-      router.replace('/login');
-      return;
-    }
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/my-leads-created/${user.id}`, {
+      const { token, user } = await loadAuthData();
+      console.log('🔑 Loaded auth data:', { token, user });
+      let userObj: any = user;
+      if (typeof user === 'string') {
+        try {
+          userObj = JSON.parse(user);
+        } catch {
+          userObj = {};
+        }
+      }
+      console.log('👤 Parsed userObj:', userObj);
+      if (!token || !userObj || !userObj.id) {
+        console.error('❌ Missing token or user', { token, userObj });
+        showToast('Please log in to view your created leads.', 'error');
+        return;
+      }
+      console.log('👤 User ID:', userObj.id);
+      const response = await axios.get(`${API_BASE_URL}/my-leads-created/${userObj.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // ✅ Type check before mapping
       if (!Array.isArray(response.data)) {
         console.error('❌ Expected an array of leads but got:', response.data);
         showToast('Failed to load leads: unexpected response format.', 'error');
@@ -120,13 +119,16 @@ export default function MyLeadsCreatedAccordion() {
         last_updated: lead.last_updated || null,
       }));
 
-      console.log('📦 Loaded leads:', leadsWithProperData);
+      console.log('📦 Loaded leads with defaults:', leadsWithProperData);
       setLeads(leadsWithProperData);
     } catch (error: any) {
-      console.error('❌ Error fetching leads:', error.response?.data || error.message);
-      const errorMessage = error.response?.status === 401
-        ? 'Unauthorized. Please log in again.'
-        : error.response?.data?.error || 'Failed to load your created leads.';
+      if (error.response?.status === 401) {
+        showToast('Unauthorized. Please log in again.', 'error');
+        router.push('/login');
+        return;
+      }
+      console.error('❌ Failed to fetch leads:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.error || 'Failed to load your created leads. Please try again.';
       showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
@@ -134,21 +136,51 @@ export default function MyLeadsCreatedAccordion() {
   };
 
   const fetchProviders = async () => {
-    if (!token) {
-      showToast('Please log in to load providers.', 'error');
-      return;
-    }
     try {
+      const { token } = await loadAuthData();
+      console.log('🔑 fetchProviders: token=', token);
+      if (!token) {
+        console.error('❌ No token found for providers request');
+        showToast('Please log in to load providers.', 'error');
+        router.push('/login');
+        return;
+      }
       const response = await axios.get(`${API_BASE_URL}/providers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProviders(response.data);
       console.log('✅ Providers loaded:', response.data);
     } catch (error: any) {
-      console.error('❌ Error fetching providers:', error.response?.data || error.message);
-      showToast('Failed to load providers.', 'error');
+      console.error('❌ Failed to load providers:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      const errorMessage = error.response?.status === 401
+        ? 'Unauthorized. Please log in again.'
+        : 'Failed to load providers. Some functionality may be limited.';
+      showToast(errorMessage, 'error');
+      if (error.response?.status === 401) {
+        router.push('/login');
+      }
+    } finally {
+      setProvidersLoading(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      const loadData = async () => {
+        await fetchLeads();
+        if (isActive) await fetchProviders();
+      };
+      loadData();
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   const toggleAccordion = (id: string) => {
     setExpandedLeadId(expandedLeadId === id ? null : id);
@@ -178,45 +210,50 @@ export default function MyLeadsCreatedAccordion() {
   };
 
   const saveLead = async (leadId: string) => {
-    if (!token || !user) {
-      showToast('Please log in to save leads.', 'error');
-      router.replace('/login');
-      return;
-    }
     try {
+      const { token } = await loadAuthData();
       const lead = leads.find((l) => l.lead_id === leadId);
-      if (!lead) {
-        showToast('Lead not found.', 'error');
+      if (!token || !lead) {
+        console.error('❌ Missing token or lead data');
+        showToast('Token or lead data is missing.', 'error');
         return;
       }
 
+      // Validate distribution method
       if (!lead.distribution_method || !['JUMPBALL', 'NETWORK'].includes(lead.distribution_method)) {
+        console.error('❌ Missing or invalid distribution_method for lead:', leadId);
         showToast('Distribution method must be JUMPBALL or NETWORK.', 'error');
         return;
       }
 
+      // Validate that at least one role is enabled
       const hasEnabledRole = Object.values(lead.role_enabled).some(enabled => enabled);
       if (!hasEnabledRole) {
+        console.error('❌ No roles enabled for lead:', leadId);
         showToast('At least one role must be enabled.', 'error');
         return;
       }
 
+      // Validate affiliate prices for enabled roles
       for (const [role, enabled] of Object.entries(lead.role_enabled)) {
         if (enabled) {
           const price = lead.affiliate_prices_by_role[role] || 0;
           if (typeof price !== 'number' || price <= 0) {
+            console.error(`❌ Invalid price for role ${role} in lead ${leadId}:`, price);
             showToast(`Price for ${role} must be a positive number.`, 'error');
             return;
           }
         }
       }
 
+      // For NETWORK, ensure preferred providers are selected for enabled roles
       if (lead.distribution_method === 'NETWORK') {
         for (const [role, enabled] of Object.entries(lead.role_enabled)) {
           if (enabled) {
             const providersForRole = lead.preferred_providers_by_role[role] || [];
             if (providersForRole.length === 0) {
-              showToast(`At least one provider must be selected for ${role}.`, 'error');
+              console.error(`❌ No preferred providers for enabled role ${role} in lead ${leadId}`);
+              showToast(`At least one preferred provider must be selected for ${role} in NETWORK distribution.`, 'error');
               return;
             }
           }
@@ -231,10 +268,14 @@ export default function MyLeadsCreatedAccordion() {
         affiliate_prices_by_role: lead.affiliate_prices_by_role,
       };
 
+      console.log('🔍 Saving lead with payload:', payload);
+
       setSavingLeadId(leadId);
       const response = await axios.put(`${API_BASE_URL}/leads/${leadId}/update`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log('✅ Save response:', response.data);
 
       setLeads((prev) =>
         prev.map((l) =>
@@ -243,35 +284,26 @@ export default function MyLeadsCreatedAccordion() {
       );
 
       showToast('Lead updated successfully.', 'success');
-    } catch (error: any) {
-      console.error('❌ Error saving lead:', error.response?.data || error.message);
-      const errorMessage = error.response?.status === 401
+    } catch (e: any) {
+      console.error('❌ Error saving lead:', {
+        message: e.message,
+        response: e.response?.data,
+        status: e.response?.status,
+        headers: e.response?.headers,
+      });
+
+      const errorMessage = e.response?.status === 401
         ? 'Unauthorized. Please log in again.'
-        : error.response?.data?.error || 'Failed to save lead.';
+        : e.response?.status === 403
+        ? 'You are not authorized to update this lead.'
+        : e.response?.data?.error || 'Failed to save lead. Please try again.';
       showToast(errorMessage, 'error');
     } finally {
       setSavingLeadId(null);
     }
   };
 
-  useEffect(() => {
-    const init = async () => {
-      const storedToken = await AsyncStorage.getItem('token');
-      if (!storedToken) {
-        showToast('Please log in to view leads.', 'error');
-        router.replace('/login');
-        return;
-      }
-      setToken(storedToken);
-      const userLoaded = await fetchUserProfile(storedToken);
-      if (userLoaded) {
-        fetchLeads();
-        fetchProviders();
-      }
-    };
-    init();
-  }, []);
-
+  // Filter leads based on selected criteria and search query
   const filteredLeads = leads.filter((lead) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -308,9 +340,12 @@ export default function MyLeadsCreatedAccordion() {
     return true;
   });
 
-  if (loading) return <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 50 }} />;
+  if (loading || providersLoading) {
+    return <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 50 }} />;
+  }
 
   console.log('🧪 Leads rendered:', filteredLeads);
+  console.log('🔍 API_BASE_URL:', API_BASE_URL);
 
   return (
     <ScrollView style={styles.container}>
@@ -354,7 +389,7 @@ export default function MyLeadsCreatedAccordion() {
             value={showRecent}
             onValueChange={(value) => setShowRecent(value)}
             trackColor={{ false: '#767577', true: '#007bff' }}
-            thumbColor={showRecent ? '#fff' : '#f4f3f4' }
+            thumbColor={showRecent ? '#fff' : '#f4f3f4'}
           />
         </View>
         <View style={styles.filterRow}>
@@ -363,7 +398,7 @@ export default function MyLeadsCreatedAccordion() {
             value={showAvailableRoles}
             onValueChange={(value) => setShowAvailableRoles(value)}
             trackColor={{ false: '#767577', true: '#007bff' }}
-            thumbColor={showAvailableRoles ? '#fff' : '#f4f3f4' }
+            thumbColor={showAvailableRoles ? '#fff' : '#f4f3f4'}
           />
         </View>
       </View>
@@ -379,6 +414,7 @@ export default function MyLeadsCreatedAccordion() {
             (p) => p.job_title === activeRole && !selectedProviders.includes(String(p.id))
           );
 
+          // Check if there are enabled roles that haven't been purchased
           const enabledRoles = Object.entries(lead.role_enabled)
             .filter(([_, enabled]) => enabled)
             .map(([role]) => role);
@@ -583,7 +619,7 @@ export default function MyLeadsCreatedAccordion() {
                       styles.saveButton,
                       { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
                     ]}
-                    onPress={() => saveLead(lead.lead_id)}
+                    onPress={() => saveLead(lead.lelead_id)}
                     disabled={savingLeadId === lead.lead_id}
                   >
                     <Text style={styles.saveText}>
@@ -739,3 +775,30 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const logout = async () => {
+  try {
+    await AsyncStorage.removeItem('authToken');
+    await AsyncStorage.removeItem('user');
+    console.log('✅ AsyncStorage cleared');
+  } catch (error) {
+    console.error('❌ Failed to clear AsyncStorage:', error);
+  }
+};
+
+export const loadAuthData = async () => {
+  try {
+    const token = await AsyncStorage.getItem('authToken');
+    const user = await AsyncStorage.getItem('user');
+    console.log('🔍 loadAuthData:', { token, user });
+    if (!token) {
+      console.warn('⚠️ No auth token found in AsyncStorage');
+    }
+    return { token, user };
+  } catch (error) {
+    console.error('❌ Failed to load auth data:', error);
+    return { token: null, user: null };
+  }
+};

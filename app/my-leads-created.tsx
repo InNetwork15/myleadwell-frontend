@@ -28,7 +28,7 @@ import { API_BASE_URL } from '../config'; // adjust path if needed
 
 // Utility to load auth data from AsyncStorage
 async function loadAuthData() {
-    const token = await AsyncStorage.getItem('token');
+    const token = await AsyncStorage.getItem('authToken');
     const userString = await AsyncStorage.getItem('user');
     let user = null;
     try {

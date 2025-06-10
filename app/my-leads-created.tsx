@@ -403,10 +403,9 @@ useEffect(() => {
         filteredLeads.map((lead, index) => {
           const isExpanded = expandedLeadId === lead.lead_id;
           const activeRole = activeTabs[lead.lead_id] || JOB_TITLES[0];
-          const selectedProviders = lead.preferred_providers_by_role[activeRole] || [];
-          const availableProviders = providers.filter(
-            (p) => p.job_title === activeRole && !selectedProviders.includes(String(p.id))
-          );
+const selectedProviders = Array.isArray(lead.preferred_providers_by_role?.[activeRole])
+  ? lead.preferred_providers_by_role[activeRole]
+  : [];
 
           // Check if there are enabled roles that haven't been purchased
           const enabledRoles = Object.entries(lead.role_enabled)

@@ -633,9 +633,9 @@ useEffect(() => {
               )}
             </View>
           )
-        ) : (
-          <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
         )
+      ) : (
+        <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
       )}
       <Toast />
     </ScrollView>

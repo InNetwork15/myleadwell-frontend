@@ -9,7 +9,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { loadAuthData } from '../utils/auth';
-import { API_BASE_URL } from '../utils/config';
+import { BASE_URL } from '../utils/config';
 
 const JOB_TITLES = [
   'Real Estate Agent',
@@ -71,33 +71,25 @@ export default function MyLeadsCreatedAccordion() {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-const { token, user } = await loadAuthData();
+      const { token, user } = await loadAuthData();
+      if (!token || !user) {
+        console.error('❌ Missing token or user');
+        showToast('Please log in to view your created leads.', 'error');
+        return;
+      }
+      console.log('👤 User ID:', user.id);
+      const response = await axios.get(`${BASE_URL}/my-leads-created/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-if (!token || !user) {
-  console.error('❌ Missing token or user');
-  showToast('Please log in to view your created leads.', 'error');
-  return;
-}
-console.log('👤 User ID:', user.id);
-const response = await axios.get(
-  `${API_BASE_URL}/my-leads-created/${userId}`,
-  {
-    headers: { Authorization: `Bearer ${token}` },
-  }
       // ✅ Type check before mapping
       if (!Array.isArray(response.data)) {
         console.error('❌ Expected an array of leads but got:', response.data);
         showToast('Failed to load leads: unexpected response format.', 'error');
         setLeads([]);
+        setLoading(false);
         return;
       }
-
-      // ✅ Only map if it's truly an array
-      setLeads(response.data.map((lead: any) => ({
-        ...lead,
-        preferredProviders: lead.preferredProviders || [],
-      })));
-
 
       const leadsWithProperData: Lead[] = response.data.map((lead: any) => ({
         lead_id: lead.lead_id,
@@ -131,7 +123,7 @@ const response = await axios.get(
   const fetchProviders = async () => {
     try {
       const { token } = await loadAuthData();
-      const response = await axios.get(`${API_BASE_URL}/providers`, {
+      const response = await axios.get(`${BASE_URL}/providers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProviders(response.data);
@@ -142,46 +134,12 @@ const response = await axios.get(
     }
   };
 
-useEffect(() => {
-    const fetchLeads = async () => {
-        try {
-            const token = await AsyncStorage.getItem('token');
-            const userId = await AsyncStorage.getItem('user_id');
-
-            if (!token || !userId) {
-                throw new Error('Token or User ID not found');
-            }
-
-            const response = await axios.get(`${API_BASE_URL}/my-leads-created/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const formattedLeads = response.data.map((e: any) => ({
-                ...e,
-                distribution_method: e.distribution_method || 'UNSPECIFIED',
-                preferred_providers: e.preferred_providers || {},
-                last_updated: e.last_updated || null,
-            }));
-
-            console.log('📦 Loaded leads with defaults:', formattedLeads);
-            setLeads(formattedLeads);
-        } catch (e: any) {
-            console.error('❌ Failed to fetch leads:', e.response?.data || e.message);
-            const errorMsg =
-                e.response?.status === 401
-                    ? 'Unauthorized. Please log in again.'
-                    : e.response?.data?.error || 'Failed to load your created leads. Please try again.';
-            showToast(errorMsg, 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    fetchLeads();
-}, []);
-
+  useFocusEffect(
+    useCallback(() => {
+      fetchLeads();
+      fetchProviders();
+    }, [])
+  );
 
   const toggleAccordion = (id: string) => {
     setExpandedLeadId(expandedLeadId === id ? null : id);
@@ -272,7 +230,7 @@ useEffect(() => {
       console.log('🔍 Saving lead with payload:', payload);
 
       setSavingLeadId(leadId);
-      const response = await axios.put(`${API_BASE_URL}/leads/${leadId}/update`, payload, {
+      const response = await axios.put(`${BASE_URL}/leads/${leadId}/update`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -401,13 +359,16 @@ useEffect(() => {
         </View>
       </View>
 
-      {filteredLeads && Array.isArray(filteredLeads) && filteredLeads.length > 0 ? (
+      {filteredLeads.length === 0 ? (
+        <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
+      ) : (
         filteredLeads.map((lead, index) => {
           const isExpanded = expandedLeadId === lead.lead_id;
           const activeRole = activeTabs[lead.lead_id] || JOB_TITLES[0];
-          const selectedProviders = Array.isArray(lead.preferred_providers_by_role?.[activeRole])
-            ? lead.preferred_providers_by_role[activeRole]
-            : [];
+          const selectedProviders = lead.preferred_providers_by_role[activeRole] || [];
+          const availableProviders = providers.filter(
+            (p) => p.job_title === activeRole && !selectedProviders.includes(String(p.id))
+          );
 
           // Check if there are enabled roles that haven't been purchased
           const enabledRoles = Object.entries(lead.role_enabled)
@@ -417,18 +378,18 @@ useEffect(() => {
           const canChangeDistribution = enabledRoles.some(role => !purchasedRoles.includes(role));
 
           return (
-            <View key={lead.lead_id} style={styles.card}>
+            <View key={lead.purchase_id || lead.lead_id || index} style={styles.card}>
               <TouchableOpacity onPress={() => toggleAccordion(lead.lead_id)}>
                 <Text style={styles.title}>{lead.lead_name}</Text>
                 <Text>{lead.state}, {lead.county}</Text>
                 <Text>Distribution: {lead.distribution_method || 'Not Set'}</Text>
                 <Text>💰 Affiliate Prices:</Text>
-                {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
+                {Object.entries(lead.affiliate_prices_by_role).map(([role, price]) => (
                   <Text key={role} style={styles.priceDetail}>
                     {role}: ${typeof price === 'number' ? price.toFixed(2) : 'Not set'}
                   </Text>
                 ))}
-                {Array.isArray(lead.purchased_by) && lead.purchased_by.length > 0 ? (
+                {lead.purchased_by && lead.purchased_by.length > 0 ? (
                   <View style={styles.purchasedByContainer}>
                     <Text style={styles.purchasedByLabel}>Purchased By:</Text>
                     <View style={styles.purchasedByNames}>
@@ -572,7 +533,7 @@ useEffect(() => {
                     />
 
                     <Text style={styles.label}>👥 Providers:</Text>
-                    {(selectedProviders || []).map((id) => {
+                    {selectedProviders.map((id) => {
                       const provider = providers.find((p) => String(p.id) === id);
                       if (!provider) return null;
                       return (
@@ -590,35 +551,23 @@ useEffect(() => {
                       );
                     })}
 
-                    {/*
-                      Define availableProviders as providers not already selected for this role
-                    */}
-                    {(() => {
-                      const availableProviders = providers.filter(
-                        (p) =>
-                          p.job_title === activeRole &&
-                          !selectedProviders.includes(String(p.id))
-                      );
-                      return (
-                        <Picker
-                          selectedValue=""
-                          onValueChange={(selectedId) => {
-                            if (!selectedId) return;
-                            toggleProviderByRole(lead.lead_id, selectedId, activeRole);
-                          }}
-                          enabled={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
-                        >
-                          <Picker.Item label="Add a provider..." value="" />
-                          {availableProviders.map((p) => (
-                            <Picker.Item
-                              key={p.id}
-                              label={`${p.first_name} ${p.last_name} (${p.job_title})`}
-                              value={String(p.id)}
-                            />
-                          ))}
-                        </Picker>
-                      );
-                    })()}
+                    <Picker
+                      selectedValue=""
+                      onValueChange={(selectedId) => {
+                        if (!selectedId) return;
+                        toggleProviderByRole(lead.lead_id, selectedId, activeRole);
+                      }}
+                      enabled={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
+                    >
+                      <Picker.Item label="Add a provider..." value="" />
+                      {availableProviders.map((p) => (
+                        <Picker.Item
+                          key={p.id}
+                          label={`${p.first_name} ${p.last_name} (${p.job_title})`}
+                          value={String(p.id)}
+                        />
+                      ))}
+                    </Picker>
                   </View>
 
                   <TouchableOpacity
@@ -635,14 +584,10 @@ useEffect(() => {
                   </TouchableOpacity>
                 </View>
               )}
-             </View>
-          )
-        );
-      })
-      : (
-        <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
-      )
-      }
+            </View>
+          );
+        })
+      )}
       <Toast />
     </ScrollView>
   );

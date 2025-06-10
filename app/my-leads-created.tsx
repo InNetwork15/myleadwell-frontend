@@ -25,7 +25,7 @@ import { API_BASE_URL} from '../config'; // adjust path if needed
 const JOB_TITLES = ['Real Estate Agent', 'Loan Originator', 'Title Agent', 'Insurance Agent', 'Home Inspector'];
 
 interface Provider {
-  id: string;
+  id: string | number;
   first_name: string;
   last_name: string;
   job_title: string;

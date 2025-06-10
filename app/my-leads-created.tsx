@@ -776,16 +776,6 @@ const styles = StyleSheet.create({
   },
 });
 
-export const logout = async () => {
-  try {
-    await AsyncStorage.removeItem('authToken');
-    await AsyncStorage.removeItem('user');
-    console.log('✅ AsyncStorage cleared');
-  } catch (error) {
-    console.error('❌ Failed to clear AsyncStorage:', error);
-  }
-};
-
 export const loadAuthData = async () => {
   try {
     const token = await AsyncStorage.getItem('authToken');

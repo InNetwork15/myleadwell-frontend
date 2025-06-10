@@ -571,7 +571,7 @@ useEffect(() => {
                       />
 
                       <Text style={styles.label}>👥 Providers:</Text>
-                      {selectedProviders.map((id) => {
+                      {selectedProviders && Array.isArray(selectedProviders) && selectedProviders.length > 0 && selectedProviders.map((id) => {
                         const provider = providers.find((p) => String(p.id) === id);
                         if (!provider) return null;
                         return (

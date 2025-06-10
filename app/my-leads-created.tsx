@@ -562,77 +562,77 @@ useEffect(() => {
                                 }
                               : l
                           )
-                        }
-                        editable={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
-                      />
+                        )
+                      }
+                      editable={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
+                    />
 
-                      <Text style={styles.label}>👥 Providers:</Text>
-                      {(selectedProviders || []).map((id) => {
-                        const provider = providers.find((p) => String(p.id) === id);
-                        if (!provider) return null;
-                        return (
-                          <View key={id} style={styles.providerRow}>
-                            <Text>
-                              {provider.first_name} {provider.last_name}
-                            </Text>
-                            <TouchableOpacity
-                              onPress={() => toggleProviderByRole(lead.lead_id, id, activeRole)}
-                              disabled={lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
-                            >
-                              <Text style={styles.removeText}>✕</Text>
-                            </TouchableOpacity>
-                          </View>
-                        );
-                      })}
-
-                      {/*
-                        Define availableProviders as providers not already selected for this role
-                      */}
-                      {(() => {
-                        const availableProviders = providers.filter(
-                          (p) =>
-                            p.job_title === activeRole &&
-                            !selectedProviders.includes(String(p.id))
-                        );
-                        return (
-                          <Picker
-                            selectedValue=""
-                            onValueChange={(selectedId) => {
-                              if (!selectedId) return;
-                              toggleProviderByRole(lead.lead_id, selectedId, activeRole);
-                            }}
-                            enabled={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
+                    <Text style={styles.label}>👥 Providers:</Text>
+                    {(selectedProviders || []).map((id) => {
+                      const provider = providers.find((p) => String(p.id) === id);
+                      if (!provider) return null;
+                      return (
+                        <View key={id} style={styles.providerRow}>
+                          <Text>
+                            {provider.first_name} {provider.last_name}
+                          </Text>
+                          <TouchableOpacity
+                            onPress={() => toggleProviderByRole(lead.lead_id, id, activeRole)}
+                            disabled={lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
                           >
-                            <Picker.Item label="Add a provider..." value="" />
-                            {availableProviders.map((p) => (
-                              <Picker.Item
-                                key={p.id}
-                                label={`${p.first_name} ${p.last_name} (${p.job_title})`}
-                                value={String(p.id)}
-                              />
-                            ))}
-                          </Picker>
-                        );
-                      })()}
-                    </View>
+                            <Text style={styles.removeText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
 
-                    <TouchableOpacity
-                      style={[
-                        styles.saveButton,
-                        { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
-                      ]}
-                      onPress={() => saveLead(lead.lead_id)}
-                      disabled={savingLeadId === lead.lead_id}
-                    >
-                      <Text style={styles.saveText}>
-                        {savingLeadId === lead.lead_id ? 'Saving...' : 'SAVE LEAD DISTRIBUTION'}
-                      </Text>
-                    </TouchableOpacity>
+                    {/*
+                      Define availableProviders as providers not already selected for this role
+                    */}
+                    {(() => {
+                      const availableProviders = providers.filter(
+                        (p) =>
+                          p.job_title === activeRole &&
+                          !selectedProviders.includes(String(p.id))
+                      );
+                      return (
+                        <Picker
+                          selectedValue=""
+                          onValueChange={(selectedId) => {
+                            if (!selectedId) return;
+                            toggleProviderByRole(lead.lead_id, selectedId, activeRole);
+                          }}
+                          enabled={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
+                        >
+                          <Picker.Item label="Add a provider..." value="" />
+                          {availableProviders.map((p) => (
+                            <Picker.Item
+                              key={p.id}
+                              label={`${p.first_name} ${p.last_name} (${p.job_title})`}
+                              value={String(p.id)}
+                            />
+                          ))}
+                        </Picker>
+                      );
+                    })()}
                   </View>
-                )}
-              </View>
-            );
-          })
+
+                  <TouchableOpacity
+                    style={[
+                      styles.saveButton,
+                      { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
+                    ]}
+                    onPress={() => saveLead(lead.lead_id)}
+                    disabled={savingLeadId === lead.lead_id}
+                  >
+                    <Text style={styles.saveText}>
+                      {savingLeadId === lead.lead_id ? 'Saving...' : 'SAVE LEAD DISTRIBUTION'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )
         ) : (
           <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
         )

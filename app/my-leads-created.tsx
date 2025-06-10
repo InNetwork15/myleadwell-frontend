@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
-import { logout, loadAuthData } from '../utils/auth';
+import { loadAuthData } from '../utils/auth';
 import { API_BASE_URL } from '../utils/config';
 
 
@@ -619,7 +619,7 @@ export default function MyLeadsCreatedAccordion() {
                       styles.saveButton,
                       { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
                     ]}
-                    onPress={() => saveLead(lead.lelead_id)}
+                    onPress={() => saveLead(lead.lead_id)}
                     disabled={savingLeadId === lead.lead_id}
                   >
                     <Text style={styles.saveText}>

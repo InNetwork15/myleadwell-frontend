@@ -400,8 +400,8 @@ useEffect(() => {
       {filteredLeads.length === 0 ? (
         <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
       ) : (
-        leads && Array.isArray(leads) && leads.length > 0 ? (
-          leads.map((lead, index) => {
+        filteredLeads && Array.isArray(filteredLeads) && filteredLeads.length > 0 ? (
+          filteredLeads.map((lead, index) => {
             const isExpanded = expandedLeadId === lead.lead_id;
             const activeRole = activeTabs[lead.lead_id] || JOB_TITLES[0];
             const selectedProviders = Array.isArray(lead.preferred_providers_by_role?.[activeRole])
@@ -625,7 +625,7 @@ useEffect(() => {
                         styles.saveButton,
                         { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
                       ]}
-                      onPress={() => saveLead(lead.lead_id)}
+                      onPress={() => saveLead(lead.lelead_id)}
                       disabled={savingLeadId === lead.lead_id}
                     >
                       <Text style={styles.saveText}>

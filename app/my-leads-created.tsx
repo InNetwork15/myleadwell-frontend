@@ -84,15 +84,20 @@ const response = await axios.get(
   {
     headers: { Authorization: `Bearer ${token}` },
   }
-
       // ✅ Type check before mapping
       if (!Array.isArray(response.data)) {
         console.error('❌ Expected an array of leads but got:', response.data);
         showToast('Failed to load leads: unexpected response format.', 'error');
         setLeads([]);
-        setLoading(false);
         return;
       }
+
+      // ✅ Only map if it's truly an array
+      setLeads(response.data.map((lead: any) => ({
+        ...lead,
+        preferredProviders: lead.preferredProviders || [],
+      })));
+
 
       const leadsWithProperData: Lead[] = response.data.map((lead: any) => ({
         lead_id: lead.lead_id,

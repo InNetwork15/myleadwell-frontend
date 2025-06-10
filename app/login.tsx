@@ -17,22 +17,27 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-      const { token, user } = response.data || {};
+      const { token, user: userObj } = response.data || {};
 
-      if (!token || !user) {
-        console.log('❌ Missing token or user', { token, user });
+      if (!token || !userObj) {
+        console.log('❌ Missing token or user', { token, userObj });
         return;
       }
 
-      // Store token and full user object
-      await AsyncStorage.setItem('authToken', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      const userId = parseInt(userObj); // Convert string to number if needed
 
-      // Optionally, confirm storage
-      console.log('authToken:', await AsyncStorage.getItem('authToken'));
-      console.log('user:', await AsyncStorage.getItem('user'));
+      const success = await loginUser(token, userId);
 
-      router.replace('/HomeScreen');
+      if (!success) {
+        throw new Error('Failed to store login data');
+      }
+
+      await AsyncStorage.setItem('authData', JSON.stringify({ token, user: userId }));
+      await AsyncStorage.setItem('user_id', userId.toString());
+
+      setTimeout(() => {
+        router.replace('/HomeScreen');
+      }, 100);
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Login Failed', 'Invalid email or password');

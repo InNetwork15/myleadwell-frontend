@@ -24,20 +24,12 @@ const LoginScreen = () => {
         return;
       }
 
-      const userId = parseInt(userObj); // Convert string to number if needed
+      // Await both setItem calls
+      await AsyncStorage.setItem('authToken', token);
+      await AsyncStorage.setItem('user', JSON.stringify(userObj));
 
-      const success = await loginUser(token, userId);
-
-      if (!success) {
-        throw new Error('Failed to store login data');
-      }
-
-      await AsyncStorage.setItem('authData', JSON.stringify({ token, user: userId }));
-      await AsyncStorage.setItem('user_id', userId.toString());
-
-      setTimeout(() => {
-        router.replace('/HomeScreen');
-      }, 100);
+      // Only navigate after storage is complete
+      router.push('/my-leads-created');
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Login Failed', 'Invalid email or password');

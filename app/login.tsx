@@ -17,20 +17,23 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-      const { token, user } = response.data || {};
+      const { token, user: userObj } = response.data || {};
 
-      if (!token || !user) {
-        throw new Error('Invalid login response');
+      if (!token || !userObj) {
+        console.log('❌ Missing token or user', { token, userObj });
+        return;
       }
 
-const success = await loginUser(token, user.id);
+      const userId = parseInt(userObj); // Convert string to number if needed
+
+      const success = await loginUser(token, userId);
 
       if (!success) {
         throw new Error('Failed to store login data');
       }
 
-      await AsyncStorage.setItem('authData', JSON.stringify({ token, user }));
-      await AsyncStorage.setItem('user_id', user.id.toString());
+      await AsyncStorage.setItem('authData', JSON.stringify({ token, user: userId }));
+      await AsyncStorage.setItem('user_id', userId.toString());
 
       setTimeout(() => {
         router.replace('/HomeScreen');

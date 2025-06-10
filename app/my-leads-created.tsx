@@ -589,23 +589,35 @@ useEffect(() => {
                         );
                       })}
 
-                      <Picker
-                        selectedValue=""
-                        onValueChange={(selectedId) => {
-                          if (!selectedId) return;
-                          toggleProviderByRole(lead.lead_id, selectedId, activeRole);
-                        }}
-                        enabled={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
-                      >
-                        <Picker.Item label="Add a provider..." value="" />
-                        {availableProviders.map((p) => (
-                          <Picker.Item
-                            key={p.id}
-                            label={`${p.first_name} ${p.last_name} (${p.job_title})`}
-                            value={String(p.id)}
-                          />
-                        ))}
-                      </Picker>
+                      {/*
+                        Define availableProviders as providers not already selected for this role
+                      */}
+                      {(() => {
+                        const availableProviders = providers.filter(
+                          (p) =>
+                            p.job_title === activeRole &&
+                            !selectedProviders.includes(String(p.id))
+                        );
+                        return (
+                          <Picker
+                            selectedValue=""
+                            onValueChange={(selectedId) => {
+                              if (!selectedId) return;
+                              toggleProviderByRole(lead.lead_id, selectedId, activeRole);
+                            }}
+                            enabled={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
+                          >
+                            <Picker.Item label="Add a provider..." value="" />
+                            {availableProviders.map((p) => (
+                              <Picker.Item
+                                key={p.id}
+                                label={`${p.first_name} ${p.last_name} (${p.job_title})`}
+                                value={String(p.id)}
+                              />
+                            ))}
+                          </Picker>
+                        );
+                      })()}
                     </View>
 
                     <TouchableOpacity
@@ -628,7 +640,7 @@ useEffect(() => {
         ) : (
           <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
         )
-      }
+      )}
       <Toast />
     </ScrollView>
   );

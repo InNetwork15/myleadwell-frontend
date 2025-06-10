@@ -397,181 +397,177 @@ useEffect(() => {
         </View>
       </View>
 
-      {filteredLeads.length === 0 ? (
-        <Text style={styles.noData}>No leads match the selected filters or search query.</Text>
-      ) : (
-        filteredLeads && Array.isArray(filteredLeads) && filteredLeads.length > 0 ? (
-          filteredLeads.map((lead, index) => {
-            const isExpanded = expandedLeadId === lead.lead_id;
-            const activeRole = activeTabs[lead.lead_id] || JOB_TITLES[0];
-            const selectedProviders = Array.isArray(lead.preferred_providers_by_role?.[activeRole])
-              ? lead.preferred_providers_by_role[activeRole]
-              : [];
+      {filteredLeads && Array.isArray(filteredLeads) && filteredLeads.length > 0 ? (
+        filteredLeads.map((lead, index) => {
+          const isExpanded = expandedLeadId === lead.lead_id;
+          const activeRole = activeTabs[lead.lead_id] || JOB_TITLES[0];
+          const selectedProviders = Array.isArray(lead.preferred_providers_by_role?.[activeRole])
+            ? lead.preferred_providers_by_role[activeRole]
+            : [];
 
-            // Check if there are enabled roles that haven't been purchased
-            const enabledRoles = Object.entries(lead.role_enabled)
-              .filter(([_, enabled]) => enabled)
-              .map(([role]) => role);
-            const purchasedRoles = lead.purchased_by.map(buyer => buyer.job_title);
-            const canChangeDistribution = enabledRoles.some(role => !purchasedRoles.includes(role));
+          // Check if there are enabled roles that haven't been purchased
+          const enabledRoles = Object.entries(lead.role_enabled)
+            .filter(([_, enabled]) => enabled)
+            .map(([role]) => role);
+          const purchasedRoles = lead.purchased_by.map(buyer => buyer.job_title);
+          const canChangeDistribution = enabledRoles.some(role => !purchasedRoles.includes(role));
 
-            return (
-              <View key={lead.purchase_id || lead.lead_id || index} style={styles.card}>
-                <TouchableOpacity onPress={() => toggleAccordion(lead.lead_id)}>
-                  <Text style={styles.title}>{lead.lead_name}</Text>
-                  <Text>{lead.state}, {lead.county}</Text>
-                  <Text>Distribution: {lead.distribution_method || 'Not Set'}</Text>
-                  <Text>💰 Affiliate Prices:</Text>
-                  {Object.entries(lead.affiliate_prices_by_role).map(([role, price]) => (
-                    <Text key={role} style={styles.priceDetail}>
-                      {role}: ${typeof price === 'number' ? price.toFixed(2) : 'Not set'}
-                    </Text>
-                  ))}
-                  {lead.purchased_by && lead.purchased_by.length > 0 ? (
-                    <View style={styles.purchasedByContainer}>
-                      <Text style={styles.purchasedByLabel}>Purchased By:</Text>
-                      <View style={styles.purchasedByNames}>
-                        {lead.purchased_by.map((buyer, idx) => (
-                          <View key={idx} style={styles.purchasedBadge}>
-                            <Text style={styles.purchasedName}>
-                              {buyer.job_title}: {buyer.first_name} {buyer.last_name}
-                            </Text>
-                          </View>
-                        ))}
+          return (
+            <View key={lead.lead_id} style={styles.card}>
+              <TouchableOpacity onPress={() => toggleAccordion(lead.lead_id)}>
+                <Text style={styles.title}>{lead.lead_name}</Text>
+                <Text>{lead.state}, {lead.county}</Text>
+                <Text>Distribution: {lead.distribution_method || 'Not Set'}</Text>
+                <Text>💰 Affiliate Prices:</Text>
+                {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
+                  <Text key={role} style={styles.priceDetail}>
+                    {role}: ${typeof price === 'number' ? price.toFixed(2) : 'Not set'}
+                  </Text>
+                ))}
+                {Array.isArray(lead.purchased_by) && lead.purchased_by.length > 0 ? (
+                  <View style={styles.purchasedByContainer}>
+                    <Text style={styles.purchasedByLabel}>Purchased By:</Text>
+                    <View style={styles.purchasedByNames}>
+                      {lead.purchased_by.map((buyer, idx) => (
+                        <View key={idx} style={styles.purchasedBadge}>
+                          <Text style={styles.purchasedName}>
+                            {buyer.job_title}: {buyer.first_name} {buyer.last_name}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.purchasedByContainer}>
+                    <Text style={styles.purchasedByLabel}>Purchased By:</Text>
+                    <Text style={styles.notPurchased}>Not Purchased</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {isExpanded && (
+                <View style={styles.expanded}>
+                  <Picker
+                    selectedValue={lead.distribution_method || ''}
+                    onValueChange={(val) => {
+                      setLeads((prev) =>
+                        prev.map((l) =>
+                          l.lead_id === lead.lead_id ? { ...l, distribution_method: val || null } : l
+                        )
+                      );
+                    }}
+                    enabled={canChangeDistribution}
+                  >
+                    <Picker.Item label="Select Distribution Method" value="" />
+                    <Picker.Item label="NETWORK" value="NETWORK" />
+                    <Picker.Item label="JUMPBALL" value="JUMPBALL" />
+                  </Picker>
+
+                  <Text style={styles.label}>💰 Affiliate Prices:</Text>
+                  {JOB_TITLES.map((role) => {
+                    const isRolePurchased = lead.purchased_by.some((buyer) => buyer.job_title === role);
+                    return (
+                      <View key={role} style={styles.priceRow}>
+                        <Text style={styles.priceLabel}>{role}:</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="$0.00"
+                          keyboardType="numeric"
+                          value={lead.affiliate_prices_by_role[role] !== undefined ? String(lead.affiliate_prices_by_role[role]) : '0'}
+                          onChangeText={(text) => {
+                            const value = text ? parseFloat(text) : 0;
+                            setLeads((prev) =>
+                              prev.map((l) =>
+                                l.lead_id === lead.lead_id
+                                  ? {
+                                      ...l,
+                                      affiliate_prices_by_role: {
+                                        ...l.affiliate_prices_by_role,
+                                        [role]: value,
+                                      },
+                                    }
+                                  : l
+                              )
+                            );
+                          }}
+                          editable={!isRolePurchased}
+                        />
                       </View>
-                    </View>
-                  ) : (
-                    <View style={styles.purchasedByContainer}>
-                      <Text style={styles.purchasedByLabel}>Purchased By:</Text>
-                      <Text style={styles.notPurchased}>Not Purchased</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                    );
+                  })}
 
-                {isExpanded && (
-                  <View style={styles.expanded}>
-                    <Picker
-                      selectedValue={lead.distribution_method || ''}
-                      onValueChange={(val) => {
+                  <View style={styles.tabRow}>
+                    {JOB_TITLES.map((role) => {
+                      const isPurchased = lead.purchased_by.some((p) => p.job_title === role);
+                      return (
+                        <TouchableOpacity
+                          key={role}
+                          disabled={isPurchased}
+                          style={[
+                            styles.tab,
+                            activeRole === role && styles.activeTab,
+                            isPurchased && { backgroundColor: '#ccc' },
+                          ]}
+                          onPress={() => toggleTab(lead.lead_id, role)}
+                        >
+                          <Text style={activeRole === role ? styles.activeTabText : styles.tabText}>
+                            {role}
+                            {isPurchased ? ' 🔒' : ''}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.section}>
+                    <Text style={styles.label}>Enable for {activeRole}:</Text>
+                    <TouchableOpacity
+                      onPress={() => {
                         setLeads((prev) =>
                           prev.map((l) =>
-                            l.lead_id === lead.lead_id ? { ...l, distribution_method: val || null } : l
+                            l.lead_id === lead.lead_id
+                              ? {
+                                  ...l,
+                                  role_enabled: {
+                                    ...l.role_enabled,
+                                    [activeRole]: !l.role_enabled?.[activeRole],
+                                  },
+                                }
+                              : l
                           )
                         );
                       }}
-                      enabled={canChangeDistribution}
+                      disabled={lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
                     >
-                      <Picker.Item label="Select Distribution Method" value="" />
-                      <Picker.Item label="NETWORK" value="NETWORK" />
-                      <Picker.Item label="JUMPBALL" value="JUMPBALL" />
-                    </Picker>
+                      <Text style={lead.role_enabled?.[activeRole] ? styles.enabled : styles.disabled}>
+                        {lead.role_enabled?.[activeRole] ? '✅ Enabled' : '🚫 Disabled'}
+                      </Text>
+                    </TouchableOpacity>
 
-                    <Text style={styles.label}>💰 Affiliate Prices:</Text>
-                    {JOB_TITLES.map((role) => {
-                      const isRolePurchased = lead.purchased_by.some((buyer) => buyer.job_title === role);
-                      return (
-                        <View key={role} style={styles.priceRow}>
-                          <Text style={styles.priceLabel}>{role}:</Text>
-                          <TextInput
-                            style={styles.input}
-                            placeholder="$0.00"
-                            keyboardType="numeric"
-                            value={lead.affiliate_prices_by_role[role] !== undefined ? String(lead.affiliate_prices_by_role[role]) : '0'}
-                            onChangeText={(text) => {
-                              const value = text ? parseFloat(text) : 0;
-                              setLeads((prev) =>
-                                prev.map((l) =>
-                                  l.lead_id === lead.lead_id
-                                    ? {
-                                        ...l,
-                                        affiliate_prices_by_role: {
-                                          ...l.affiliate_prices_by_role,
-                                          [role]: value,
-                                        },
-                                      }
-                                    : l
-                                )
-                              );
-                            }}
-                            editable={!isRolePurchased}
-                          />
-                        </View>
-                      );
-                    })}
-
-                    <View style={styles.tabRow}>
-                      {JOB_TITLES.map((role) => {
-                        const isPurchased = lead.purchased_by.some((p) => p.job_title === role);
-                        return (
-                          <TouchableOpacity
-                            key={role}
-                            disabled={isPurchased}
-                            style={[
-                              styles.tab,
-                              activeRole === role && styles.activeTab,
-                              isPurchased && { backgroundColor: '#ccc' },
-                            ]}
-                            onPress={() => toggleTab(lead.lead_id, role)}
-                          >
-                            <Text style={activeRole === role ? styles.activeTabText : styles.tabText}>
-                              {role}
-                              {isPurchased ? ' 🔒' : ''}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-
-                    <View style={styles.section}>
-                      <Text style={styles.label}>Enable for {activeRole}:</Text>
-                      <TouchableOpacity
-                        onPress={() => {
-                          setLeads((prev) =>
-                            prev.map((l) =>
-                              l.lead_id === lead.lead_id
-                                ? {
-                                    ...l,
-                                    role_enabled: {
-                                      ...l.role_enabled,
-                                      [activeRole]: !l.role_enabled?.[activeRole],
-                                    },
-                                  }
-                                : l
-                            )
-                          );
-                        }}
-                        disabled={lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
-                      >
-                        <Text style={lead.role_enabled?.[activeRole] ? styles.enabled : styles.disabled}>
-                          {lead.role_enabled?.[activeRole] ? '✅ Enabled' : '🚫 Disabled'}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <Text style={styles.label}>📝 Note:</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter a note for this role"
-                        value={lead.notes_by_role?.[activeRole] || ''}
-                        onChangeText={(text) =>
-                          setLeads((prev) =>
-                            prev.map((l) =>
-                              l.lead_id === lead.lead_id
-                                ? {
-                                    ...l,
-                                    notes_by_role: {
-                                      ...l.notes_by_role,
-                                      [activeRole]: text,
-                                    },
-                                  }
-                                : l
-                            )
+                    <Text style={styles.label}>📝 Note:</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter a note for this role"
+                      value={lead.notes_by_role?.[activeRole] || ''}
+                      onChangeText={(text) =>
+                        setLeads((prev) =>
+                          prev.map((l) =>
+                            l.lead_id === lead.lead_id
+                              ? {
+                                  ...l,
+                                  notes_by_role: {
+                                    ...l.notes_by_role,
+                                    [activeRole]: text,
+                                  },
+                                }
+                              : l
                           )
                         }
                         editable={!lead.purchased_by.some((buyer) => buyer.job_title === activeRole)}
                       />
 
                       <Text style={styles.label}>👥 Providers:</Text>
-                      {selectedProviders && Array.isArray(selectedProviders) && selectedProviders.length > 0 && selectedProviders.map((id) => {
+                      {(selectedProviders || []).map((id) => {
                         const provider = providers.find((p) => String(p.id) === id);
                         if (!provider) return null;
                         return (
@@ -625,7 +621,7 @@ useEffect(() => {
                         styles.saveButton,
                         { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
                       ]}
-                      onPress={() => saveLead(lead.lelead_id)}
+                      onPress={() => saveLead(lead.lead_id)}
                       disabled={savingLeadId === lead.lead_id}
                     >
                       <Text style={styles.saveText}>

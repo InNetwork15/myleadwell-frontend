@@ -40,6 +40,10 @@ async function loadAuthData() {
 }
 
 const JOB_TITLES = ['Real Estate Agent', 'Loan Originator', 'Title Agent', 'Insurance Agent', 'Home Inspector'];
+const stored = await AsyncStorage.getItem('authData');
+const parsed = JSON.parse(stored || '{}');
+const token = parsed.token;
+
 
 interface Provider {
     id: string | number;

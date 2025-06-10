@@ -29,7 +29,7 @@ const LoginScreen = () => {
       await AsyncStorage.setItem('user', JSON.stringify(userObj));
 
       // Only navigate after storage is complete
-      router.push('/my-leads-created');
+      router.push('/HomeScreen');
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Login Failed', 'Invalid email or password');

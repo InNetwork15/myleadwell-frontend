@@ -775,24 +775,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export const loadAuthData = async () => {
-  try {
-    const token = await AsyncStorage.getItem('authToken');
-    const userStr = await AsyncStorage.getItem('user');
-
-    let user = null;
-    if (userStr) {
-      try {
-        user = JSON.parse(userStr);
-      } catch (err) {
-        console.warn('⚠️ Failed to parse user JSON from AsyncStorage:', err);
-      }
-    }
-
-    return { token, user };
-  } catch (error) {
-    console.error('❌ Failed to load auth data:', error);
-    return { token: null, user: null };
-  }
-};

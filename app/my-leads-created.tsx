@@ -1,24 +1,28 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
-  ActivityIndicator, StyleSheet, ToastAndroid, Platform, Switch,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  Button,
+  Platform,
+  ToastAndroid,
+  TouchableOpacity,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { loadAuthData } from '../utils/auth';
-import { API_BASE_URL } from '../utils/config';
+import * as WebBrowser from 'expo-web-browser';
+import { getUserFromToken } from '../utils/auth';
 
+import { API_BASE_URL} from '../config'; // adjust path if needed
 
-const JOB_TITLES = [
-  'Real Estate Agent',
-  'Loan Originator',
-  'Title Agent',
-  'Insurance Agent',
-  'Home Inspector',
-];
+const JOB_TITLES = ['Real Estate Agent', 'Loan Originator', 'Title Agent', 'Insurance Agent', 'Home Inspector'];
 
 interface Provider {
   id: string;
@@ -27,21 +31,21 @@ interface Provider {
   job_title: string;
 }
 
-interface Lead {
-  lead_id: string;
-  purchase_id?: string;
-  lead_name: string;
-  state: string;
-  county: string;
-  distribution_method: string | null;
-  affiliate_prices_by_role: Record<string, number>;
-  preferred_providers_by_role: Record<string, string[]>;
-  role_enabled: Record<string, boolean>;
-  notes_by_role: Record<string, string>;
-  purchased_by: Array<{ id: string; first_name: string; last_name: string; job_title: string }>;
-  created_at: string;
-  last_updated: string | null;
-}
+  interface Lead {
+    id: number;
+    lead_name: string;
+    lead_email?: string;
+    lead_phone?: string;
+    state: string;
+    county: string;
+    affiliate_name: string; // Added to display affiliate marketer's name
+    purchased_by?: { job_title: string; first_name: string; last_name: string }[];
+    role_enabled?: { [key: string]: boolean };
+    distribution_method: 'JUMPBALL' | 'NETWORK' | string;
+    preferred_provider_ids?: number[];
+    status?: string;
+    provider_price?: number;
+  }
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
   if (Platform.OS === 'android') {

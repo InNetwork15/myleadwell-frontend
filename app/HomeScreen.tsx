@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Alert } from 'react-native'; // <-- Add Image import
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native'; // <-- Add Image import
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -52,17 +52,6 @@ export default function HomeScreen() {
         Toast.show({ type: 'success', text1: 'Logged out successfully' });
     };
 
-    const handleMyLeadsCreatedPress = async () => {
-        const token = await AsyncStorage.getItem('token');
-        const user = await AsyncStorage.getItem('user');
-        if (!token || !user) {
-            Alert.alert('Session expired', 'Please log in again.');
-            router.push('/login');
-        } else {
-            router.push('/my-leads-created');
-        }
-    };
-
     return (
         <View style={styles.container}>
             <Image
@@ -71,7 +60,7 @@ source={require('../assets/leadwellimage.png')}
                 resizeMode="contain"
             />
             <Text style={styles.title}>MyLeadWell</Text>
-            <TouchableOpacity style={styles.button} onPress={handleMyLeadsCreatedPress}>
+            <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads-created')}>
                 <Text style={styles.buttonText}>My Leads Created</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={() => router.push('/AvailableLeadsScreen')}>

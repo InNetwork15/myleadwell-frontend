@@ -12,10 +12,14 @@ import {
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { AsyncStorage as LegacyAsyncStorage } from 'react-native'; // fallback for old builds
+import AsyncStorageExpo from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { API_BASE_URL} from '../config';
 import { loadAuthData } from '../utils/auth';
+
+const AsyncStorage = Platform.OS === 'web' ? null : (AsyncStorageExpo || LegacyAsyncStorage);
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {
   if (Platform.OS === 'android') {

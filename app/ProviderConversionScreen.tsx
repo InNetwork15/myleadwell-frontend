@@ -65,7 +65,7 @@ const ProviderConversionScreen = () => {
       console.log('🧪 Token:', token);
       console.log('🧪 User:', user);
 
-if (!userId) {
+if (!token || !user)  {
   showToast('Please log in again.', 'error');
   setTimeout(() => router.push('/login'), 1500); // Delay for toast to show
   return;

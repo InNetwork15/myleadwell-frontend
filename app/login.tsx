@@ -2,12 +2,12 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { API_BASE_URL } from '../utils/config';
-import { loginUser } from '../utils/auth'; // ✅ Correct import for named export
+import {API_BASE_URL} from '../utils/config';
+import { loginUser } from '../utils/auth'; // ✅ correct
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-console.log("🚀 Using API base:", { API_BASE_URL });
+console.log("🚀 Using API base:", {API_BASE_URL}); // <-- TEMP LOG
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -23,18 +23,22 @@ const LoginScreen = () => {
         throw new Error('Invalid login response');
       }
 
-      const success = await loginUser(token); // ✅ use correct named import
+      // Use centralized loginUser to store token and user
+const success = await loginUser(token); // ✅ CORRECT
+
 
       if (!success) {
         throw new Error('Failed to store login data');
       }
 
+      // Optionally, still store authData if you want
       await AsyncStorage.setItem('authData', JSON.stringify({ token, user }));
       await AsyncStorage.setItem('user_id', user.id.toString());
 
       setTimeout(() => {
         router.replace('/HomeScreen');
       }, 100);
+      
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Login Failed', 'Invalid email or password');
@@ -45,6 +49,21 @@ const LoginScreen = () => {
     setTimeout(() => {
       router.push('/SignupScreen');
     }, 100);
+  };
+
+  const loadAuthData = async () => {
+    try {
+      const raw = await AsyncStorage.getItem('authData');
+      if (!raw) {
+        console.warn('⚠️ No auth data found');
+        return;
+      }
+
+      const data = JSON.parse(raw); // ✅ Only happens if data exists
+      // Proceed with using `data.token` and `data.user`
+    } catch (error) {
+      console.error('❌ Error loading auth data:', error);
+    }
   };
 
   return (

@@ -23,7 +23,7 @@ const LoginScreen = () => {
         throw new Error('Invalid login response');
       }
 
-const success = await loginUser(token, user.id);
+      const success = await loginUser(token); // ✅ use correct named import
 
       if (!success) {
         throw new Error('Failed to store login data');

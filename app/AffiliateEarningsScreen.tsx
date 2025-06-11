@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import * as WebBrowser from 'expo-web-browser';
+import jwt_decode from 'jwt-decode';
 import { getUserFromToken } from '../utils/auth';
 
 const AffiliateEarningsScreen = () => {
@@ -32,22 +33,27 @@ const AffiliateEarningsScreen = () => {
 
   useEffect(() => {
     const fetchAuthData = async () => {
-      const storedToken = await AsyncStorage.getItem('token');
-      const storedUserId = await AsyncStorage.getItem('user_id');
-      console.log('User ID:', storedUserId);
-      setToken(storedToken);
-      setUserId(storedUserId);
+  const storedToken = await AsyncStorage.getItem('token');
 
-      if (!storedToken || !storedUserId) {
-        setLoading(false);
-        return;
-      }
+  if (!storedToken) {
+    console.log('❌ No stored token found');
+    setLoading(false);
+    return;
+  }
 
-      await fetchEarnings(storedToken, storedUserId);
-    };
+  try {
+    const decoded: any = jwt_decode(storedToken);
+    const userIdFromToken = decoded?.id;
+    console.log('✅ Decoded user ID from token:', userIdFromToken);
+    setToken(storedToken);
+    setUserId(userIdFromToken);
+    await fetchEarnings(storedToken, userIdFromToken);
+  } catch (error) {
+    console.error('❌ Error decoding token:', error);
+    setLoading(false);
+  }
+};
 
-    fetchAuthData();
-  }, []);
 
   const fetchEarnings = async (authToken: string, userId: string) => {
     try {

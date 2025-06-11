@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
+import { API_BASE_URL } from '../config';
 
 const JOB_TITLES = [
   'Real Estate Agent',

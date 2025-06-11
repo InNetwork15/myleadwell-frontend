@@ -18,18 +18,15 @@ import { API_BASE_URL} from '../config';
 import { loadAuthData } from '../utils/auth';
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {
-  if (Platform.OS === 'android') {
-    ToastAndroid.show(message, ToastAndroid.LONG);
-  } else {
-    Toast.show({
-      type,
-      text1: type === 'error' ? 'Error' : 'Notification',
-      text2: message,
-      position: 'top',
-      visibilityTime: 5000,
-    });
-  }
+  Toast.show({
+    type,
+    text1: type === 'error' ? 'Error' : 'Notification',
+    text2: message,
+    position: 'top',
+    visibilityTime: 3000,
+  });
 };
+
 
 interface ConversionData {
   totalSpent: string;
@@ -68,11 +65,11 @@ const ProviderConversionScreen = () => {
       console.log('🧪 Token:', token);
       console.log('🧪 User:', user);
 
-      if (!userId) {
-        showToast('Please log in again.', 'error');
-        router.push('/login');
-        return;
-      }
+if (!userId) {
+  showToast('Please log in again.', 'error');
+  setTimeout(() => router.push('/login'), 1500); // Delay for toast to show
+  return;
+}
 
       console.log('👤 Fetching conversion data for user ID:', userId);
 

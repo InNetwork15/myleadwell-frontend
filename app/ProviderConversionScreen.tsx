@@ -60,7 +60,7 @@ const ProviderConversionScreen = () => {
       }
 
       console.log('👤 Raw user object:', user);
-      const userId = user?.id;
+      const userId = user?.id || user?.user?.id;
 
       console.log('🧪 Token:', token);
       console.log('🧪 User:', user);

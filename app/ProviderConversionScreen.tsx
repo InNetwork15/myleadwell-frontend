@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { API_BASE_URL} from '../config';
+import { API_BASE_URL } from '../config';
 import { loadAuthData } from '../utils/auth';
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {
@@ -235,16 +235,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProviderConversionScreen;
-
-export const loadAuthData = async () => {
-  try {
-    const token = await AsyncStorage.getItem('authToken');
-    const userString = await AsyncStorage.getItem('user');
-    const user = userString ? JSON.parse(userString) : null;
-
-    return { token, user };
-  } catch (error) {
-    console.error('❌ Failed to load auth data:', error);
-    return { token: null, user: null };
-  }
-};

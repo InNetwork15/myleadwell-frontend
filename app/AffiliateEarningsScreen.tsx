@@ -31,8 +31,7 @@ const AffiliateEarningsScreen = () => {
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAuthData = async () => {
+  const fetchAuthData = async () => {
   const storedToken = await AsyncStorage.getItem('token');
 
   if (!storedToken) {

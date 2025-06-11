@@ -6,9 +6,10 @@ import {
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
-import { API_BASE_URL } from '../utils/config';
 import Toast from 'react-native-toast-message';
 import { useRouter } from 'expo-router';
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com';
 
 export default function SignupScreen() {
     const router = useRouter();

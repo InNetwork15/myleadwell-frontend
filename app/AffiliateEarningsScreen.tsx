@@ -21,38 +21,37 @@ const AffiliateEarningsScreen = () => {
   const [totalPending, setTotalPending] = useState(0);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchAuthData();
+    init();
   }, []);
 
-  const fetchAuthData = async () => {
+  const init = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
-      if (!storedToken) throw new Error('No stored token found');
+      if (!storedToken) throw new Error('No token found');
 
       const decoded: any = jwt_decode(storedToken);
-      const userIdFromToken = decoded?.id;
+      const uid = decoded?.id;
 
-      if (!userIdFromToken) throw new Error('User ID not found in token');
+      if (!uid) throw new Error('No user ID in token');
 
-      console.log('🔐 Loaded userId:', userIdFromToken);
-
+      console.log('🔐 Decoded user ID:', uid);
       setToken(storedToken);
-      setUserId(userIdFromToken.toString());
+      setUserId(uid);
+      await AsyncStorage.setItem('user_id', uid.toString());
 
-      await AsyncStorage.setItem('user_id', userIdFromToken.toString());
-      await fetchEarnings(storedToken, userIdFromToken);
+      await fetchEarnings(storedToken, uid);
     } catch (err) {
-      console.error('❌ Auth or decoding error:', err);
+      console.error('❌ Init/auth error:', err);
       setLoading(false);
     }
   };
 
-  const fetchEarnings = async (authToken: string, userId: string) => {
+  const fetchEarnings = async (authToken: string, uid: number) => {
     try {
-      console.log('📡 Fetching earnings for user:', userId);
+      console.log('📡 Fetching earnings for UID:', uid);
 
       const [paidRes, pendingRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/affiliate-earnings`, {
@@ -63,35 +62,31 @@ const AffiliateEarningsScreen = () => {
         }),
       ]);
 
-      console.log('✅ Paid response:', paidRes.data);
-      console.log('✅ Pending response:', pendingRes.data);
+      const paid = paidRes.data || [];
+      const pending = pendingRes.data || [];
 
-      setPaidEarnings(paidRes.data || []);
-      const paidSum = paidRes.data.reduce(
-        (acc: number, lead: any) => acc + parseFloat(lead.payout_amount || 0),
-        0
+      setPaidEarnings(paid);
+      setTotalPaid(
+        paid.reduce((sum: number, l: any) => sum + parseFloat(l.payout_amount || 0), 0)
       );
-      setTotalPaid(paidSum);
 
-      setPendingEarnings(pendingRes.data || []);
-      const pendingSum = pendingRes.data.reduce(
-        (acc: number, lead: any) => acc + parseFloat(lead.payout_amount || 0),
-        0
+      setPendingEarnings(pending);
+      setTotalPending(
+        pending.reduce((sum: number, l: any) => sum + parseFloat(l.payout_amount || 0), 0)
       );
-      setTotalPending(pendingSum);
+
+      console.log('✅ Earnings loaded:', { paid, pending });
     } catch (err: any) {
-      console.error('❌ Error fetching earnings:', err?.response?.data || err.message);
+      console.error('❌ Fetch earnings error:', err?.response?.data || err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const refreshEarnings = async () => {
-    setLoading(true);
-    if (token && userId) {
+    if (token && userId !== null) {
+      setLoading(true);
       await fetchEarnings(token, userId);
-    } else {
-      setLoading(false);
     }
   };
 

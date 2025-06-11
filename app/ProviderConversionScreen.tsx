@@ -57,9 +57,9 @@ const ProviderConversionScreen = () => {
     try {
       const { token, user } = await loadAuthData();
       const userId = user?.id;
-      if (!token || !userId) {
-        console.error('❌ Missing token or user ID:', { token, user });
-        showToast('Please log in to view your conversion data.', 'error');
+      if (!token || !userId || typeof userId !== 'number') {
+        console.error('❌ Invalid user ID:', userId);
+        showToast('User data is invalid. Please log in again.', 'error');
         return;
       }
 

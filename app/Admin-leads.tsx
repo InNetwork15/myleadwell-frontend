@@ -127,10 +127,11 @@ export default function AdminLeadsScreen(): JSX.Element {
         setProviderNames(providerMap);
       } catch (err) {
         console.error('❌ Error fetching admin leads:', err);
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to load leads',
-        });
+           Toast.show({
+             type: 'error',
+             text1: 'Failed to load leads',
+             text2: err?.response?.data?.error || err.message || 'Unexpected error',
+           });
       }
     };
 

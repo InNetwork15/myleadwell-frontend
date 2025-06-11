@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '../utils/config';
-import { loginUser } from '../utils/auth'; // ✅ make sure this matches your path
+import { loginUser } from '../utils/auth'; // ✅ Correct import for named export
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -32,8 +32,8 @@ const LoginScreen = () => {
         throw new Error('Failed to store login data');
       }
 
-      await AsyncStorage.setItem('authToken', token);
-      await AsyncStorage.setItem('user', JSON.stringify(userObj));
+      await AsyncStorage.setItem('authData', JSON.stringify({ token, user: userId }));
+      await AsyncStorage.setItem('user_id', userId.toString());
 
       setTimeout(() => {
         router.replace('/HomeScreen');

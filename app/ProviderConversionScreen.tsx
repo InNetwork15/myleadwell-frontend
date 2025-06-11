@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { BASE_URL } from '../utils/config';
+import { API_BASE_URL} from '../config';
 import { loadAuthData } from '../utils/auth';
 
 const showToast = (message: string, type: 'info' | 'error' = 'info') => {
@@ -57,13 +57,15 @@ const ProviderConversionScreen = () => {
     try {
       const { token, user } = await loadAuthData();
       if (!token || !user) {
-        console.error('❌ Missing token or user');
+        console.error('❌ Missing token or user ID:', { token, user });
         showToast('Please log in to view your conversion data.', 'error');
         return;
       }
 
-      console.log('👤 Fetching conversion data for user ID:', user.id);
-      const response = await axios.get(`${BASE_URL}/provider/conversion/${user.id}`, {
+      const userId = typeof user === 'string' ? user : user.id;
+      console.log('👤 Fetching conversion data for user ID:', userId);
+
+      const response = await axios.get(`${API_BASE_URL}/provider/conversion/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -106,42 +108,49 @@ const ProviderConversionScreen = () => {
       </View>
       <Text style={styles.subtitle}>Your lifetime performance as a provider</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Lifetime Spend</Text>
-        <Text style={styles.cardValue}>${conversionData.totalSpent}</Text>
-        <Text style={styles.cardDescription}>Total amount spent on purchasing leads</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Revenue Earned</Text>
-        <Text style={styles.cardValue}>${conversionData.revenueEarned}</Text>
-        <Text style={styles.cardDescription}>Total revenue from closed sales</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Conversion Rate</Text>
-        <Text style={styles.cardValue}>{conversionData.conversionRate}%</Text>
-        <Text style={styles.cardDescription}>Percentage of purchased leads that converted to closed sales</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Leads in Progress</Text>
-        <Text style={styles.cardValue}>{conversionData.inProgress}</Text>
-        <Text style={styles.cardDescription}>Number of leads currently in progress</Text>
-      </View>
-
-      <Text style={styles.sectionHeader}>Recent Leads</Text>
-      {conversionData.recentLeads.length === 0 ? (
-        <Text style={styles.noData}>No recent leads found.</Text>
-      ) : (
-        conversionData.recentLeads.map((lead) => (
-          <View key={lead.id} style={styles.leadCard}>
-            <Text style={styles.leadTitle}>{lead.leadName}</Text>
-            <Text style={styles.leadDetail}>📍 {lead.state}, {lead.county}</Text>
-            <Text style={styles.leadDetail}>💲 Cost: ${lead.leadAcquisitionCost}</Text>
-            <Text style={styles.leadDetail}>📦 Status: {lead.status}</Text>
+      {/* Defensive UI for conversionData */}
+      {conversionData ? (
+        <>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Lifetime Spend</Text>
+            <Text style={styles.cardValue}>${conversionData.totalSpent}</Text>
+            <Text style={styles.cardDescription}>Total amount spent on purchasing leads</Text>
           </View>
-        ))
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Revenue Earned</Text>
+            <Text style={styles.cardValue}>${conversionData.revenueEarned}</Text>
+            <Text style={styles.cardDescription}>Total revenue from closed sales</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Conversion Rate</Text>
+            <Text style={styles.cardValue}>{conversionData.conversionRate}%</Text>
+            <Text style={styles.cardDescription}>Percentage of purchased leads that converted to closed sales</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Leads in Progress</Text>
+            <Text style={styles.cardValue}>{conversionData.inProgress}</Text>
+            <Text style={styles.cardDescription}>Number of leads currently in progress</Text>
+          </View>
+
+          <Text style={styles.sectionHeader}>Recent Leads</Text>
+          {conversionData.recentLeads.length === 0 ? (
+            <Text style={styles.noData}>No recent leads found.</Text>
+          ) : (
+            conversionData.recentLeads.map((lead) => (
+              <View key={lead.id} style={styles.leadCard}>
+                <Text style={styles.leadTitle}>{lead.leadName}</Text>
+                <Text style={styles.leadDetail}>📍 {lead.state}, {lead.county}</Text>
+                <Text style={styles.leadDetail}>💲 Cost: ${lead.leadAcquisitionCost}</Text>
+                <Text style={styles.leadDetail}>📦 Status: {lead.status}</Text>
+              </View>
+            ))
+          )}
+        </>
+      ) : (
+        <Text style={styles.noData}>Loading conversion stats...</Text>
       )}
 
       <Toast />

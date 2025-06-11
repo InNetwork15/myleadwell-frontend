@@ -26,7 +26,7 @@ const LoginScreen = () => {
 
       const userId = parseInt(userObj); // Convert string to number if needed
 
-      const success = await loginUser(token, userId);
+      const success = await loginUser(token, userObj);
 
       if (!success) {
         throw new Error('Failed to store login data');

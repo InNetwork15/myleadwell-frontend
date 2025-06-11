@@ -56,13 +56,13 @@ const ProviderConversionScreen = () => {
     setLoading(true);
     try {
       const { token, user } = await loadAuthData();
-      if (!token || !user) {
+      const userId = user?.id;
+      if (!token || !userId) {
         console.error('❌ Missing token or user ID:', { token, user });
         showToast('Please log in to view your conversion data.', 'error');
         return;
       }
 
-      const userId = typeof user === 'string' ? user : user.id;
       console.log('👤 Fetching conversion data for user ID:', userId);
 
       const response = await axios.get(`${API_BASE_URL}/provider/conversion/${userId}`, {
@@ -235,3 +235,16 @@ const styles = StyleSheet.create({
 });
 
 export default ProviderConversionScreen;
+
+export const loadAuthData = async () => {
+  try {
+    const token = await AsyncStorage.getItem('authToken');
+    const userString = await AsyncStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+
+    return { token, user };
+  } catch (error) {
+    console.error('❌ Failed to load auth data:', error);
+    return { token: null, user: null };
+  }
+};

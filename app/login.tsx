@@ -2,12 +2,12 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import {API_BASE_URL} from '../utils/config';
-import { loginUser } from '../utils/auth'; // ✅ correct
+import { API_BASE_URL } from '../utils/config';
+import { loginUser } from '../utils/auth'; // ✅ Correct import for named export
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-console.log("🚀 Using API base:", {API_BASE_URL}); // <-- TEMP LOG
+console.log("🚀 Using API base:", { API_BASE_URL });
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -17,28 +17,27 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-      const { token, user } = response.data || {};
+      const { token, user: userObj } = response.data || {};
 
-      if (!token || !user) {
-        throw new Error('Invalid login response');
+      if (!token || !userObj) {
+        console.log('❌ Missing token or user', { token, userObj });
+        return;
       }
 
-      // Use centralized loginUser to store token and user
-const success = await loginUser(token); // ✅ CORRECT
+      const userId = parseInt(userObj); // Convert string to number if needed
 
+      const success = await loginUser(token, userId);
 
       if (!success) {
         throw new Error('Failed to store login data');
       }
 
-      // Optionally, still store authData if you want
-      await AsyncStorage.setItem('authData', JSON.stringify({ token, user }));
-      await AsyncStorage.setItem('user_id', user.id.toString());
+      await AsyncStorage.setItem('authToken', token);
+      await AsyncStorage.setItem('user', JSON.stringify(userObj));
 
       setTimeout(() => {
         router.replace('/HomeScreen');
       }, 100);
-      
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Login Failed', 'Invalid email or password');
@@ -49,21 +48,6 @@ const success = await loginUser(token); // ✅ CORRECT
     setTimeout(() => {
       router.push('/SignupScreen');
     }, 100);
-  };
-
-  const loadAuthData = async () => {
-    try {
-      const raw = await AsyncStorage.getItem('authData');
-      if (!raw) {
-        console.warn('⚠️ No auth data found');
-        return;
-      }
-
-      const data = JSON.parse(raw); // ✅ Only happens if data exists
-      // Proceed with using `data.token` and `data.user`
-    } catch (error) {
-      console.error('❌ Error loading auth data:', error);
-    }
   };
 
   return (

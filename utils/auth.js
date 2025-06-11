@@ -18,11 +18,12 @@ export const loadAuthData = async () => {
   try {
     const token = await AsyncStorage.getItem('token');
     const userString = await AsyncStorage.getItem('user');
-    const user = userString ? JSON.parse(userString) : null; // ✅ Parse it
+    const user = userString ? JSON.parse(userString) : null; // ✅ IMPORTANT
+
     return { token, user };
   } catch (error) {
     console.error('❌ Error loading auth data:', error);
-    return {};
+    return { token: null, user: null };
   }
 };
 
@@ -31,7 +32,7 @@ export const loadAuthData = async () => {
 export const logoutUser = async () => {
   try {
     await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user_id');
+await AsyncStorage.removeItem('user'); // ✅ Correct key you actually use
     return true;
   } catch (error) {
     console.error('❌ Error clearing auth data:', error);

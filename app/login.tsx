@@ -18,16 +18,11 @@ const LoginScreen = () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
       const { token, user: userObj } = response.data || {};
-
-      if (!token || !userObj) {
-        console.log('❌ Missing token or user', { token, userObj });
-        return;
-      }
-
-      const userId = parseInt(userObj); // Convert string to number if needed
-
-      const success = await loginUser(token, userObj);
-
+if (!token || !userObj || !userObj.id) {
+  console.log('❌ Missing token or malformed user object:', { token, userObj });
+  return;
+}
+const success = await loginUser(token, userObj);
       if (!success) {
         throw new Error('Failed to store login data');
       }

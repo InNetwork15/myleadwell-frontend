@@ -47,9 +47,8 @@ const AccountScreen = () => {
     const router = useRouter();
 
     const fetchProfile = async () => {
-const stored = await AsyncStorage.getItem('authData');
-const parsed = JSON.parse(stored || '{}');
-const token = parsed.token;
+const token = await AsyncStorage.getItem('token');
+
         console.log('🔑 JWT Token:', token); // Add this line
         if (!token || token === 'null' || token === 'undefined') {
             console.warn('⛔ Skipping API call — no token loaded');

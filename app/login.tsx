@@ -32,8 +32,8 @@ const LoginScreen = () => {
         throw new Error('Failed to store login data');
       }
 
-      await AsyncStorage.setItem('authToken', token);
-      await AsyncStorage.setItem('user', JSON.stringify(userObj));
+      await AsyncStorage.setItem('token', token);
+await AsyncStorage.setItem('user', JSON.stringify(userObj));
 
       setTimeout(() => {
         router.replace('/HomeScreen');

@@ -1,9 +1,24 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  Button,
+  Platform,
+  ToastAndroid,
+  TouchableOpacity,
+} from 'react-native';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { API_BASE_URL} from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+import * as WebBrowser from 'expo-web-browser';
+import { getUserFromToken } from '../utils/auth';
 
 const AffiliateEarningsScreen = () => {
   const router = useRouter();

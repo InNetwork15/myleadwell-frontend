@@ -4,7 +4,7 @@
 export const loginUser = async (token, userId) => {
   try {
     await AsyncStorage.setItem('token', token);
-    await AsyncStorage.setItem('user_id', userId.toString());
+await AsyncStorage.setItem('user', JSON.stringify(userObj));
     return true;
   } catch (error) {
     console.error('❌ Error storing auth data:', error);
@@ -16,7 +16,7 @@ export const loginUser = async (token, userId) => {
 export const loadAuthData = async () => {
   try {
     const token = await AsyncStorage.getItem('token');
-    const user = await AsyncStorage.getItem('user_id');
+    const user = await AsyncStorage.getItem('user');
     return { token, user };
   } catch (error) {
     console.error('❌ Error loading auth data:', error);

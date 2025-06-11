@@ -65,7 +65,18 @@ const ProviderConversionScreen = () => {
       console.log('👤 Raw user object:', user);
 const userId = user?.id;
 
-if (!token || !userId) {
+console.log('🧪 Token:', token);
+console.log('🧪 User:', user);
+
+const userId = user?.id;
+
+
+  showToast('Please log in again.', 'error');
+  router.push('/login');
+  return;
+}
+
+
   console.error('❌ Missing token or valid user ID:', { token, userId });
   showToast('Please log in again.', 'error');
   router.push('/login');
@@ -73,7 +84,7 @@ if (!token || !userId) {
 }
 
 
-if (!token || !userId) {
+
   console.error('❌ Missing token or valid user ID:', { token, userId });
   showToast('Please log in again.', 'error');
   router.push('/login'); // optional redirect

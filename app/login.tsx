@@ -39,7 +39,8 @@ const LoginScreen = () => {
     }
   };
 
-  const handleGoToSignUp = () => {
-    setTimeout(() => {
-      router.push('/SignupScreen');
-    }, 100);
+const handleGoToSignUp = () => {
+  setTimeout(() => {
+    router.push('/SignupScreen');
+  }, 100);
+};

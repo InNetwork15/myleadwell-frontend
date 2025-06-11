@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import axios from 'axios';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwt_decode from 'jwt-decode';
@@ -29,30 +28,32 @@ const AffiliateEarningsScreen = () => {
   }, []);
 
   const fetchAuthData = async () => {
-    const storedToken = await AsyncStorage.getItem('token');
-    if (!storedToken) {
-      console.log('❌ No stored token found');
-      setLoading(false);
-      return;
-    }
-
     try {
+      const storedToken = await AsyncStorage.getItem('token');
+      if (!storedToken) throw new Error('No stored token found');
+
       const decoded: any = jwt_decode(storedToken);
       const userIdFromToken = decoded?.id;
+
       if (!userIdFromToken) throw new Error('User ID not found in token');
+
+      console.log('🔐 Loaded userId:', userIdFromToken);
+
       setToken(storedToken);
       setUserId(userIdFromToken.toString());
 
-      await AsyncStorage.setItem('user_id', String(userIdFromToken));
+      await AsyncStorage.setItem('user_id', userIdFromToken.toString());
       await fetchEarnings(storedToken, userIdFromToken);
     } catch (err) {
-      console.error('❌ Error decoding token or fetching earnings:', err);
+      console.error('❌ Auth or decoding error:', err);
       setLoading(false);
     }
   };
 
   const fetchEarnings = async (authToken: string, userId: string) => {
     try {
+      console.log('📡 Fetching earnings for user:', userId);
+
       const [paidRes, pendingRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/affiliate-earnings`, {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -62,21 +63,24 @@ const AffiliateEarningsScreen = () => {
         }),
       ]);
 
+      console.log('✅ Paid response:', paidRes.data);
+      console.log('✅ Pending response:', pendingRes.data);
+
       setPaidEarnings(paidRes.data || []);
-      const paidSum = (paidRes.data || []).reduce(
+      const paidSum = paidRes.data.reduce(
         (acc: number, lead: any) => acc + parseFloat(lead.payout_amount || 0),
         0
       );
       setTotalPaid(paidSum);
 
       setPendingEarnings(pendingRes.data || []);
-      const pendingSum = (pendingRes.data || []).reduce(
+      const pendingSum = pendingRes.data.reduce(
         (acc: number, lead: any) => acc + parseFloat(lead.payout_amount || 0),
         0
       );
       setTotalPending(pendingSum);
     } catch (err: any) {
-      console.error('❌ Error fetching earnings:', err.response?.data || err.message);
+      console.error('❌ Error fetching earnings:', err?.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -84,10 +88,8 @@ const AffiliateEarningsScreen = () => {
 
   const refreshEarnings = async () => {
     setLoading(true);
-    const storedToken = await AsyncStorage.getItem('token');
-    const storedUserId = await AsyncStorage.getItem('user_id');
-    if (storedToken && storedUserId) {
-      await fetchEarnings(storedToken, storedUserId);
+    if (token && userId) {
+      await fetchEarnings(token, userId);
     } else {
       setLoading(false);
     }
@@ -109,7 +111,7 @@ const AffiliateEarningsScreen = () => {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.refreshButton} onPress={refreshEarnings}>
-        <Text style={styles.refreshButtonText}>🔄 Refresh Earnings</Text>
+        <Text style={styles.refreshButtonText}>🔄 Refresh</Text>
       </TouchableOpacity>
 
       <Text style={styles.header}>💸 Total Paid: ${totalPaid.toFixed(2)}</Text>
@@ -120,7 +122,7 @@ const AffiliateEarningsScreen = () => {
         <Text style={styles.noData}>No paid earnings yet.</Text>
       ) : (
         paidEarnings.map((lead: any, index: number) => (
-          <View key={`paid-${lead.id ?? index}`} style={styles.card}>
+          <View key={`paid-${lead.id || index}`} style={styles.card}>
             <Text style={styles.clientName}>{lead.lead_name}</Text>
             <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
             <Text>👤 Purchased By: {lead.provider_name || 'Unknown'}</Text>
@@ -135,7 +137,7 @@ const AffiliateEarningsScreen = () => {
         <Text style={styles.noData}>No pending earnings.</Text>
       ) : (
         pendingEarnings.map((lead: any, index: number) => (
-          <View key={`pending-${lead.id ?? index}`} style={[styles.card, { backgroundColor: '#e6f7ff' }]}>
+          <View key={`pending-${lead.id || index}`} style={[styles.card, { backgroundColor: '#e6f7ff' }]}>
             <Text style={styles.clientName}>{lead.lead_name}</Text>
             <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
             <Text>👤 Purchased By: {lead.provider_name || 'Unknown'}</Text>

@@ -4,22 +4,15 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   ActivityIndicator,
-  Alert,
-  Button,
-  Platform,
-  ToastAndroid,
   TouchableOpacity,
 } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Toast from 'react-native-toast-message';
-import * as WebBrowser from 'expo-web-browser';
 import jwt_decode from 'jwt-decode';
-import { getUserFromToken } from '../utils/auth';
+import { API_BASE_URL } from '../config';
 
 const AffiliateEarningsScreen = () => {
   const router = useRouter();
@@ -31,54 +24,59 @@ const AffiliateEarningsScreen = () => {
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetchAuthData();
+  }, []);
+
   const fetchAuthData = async () => {
-  const storedToken = await AsyncStorage.getItem('token');
+    const storedToken = await AsyncStorage.getItem('token');
+    if (!storedToken) {
+      console.log('❌ No stored token found');
+      setLoading(false);
+      return;
+    }
 
-  if (!storedToken) {
-    console.log('❌ No stored token found');
-    setLoading(false);
-    return;
-  }
+    try {
+      const decoded: any = jwt_decode(storedToken);
+      const userIdFromToken = decoded?.id;
+      if (!userIdFromToken) throw new Error('User ID not found in token');
+      setToken(storedToken);
+      setUserId(userIdFromToken.toString());
 
-  try {
-    const decoded: any = jwt_decode(storedToken);
-    const userIdFromToken = decoded?.id;
-    console.log('✅ Decoded user ID from token:', userIdFromToken);
-
-    setToken(storedToken);
-    setUserId(userIdFromToken);
-
-    // ✅ Store in AsyncStorage for other screens that rely on it
-    await AsyncStorage.setItem('user_id', String(userIdFromToken));
-
-    await fetchEarnings(storedToken, userIdFromToken);
-  } catch (error) {
-    console.error('❌ Error decoding token:', error);
-    setLoading(false);
-  }
-};
-
-
+      await AsyncStorage.setItem('user_id', String(userIdFromToken));
+      await fetchEarnings(storedToken, userIdFromToken);
+    } catch (err) {
+      console.error('❌ Error decoding token or fetching earnings:', err);
+      setLoading(false);
+    }
+  };
 
   const fetchEarnings = async (authToken: string, userId: string) => {
     try {
-      const paidRes = await axios.get(`${API_BASE_URL}/affiliate-earnings`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      console.log('Paid earnings:', JSON.stringify(paidRes.data, null, 2));
-      setPaidEarnings(paidRes.data);
-      const paidSum = paidRes.data.reduce((acc, lead) => acc + parseFloat(lead.payout_amount || 0), 0);
+      const [paidRes, pendingRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/affiliate-earnings`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }),
+        axios.get(`${API_BASE_URL}/affiliate-earnings-pending`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }),
+      ]);
+
+      setPaidEarnings(paidRes.data || []);
+      const paidSum = (paidRes.data || []).reduce(
+        (acc: number, lead: any) => acc + parseFloat(lead.payout_amount || 0),
+        0
+      );
       setTotalPaid(paidSum);
 
-      const pendingRes = await axios.get(`${API_BASE_URL}/affiliate-earnings-pending`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      console.log('Pending earnings:', JSON.stringify(pendingRes.data, null, 2));
-      setPendingEarnings(pendingRes.data);
-      const pendingSum = pendingRes.data.reduce((acc, lead) => acc + parseFloat(lead.payout_amount || 0), 0);
+      setPendingEarnings(pendingRes.data || []);
+      const pendingSum = (pendingRes.data || []).reduce(
+        (acc: number, lead: any) => acc + parseFloat(lead.payout_amount || 0),
+        0
+      );
       setTotalPending(pendingSum);
-    } catch (err) {
-      console.error('Error fetching earnings:', err.response?.data || err.message);
+    } catch (err: any) {
+      console.error('❌ Error fetching earnings:', err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -95,30 +93,33 @@ const AffiliateEarningsScreen = () => {
     }
   };
 
-  if (loading) return <ActivityIndicator size="large" style={{ marginTop: 40 }} />;
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Loading earnings...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => router.push('/HomeScreen')}
-      >
-        <Text style={styles.homeButtonText}>Home</Text>
+      <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/HomeScreen')}>
+        <Text style={styles.homeButtonText}>🏠 Home</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.refreshButton}
-        onPress={refreshEarnings}
-      >
-        <Text style={styles.refreshButtonText}>Refresh Earnings</Text>
+
+      <TouchableOpacity style={styles.refreshButton} onPress={refreshEarnings}>
+        <Text style={styles.refreshButtonText}>🔄 Refresh Earnings</Text>
       </TouchableOpacity>
-      <Text style={styles.header}>💸 Total Paid Earnings: ${totalPaid.toFixed(2)}</Text>
-      <Text style={styles.subHeader}>💰 Total Pending Earnings: ${totalPending.toFixed(2)}</Text>
+
+      <Text style={styles.header}>💸 Total Paid: ${totalPaid.toFixed(2)}</Text>
+      <Text style={styles.subHeader}>💰 Total Pending: ${totalPending.toFixed(2)}</Text>
 
       <Text style={styles.sectionTitle}>Paid Earnings</Text>
       {paidEarnings.length === 0 ? (
         <Text style={styles.noData}>No paid earnings yet.</Text>
       ) : (
-        paidEarnings.map((lead, index) => (
+        paidEarnings.map((lead: any, index: number) => (
           <View key={`paid-${lead.id ?? index}`} style={styles.card}>
             <Text style={styles.clientName}>{lead.lead_name}</Text>
             <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
@@ -128,11 +129,12 @@ const AffiliateEarningsScreen = () => {
           </View>
         ))
       )}
+
       <Text style={styles.sectionTitle}>Pending Earnings</Text>
       {pendingEarnings.length === 0 ? (
         <Text style={styles.noData}>No pending earnings.</Text>
       ) : (
-        pendingEarnings.map((lead, index) => (
+        pendingEarnings.map((lead: any, index: number) => (
           <View key={`pending-${lead.id ?? index}`} style={[styles.card, { backgroundColor: '#e6f7ff' }]}>
             <Text style={styles.clientName}>{lead.lead_name}</Text>
             <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
@@ -150,6 +152,11 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: '#fff',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     fontSize: 18,

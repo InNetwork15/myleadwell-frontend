@@ -16,7 +16,6 @@ import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import { useNavigation, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { API_BASE_URL } from '../config';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com';
 

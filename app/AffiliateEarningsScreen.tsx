@@ -31,8 +31,7 @@ const AffiliateEarningsScreen = () => {
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAuthData = async () => {
+  const fetchAuthData = async () => {
   const storedToken = await AsyncStorage.getItem('token');
 
   if (!storedToken) {
@@ -45,14 +44,20 @@ const AffiliateEarningsScreen = () => {
     const decoded: any = jwt_decode(storedToken);
     const userIdFromToken = decoded?.id;
     console.log('✅ Decoded user ID from token:', userIdFromToken);
+
     setToken(storedToken);
     setUserId(userIdFromToken);
+
+    // ✅ Store in AsyncStorage for other screens that rely on it
+    await AsyncStorage.setItem('user_id', String(userIdFromToken));
+
     await fetchEarnings(storedToken, userIdFromToken);
   } catch (error) {
     console.error('❌ Error decoding token:', error);
     setLoading(false);
   }
 };
+
 
 
   const fetchEarnings = async (authToken: string, userId: string) => {

@@ -63,33 +63,17 @@ const ProviderConversionScreen = () => {
       }
 
       console.log('👤 Raw user object:', user);
-const userId = user?.id;
+      const userId = user?.id;
 
-console.log('🧪 Token:', token);
-console.log('🧪 User:', user);
+      console.log('🧪 Token:', token);
+      console.log('🧪 User:', user);
 
-const userId = user?.id;
+      if (!userId) {
+        showToast('Please log in again.', 'error');
+        router.push('/login');
+        return;
+      }
 
-
-  showToast('Please log in again.', 'error');
-  router.push('/login');
-  return;
-}
-
-
-  console.error('❌ Missing token or valid user ID:', { token, userId });
-  showToast('Please log in again.', 'error');
-  router.push('/login');
-  return;
-}
-
-
-
-  console.error('❌ Missing token or valid user ID:', { token, userId });
-  showToast('Please log in again.', 'error');
-  router.push('/login'); // optional redirect
-  return;
-}
       console.log('👤 Fetching conversion data for user ID:', userId);
 
       const response = await axios.get(`${API_BASE_URL}/provider/conversion/${userId}`, {

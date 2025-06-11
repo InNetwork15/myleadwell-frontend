@@ -56,8 +56,8 @@ const ProviderConversionScreen = () => {
     setLoading(true);
     try {
       const { token, user } = await loadAuthData();
-      const userId = user?.id;
-      if (!token || !userId || typeof userId !== 'number') {
+      const userId = parseInt(user?.id, 10); // Convert string to number safely
+      if (!token || !userId || isNaN(userId)) {
         console.error('❌ Invalid user ID:', userId);
         showToast('User data is invalid. Please log in again.', 'error');
         return;

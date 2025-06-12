@@ -12,6 +12,8 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwt_decode from 'jwt-decode';
 import { API_BASE_URL } from '../config';
+import { getUserFromToken } from '../utils/auth';
+
 
 const AffiliateEarningsScreen = () => {
   const router = useRouter();

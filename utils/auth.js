@@ -1,4 +1,5 @@
 ﻿import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwt_decode from 'jwt-decode';
 
 // ✅ Store both token and user_id
 export const loginUser = async (token, user) => {
@@ -38,4 +39,9 @@ await AsyncStorage.removeItem('user'); // ✅ Correct key you actually use
     console.error('❌ Error clearing auth data:', error);
     return false;
   }
+};
+
+export const getUserFromToken = (token) => {
+  const decoded = jwt_decode(token);
+  return decoded;
 };

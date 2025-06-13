@@ -51,6 +51,51 @@ const AffiliateEarningsScreen = () => {
     }
   };
 
+    const fetchUsers = async () => {
+    const token = await AsyncStorage.getItem('token');
+    const currentUserId = await AsyncStorage.getItem('user_id');
+
+    try {
+      const res = await axios.get(`${API_BASE_URL}/all-users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      let usersList = res.data;
+
+      // ✅ Normalize affiliate_marketer → affiliate for all users
+      usersList = usersList.map((user: any) => ({
+        ...user,
+        roles: (user.roles || []).map((r: string) =>
+          r === 'affiliate_marketer' ? 'affiliate' : r
+        ),
+      }));
+
+      // Add fallback for current user if not included in /all-users
+      if (currentUserId && !usersList.find((user: { id: number }) => user.id === parseInt(currentUserId, 10))) {
+        const userRes = await axios.get(`${API_BASE_URL}/users/${currentUserId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // ✅ Normalize roles for fallback user
+        const normalizedUser = {
+          ...userRes.data,
+          roles: (userRes.data.roles || []).map((r: string) =>
+            r === 'affiliate_marketer' ? 'affiliate' : r
+          ),
+        };
+        usersList = [...usersList, normalizedUser];
+      }
+
+      setUsers(usersList); // ✅ Leave IDs as integers
+      console.log("👥 Users loaded for dropdown:", usersList); // ✅ Debug information
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("❌ Error loading users:", err.message);
+      } else {
+        console.error("❌ Error loading users:", err);
+      }
+    }
+  };
+
   const fetchEarnings = async (authToken: string, uid: number) => {
     try {
       console.log('📡 Fetching earnings for UID:', uid);

@@ -58,7 +58,7 @@ interface Lead {
     lead_phone?: string;
     state: string;
     county: string;
-    affiliate_name: string; // Added to display affiliate marketer's name
+    affiliate_name: string; // Added to display affiliate's name
     purchased_by?: { job_title: string; first_name: string; last_name: string }[];
     role_enabled?: { [key: string]: boolean };
     distribution_method: 'JUMPBALL' | 'NETWORK' | string;

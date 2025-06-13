@@ -45,11 +45,11 @@ export default function AdminUsersScreen() {
 
       let usersList = res.data;
 
-      // ✅ Normalize affiliate_marketer → affiliate for all users
+      // ✅ Normalize affiliate → affiliate for all users
       usersList = usersList.map((user: any) => ({
         ...user,
         roles: (user.roles || []).map((r: string) =>
-          r === 'affiliate_marketer' ? 'affiliate' : r
+          r === 'affiliate' ? 'affiliate' : r
         ),
       }));
 
@@ -62,7 +62,7 @@ export default function AdminUsersScreen() {
         const normalizedUser = {
           ...userRes.data,
           roles: (userRes.data.roles || []).map((r: string) =>
-            r === 'affiliate_marketer' ? 'affiliate' : r
+            r === 'affiliate' ? 'affiliate' : r
           ),
         };
         usersList = [...usersList, normalizedUser];

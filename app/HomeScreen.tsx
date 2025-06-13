@@ -72,7 +72,7 @@ source={require('../assets/leadwellimage.png')}
             <TouchableOpacity style={styles.button} onPress={() => router.push('/account')}>
                 <Text style={styles.buttonText}>My Account</Text>
             </TouchableOpacity>
-            {(roles.includes('affiliate_marketer') || roles.includes('admin')) && (
+            {(roles.includes('affiliate') || roles.includes('admin')) && (
                 <TouchableOpacity style={styles.button} onPress={() => router.push('/AffiliateEarningsScreen')}>
                     <Text style={styles.buttonText}>Affiliate Earnings</Text>
                 </TouchableOpacity>

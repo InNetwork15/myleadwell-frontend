@@ -193,7 +193,7 @@ export default function SignupScreen() {
 
             <Text style={styles.label}>Select Your Roles</Text>
             <View style={styles.roleButtons}>
-                {['Provider', 'Affiliate Marketer'].map((r) => {
+                {['Provider', 'Affiliate'].map((r) => {
                     const selected = roles.includes(r);
                     return (
                         <TouchableOpacity
@@ -266,7 +266,7 @@ export default function SignupScreen() {
                 </>
             )}
 
-            {roles.includes('Affiliate Marketer') && (
+            {roles.includes('Affiliate') && (
                 <>
                     <Text style={styles.label}>Customize Your Affiliate Link</Text>
                     <TextInput

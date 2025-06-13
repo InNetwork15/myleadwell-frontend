@@ -45,12 +45,27 @@ export default function AdminUsersScreen() {
 
       let usersList = res.data;
 
+      // ✅ Normalize affiliate_marketer → affiliate for all users
+      usersList = usersList.map((user: any) => ({
+        ...user,
+        roles: (user.roles || []).map((r: string) =>
+          r === 'affiliate_marketer' ? 'affiliate' : r
+        ),
+      }));
+
       // Add fallback for current user if not included in /all-users
       if (currentUserId && !usersList.find((user: { id: number }) => user.id === parseInt(currentUserId, 10))) {
         const userRes = await axios.get(`${API_BASE_URL}/users/${currentUserId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        usersList = [...usersList, userRes.data];
+        // ✅ Normalize roles for fallback user
+        const normalizedUser = {
+          ...userRes.data,
+          roles: (userRes.data.roles || []).map((r: string) =>
+            r === 'affiliate_marketer' ? 'affiliate' : r
+          ),
+        };
+        usersList = [...usersList, normalizedUser];
       }
 
       setUsers(usersList); // ✅ Leave IDs as integers

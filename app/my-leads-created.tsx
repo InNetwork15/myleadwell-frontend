@@ -506,93 +506,110 @@ export default function MyLeadsCreatedAccordion() {
                                         <Picker.Item label="JUMPBALL" value="JUMPBALL" />
                                     </Picker>
 
-                                    <Text style={styles.label}>💰 Affiliate Prices:</Text>
-                                    {JOB_TITLES.map((role) => {
-                                        const isRolePurchased = (lead.purchased_by ?? []).some((buyer) => buyer.job_title === role);
-                                        return (
-                                            <View key={role} style={styles.priceRow}>
-                                                <Text style={styles.priceLabel}>{role}:</Text>
-                                                <TextInput
-                                                    style={styles.input}
-                                                    placeholder="$0.00"
-                                                    keyboardType="numeric"
-                                                    value={(lead.affiliate_prices_by_role?.[role] !== undefined ? String(lead.affiliate_prices_by_role?.[role]) : '0')}
-                                                    onChangeText={(text) => {
-                                                        const value = text ? parseFloat(text) : 0;
-                                                        setLeads((prev) =>
-                                                            prev.map((l) =>
-                                                                l.lead_id === lead.lead_id
-                                                                    ? {
-                                                                        ...l,
-                                                                        affiliate_prices_by_role: {
-                                                                            ...l.affiliate_prices_by_role,
-                                                                            [role]: value,
-                                                                        },
-                                                                    }
-                                                                    : l
-                                                            )
-                                                        );
-                                                    }}
-                                                    editable={!isRolePurchased}
-                                                />
-                                            </View>
-                                        );
-                                    })}
-
                                     <View style={styles.tabRow}>
                                         {JOB_TITLES.map((role) => {
                                             const isPurchased = (lead.purchased_by ?? []).some((p) => p.job_title === role);
+                                            const isActive = activeRole === role;
+                                            const price = lead.affiliate_prices_by_role?.[role] ?? 0;
+
                                             return (
                                                 <TouchableOpacity
                                                     key={role}
                                                     disabled={isPurchased}
                                                     style={[
-                                                        styles.tab,
-                                                        activeRole === role && styles.activeTab,
+                                                        styles.tabWithPrice,
+                                                        isActive && styles.activeTab,
                                                         isPurchased && { backgroundColor: '#ccc' },
                                                     ]}
                                                     onPress={() => toggleTab(lead.lead_id, role)}
                                                 >
-                                                    <Text style={activeRole === role ? styles.activeTabText : styles.tabText}>
+                                                    <Text style={isActive ? styles.activeTabText : styles.tabText}>
                                                         {role}
-                                                        {isPurchased ? ' 🔒' : ''}
                                                     </Text>
+                                                    <TextInput
+                                                        style={styles.tabPriceInput}
+                                                        value={isActive ? price.toString() : ''}
+                                                        keyboardType="numeric"
+                                                        editable={isActive}
+                                                        onChangeText={(text) => {
+                                                            const numericValue = parseFloat(text);
+                                                            if (!isNaN(numericValue)) {
+                                                                setLeads((prev) =>
+                                                                    prev.map((l) =>
+                                                                        l.lead_id === lead.lead_id
+                                                                            ? {
+                                                                                ...l,
+                                                                                affiliate_prices_by_role: {
+                                                                                    ...l.affiliate_prices_by_role,
+                                                                                    [role]: numericValue,
+                                                                                },
+                                                                            }
+                                                                            : l
+                                                                    )
+                                                                );
+                                                            }
+                                                        }}
+                                                    />
                                                 </TouchableOpacity>
                                             );
                                         })}
                                     </View>
 
-                                    <View style={styles.section}>
-                                        <Text style={styles.label}>Enable for {activeRole}:</Text>
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setLeads((prev) =>
-                                                    prev.map((l) =>
-                                                        l.lead_id === lead.lead_id
-                                                            ? {
-                                                                ...l,
-                                                                role_enabled: {
-                                                                    ...l.role_enabled,
-                                                                    [activeRole]: !l.role_enabled?.[activeRole],
-                                                                },
-                                                            }
-                                                            : l
-                                                    )
-                                                );
-                                            }}
-                                            disabled={(lead.purchased_by ?? []).some((buyer) => buyer.job_title === activeRole)}
-                                        >
-                                            <Text style={lead.role_enabled?.[activeRole] ? styles.enabled : styles.disabled}>
-                                                {lead.role_enabled?.[activeRole] ? '✅ Enabled' : '🚫 Disabled'}
-                                            </Text>
-                                        </TouchableOpacity>
+                                    <View style={styles.providerSection}>
+                                        <Text style={styles.label}>Preferred Providers for {activeRole}:</Text>
+                                        <View style={styles.providerList}>
+                                            {selectedProviders.length === 0 ? (
+                                                <Text style={styles.noProviders}>No providers selected for this role.</Text>
+                                            ) : (
+                                                selectedProviders.map((providerId) => {
+                                                    const provider = providers.find((p) => p.id === providerId);
+                                                    return provider ? (
+                                                        <View key={provider.id} style={styles.providerItem}>
+                                                            <Text style={styles.providerName}>
+                                                                {provider.first_name} {provider.last_name}
+                                                            </Text>
+                                                            <TouchableOpacity
+                                                                style={styles.removeProvider}
+                                                                onPress={() => toggleProviderByRole(lead.lead_id, providerId, activeRole)}
+                                                            >
+                                                                <Ionicons name="trash-outline" size={16} color="#dc3545" />
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    ) : null;
+                                                })
+                                            )}
+                                        </View>
+                                        <View style={styles.addProviderContainer}>
+                                            {availableProviders.length > 0 && (
+                                                <Picker
+                                                    selectedValue=""
+                                                    onValueChange={(val) => {
+                                                        const providerId = val;
+                                                        if (providerId) {
+                                                            toggleProviderByRole(lead.lead_id, providerId, activeRole);
+                                                        }
+                                                    }}
+                                                    style={styles.providerPicker}
+                                                >
+                                                    <Picker.Item label="Add Provider..." value="" />
+                                                    {availableProviders.map((provider) => (
+                                                        <Picker.Item
+                                                            key={provider.id}
+                                                            label={`${provider.first_name} ${provider.last_name}`}
+                                                            value={provider.id}
+                                                        />
+                                                    ))}
+                                                </Picker>
+                                            )}
+                                        </View>
+                                    </View>
 
-                                        <Text style={styles.label}>📝 Note:</Text>
+                                    <View style={styles.notesContainer}>
+                                        <Text style={styles.label}>Notes for {activeRole}:</Text>
                                         <TextInput
-                                            style={styles.input}
-                                            placeholder="Enter a note for this role"
-                                            value={lead.notes_by_role?.[activeRole] || ''}
-                                            onChangeText={(text: string) =>
+                                            style={styles.notesInput}
+                                            value={lead.notes_by_role?.[activeRole]}
+                                            onChangeText={(text) => {
                                                 setLeads((prev) =>
                                                     prev.map((l) =>
                                                         l.lead_id === lead.lead_id
@@ -605,60 +622,24 @@ export default function MyLeadsCreatedAccordion() {
                                                             }
                                                             : l
                                                     )
-                                                )
-                                            }
-                                            editable={!((lead.purchased_by ?? []).some((buyer) => buyer.job_title === activeRole))}
-                                        />
-
-                                        <Text style={styles.label}>👥 Providers:</Text>
-                                        {selectedProviders.map((id) => {
-                                            const provider = providers.find((p) => String(p.id) === id);
-                                            if (!provider) return null;
-                                            return (
-                                                <View key={id} style={styles.providerRow}>
-                                                    <Text>
-                                                        {provider.first_name} {provider.last_name}
-                                                    </Text>
-                                                    <TouchableOpacity
-                                                        onPress={() => toggleProviderByRole(lead.lead_id, id, activeRole)}
-                                                        disabled={(lead.purchased_by ?? []).some((buyer) => buyer.job_title === activeRole)}
-                                                    >
-                                                        <Text style={styles.removeText}>✕</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            );
-                                        })}
-
-                                        <Picker
-                                            selectedValue=""
-                                            onValueChange={(selectedId) => {
-                                                if (!selectedId) return;
-                                                toggleProviderByRole(lead.lead_id, selectedId, activeRole);
+                                                );
                                             }}
-                                            enabled={!((lead.purchased_by ?? []).some((buyer) => buyer.job_title === activeRole))}
-                                        >
-                                            <Picker.Item label="Add a provider..." value="" />
-                                            {availableProviders.map((p) => (
-                                                <Picker.Item
-                                                    key={p.id}
-                                                    label={`${p.first_name} ${p.last_name} (${p.job_title})`}
-                                                    value={String(p.id)}
-                                                />
-                                            ))}
-                                        </Picker>
+                                            multiline
+                                            numberOfLines={3}
+                                            placeholder="Enter notes here..."
+                                        />
                                     </View>
 
                                     <TouchableOpacity
-                                        style={[
-                                            styles.saveButton,
-                                            { opacity: savingLeadId === lead.lead_id ? 0.6 : 1 },
-                                        ]}
+                                        style={styles.saveButton}
                                         onPress={() => saveLead(lead.lead_id)}
                                         disabled={savingLeadId === lead.lead_id}
                                     >
-                                        <Text style={styles.saveText}>
-                                            {savingLeadId === lead.lead_id ? 'Saving...' : 'SAVE LEAD DISTRIBUTION'}
-                                        </Text>
+                                        {savingLeadId === lead.lead_id ? (
+                                            <ActivityIndicator size="small" color="#fff" />
+                                        ) : (
+                                            <Text style={styles.saveButtonText}>Save Changes</Text>
+                                        )}
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -666,146 +647,224 @@ export default function MyLeadsCreatedAccordion() {
                     );
                 })
             )}
-            <Toast />
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 16, backgroundColor: '#fff' },
+    container: {
+        flex: 1,
+        padding: 16,
+        backgroundColor: '#f8f9fa',
+    },
     header: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,
+        color: '#333',
     },
     searchInput: {
-        borderColor: '#ccc',
-        borderWidth: 1,
-        padding: 8,
-        borderRadius: 6,
-        marginBottom: 16,
-    },
-    filterContainer: {
-        marginBottom: 16,
-        padding: 10,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#fff',
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#ced4da',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        marginBottom: 16,
+        fontSize: 16,
+    },
+    filterContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ced4da',
+        padding: 16,
+        marginBottom: 16,
     },
     filterRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     filterLabel: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 16,
         color: '#333',
     },
     noData: {
-        fontSize: 16,
-        color: '#666',
         textAlign: 'center',
-        marginTop: 20,
+        fontSize: 18,
+        color: '#666',
+        marginTop: 50,
     },
     card: {
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 14,
-        marginBottom: 20,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ced4da',
+        padding: 16,
+        marginBottom: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
+        elevation: 2,
     },
-    title: { fontSize: 18, fontWeight: 'bold' },
-    priceDetail: { marginLeft: 16, fontSize: 14 },
-    purchasedByContainer: {
-        marginTop: 8,
+    title: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#007bff',
+        marginBottom: 8,
+    },
+    priceDetail: {
+        fontSize: 14,
+        color: '#333',
         marginBottom: 4,
+    },
+    purchasedByContainer: {
+        marginTop: 12,
     },
     purchasedByLabel: {
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
         marginBottom: 4,
-        color: '#2e7d32',
     },
     purchasedByNames: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 6,
     },
     purchasedBadge: {
-        backgroundColor: '#e6ffed',
+        backgroundColor: '#e9ecef',
+        borderRadius: 12,
         paddingVertical: 4,
         paddingHorizontal: 8,
-        borderRadius: 8,
-        marginRight: 6,
-        marginBottom: 6,
+        marginRight: 8,
+        marginBottom: 8,
     },
     purchasedName: {
-        color: '#2e7d32',
-        fontWeight: 'bold',
+        fontSize: 14,
+        color: '#333',
     },
-    notPurchased: {
-        color: '#666',
-        fontStyle: 'italic',
+    expanded: {
+        marginTop: 16,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#ced4da',
     },
-    expanded: { marginTop: 12 },
+    label: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 8,
+    },
     tabRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 6,
-        marginVertical: 10,
+        marginBottom: 16,
     },
-    tab: {
+    tabWithPrice: {
+        flexDirection: 'column',
+        alignItems: 'center',
         backgroundColor: '#ddd',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
+        paddingVertical: 8,
+        paddingHorizontal: 10,
         borderRadius: 8,
         marginRight: 6,
         marginBottom: 6,
+        width: 100,
     },
     activeTab: {
         backgroundColor: '#007bff',
     },
-    tabText: { fontWeight: 'normal' },
-    activeTabText: { color: '#fff', fontWeight: 'bold' },
-    section: { marginTop: 12 },
-    label: { fontWeight: 'bold', marginTop: 10 },
-    priceLabel: { fontWeight: 'bold', marginTop: 10, flex: 1 },
-    priceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-    input: {
-        backgroundColor: '#f4f4f4',
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 4,
-        marginBottom: 10,
-        flex: 1,
+    activeTabText: {
+        color: '#fff',
+        fontWeight: '600',
     },
-    providerRow: {
+    tabText: {
+        color: '#333',
+        fontWeight: '500',
+    },
+    tabPriceInput: {
+        backgroundColor: '#fff',
+        marginTop: 4,
+        borderRadius: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 6,
+        fontSize: 12,
+        width: '100%',
+        textAlign: 'center',
+    },
+    providerSection: {
+        marginTop: 16,
+    },
+    providerList: {
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ced4da',
+        padding: 16,
+        marginBottom: 16,
+    },
+    providerItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f0f0f0',
-        padding: 8,
-        borderRadius: 6,
-        marginTop: 4,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        backgroundColor: '#fff',
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: '#ced4da',
     },
-    removeText: { color: 'red', marginLeft: 8 },
-    enabled: { color: 'green' },
-    disabled: { color: 'gray' },
+    providerName: {
+        fontSize: 16,
+        color: '#333',
+    },
+    removeProvider: {
+        padding: 4,
+    },
+    addProviderContainer: {
+        marginTop: 8,
+    },
+    providerPicker: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ced4da',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+    },
+    notesContainer: {
+        marginTop: 16,
+    },
+    notesInput: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ced4da',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        minHeight: 60,
+        textAlignVertical: 'top',
+        fontSize: 16,
+    },
     saveButton: {
         backgroundColor: '#007bff',
-        padding: 14,
-        borderRadius: 10,
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         alignItems: 'center',
-        marginTop: 20,
+        justifyContent: 'center',
+        marginTop: 16,
     },
-    saveText: {
+    saveButtonText: {
         color: '#fff',
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

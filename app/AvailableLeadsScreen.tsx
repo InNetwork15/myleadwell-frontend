@@ -306,10 +306,6 @@ const AvailableLeadsScreen = () => {
                   ? lead.provider_price.toFixed(2)
                   : 'N/A'}
               </Text>
-              <Text style={styles.detail}>
-                📦 Status: {lead.status || 'Pending'}
-              </Text>
-              <Text style={styles.detail}>📡 Distribution: {lead.distribution_method}</Text>
               <TouchableOpacity
                 disabled={alreadyPurchasedByRole}
                 style={{

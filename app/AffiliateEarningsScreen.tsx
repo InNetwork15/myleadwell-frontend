@@ -71,7 +71,8 @@ const AffiliateEarningsScreen = () => {
 
       setPaidEarnings(paid);
       setTotalPaid(
-        paid.reduce((sum: number, l: any) => sum + parseFloat(l.payout_amount || 0), 0)
+paid.reduce((sum: number, l: any) => sum + (parseFloat(l.payout_amount) || 0), 0)
+
       );
 
       setPendingEarnings(pending);
@@ -126,7 +127,12 @@ const AffiliateEarningsScreen = () => {
             <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
             <Text>👤 Purchased By: {lead.provider_name || 'Unknown'}</Text>
             <Text>💵 Payout: ${lead.payout_amount}</Text>
-            <Text>📆 Paid on: {new Date(lead.payout_sent_at).toLocaleDateString()}</Text>
+<Text>
+  📆 Paid on:{' '}
+  {lead.payout_sent_at
+    ? new Date(lead.payout_sent_at).toLocaleDateString()
+    : 'Not yet sent'}
+</Text>
           </View>
         ))
       )}
@@ -141,7 +147,12 @@ const AffiliateEarningsScreen = () => {
             <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
             <Text>👤 Purchased By: {lead.provider_name || 'Unknown'}</Text>
             <Text>💵 Expected Payout: ${lead.payout_amount}</Text>
-            <Text>📆 Purchased on: {new Date(lead.purchased_at).toLocaleDateString()}</Text>
+<Text>
+  📆 Purchased on:{' '}
+  {lead.purchased_at
+    ? new Date(lead.purchased_at).toLocaleDateString()
+    : 'Date unavailable'}
+</Text>
           </View>
         ))
       )}

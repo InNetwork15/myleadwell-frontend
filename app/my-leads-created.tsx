@@ -502,6 +502,11 @@ export default function MyLeadsCreatedAccordion() {
                                         (p) => p.job_title === activeRole && !selectedProviders.includes(String(p.id))
                                       );
 
+                                      // Check if the role is locked (purchased)
+                                      const isLocked = (lead.purchased_by ?? []).some(
+                                        (purchase) => purchase.job_title === activeRole
+                                      );
+
                                       return (
                                         <View style={styles.section}>
                                           <Text style={styles.label}>Distribution Method:</Text>
@@ -522,7 +527,7 @@ export default function MyLeadsCreatedAccordion() {
                                                 )
                                               );
                                             }}
-                                            enabled={!isPurchased}
+                                            enabled={!isLocked}
                                           >
                                             <Picker.Item label="Select..." value="" />
                                             <Picker.Item label="NETWORK" value="NETWORK" />
@@ -550,7 +555,7 @@ export default function MyLeadsCreatedAccordion() {
                                                 )
                                               );
                                             }}
-                                            editable={!isPurchased}
+                                            editable={!isLocked}
                                           />
 
                                           <TouchableOpacity

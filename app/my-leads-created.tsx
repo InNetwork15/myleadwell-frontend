@@ -286,6 +286,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
+              distribution_method: lead.distribution_method || 'JUMPBALL',
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: lead.affiliate_prices_by_role || {},

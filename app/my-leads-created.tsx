@@ -51,17 +51,18 @@ interface Provider {
 
 interface Lead {
     id: number;
-    lead_id: string; // Added to match usage in code
-    purchase_id?: string | number; // Optional, as used in key
+    lead_id: string;
+    purchase_id?: string | number;
     lead_name: string;
     lead_email?: string;
     lead_phone?: string;
     state: string;
     county: string;
-    affiliate_name: string; // Added to display affiliate's name
+    affiliate_name: string;
     purchased_by?: { job_title: string; first_name: string; last_name: string }[];
     role_enabled?: { [key: string]: boolean };
     distribution_method: 'JUMPBALL' | 'NETWORK' | string;
+    distribution_method_by_role?: { [key: string]: string }; // <-- Added this line
     preferred_provider_ids?: number[];
     status?: string;
     provider_price?: number;
@@ -133,6 +134,7 @@ export default function MyLeadsCreatedAccordion() {
                 county: lead.county_name || lead.county || 'N/A',
                 affiliate_name: lead.affiliate_name || 'Unknown', // fallback if missing
                 distribution_method: lead.distribution_method || null,
+                distribution_method_by_role: lead.distribution_method_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 'JUMPBALL' }), {}), // <-- Added this line
                 affiliate_prices_by_role: lead.affiliate_prices_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 0 }), {}),
                 preferred_providers_by_role: lead.preferred_providers_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: [] }), {}),
                 role_enabled: lead.role_enabled || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: false }), {}),
@@ -284,7 +286,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-                distribution_method: lead.distribution_method,
+                distribution_method_by_role: lead.distribution_method_by_role,
                 preferred_providers_by_role: lead.preferred_providers_by_role,
                 role_enabled: lead.role_enabled,
                 notes_by_role: lead.notes_by_role,
@@ -479,16 +481,25 @@ export default function MyLeadsCreatedAccordion() {
 
                             {isExpanded && (
                                 <View style={styles.expanded}>
+                                    <Text style={styles.label}>Distribution Method for {activeRole}:</Text>
                                     <Picker
-                                        selectedValue={lead.distribution_method || ''}
+                                        selectedValue={lead.distribution_method_by_role?.[activeRole] || ''}
                                         onValueChange={(val) => {
                                             setLeads((prev) =>
                                                 prev.map((l) =>
-                                                    l.lead_id === lead.lead_id ? { ...l, distribution_method: val || null } : l
+                                                    l.lead_id === lead.lead_id
+                                                        ? {
+                                                            ...l,
+                                                            distribution_method_by_role: {
+                                                                ...l.distribution_method_by_role,
+                                                                [activeRole]: val,
+                                                            },
+                                                        }
+                                                        : l
                                                 )
                                             );
                                         }}
-                                        enabled={canChangeDistribution}
+                                        enabled={!((lead.purchased_by ?? []).some((buyer) => buyer.job_title === activeRole))}
                                     >
                                         <Picker.Item label="Select Distribution Method" value="" />
                                         <Picker.Item label="NETWORK" value="NETWORK" />

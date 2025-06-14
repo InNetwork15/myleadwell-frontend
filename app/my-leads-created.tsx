@@ -286,11 +286,11 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-                distribution_method_by_role: lead.distribution_method_by_role,
-                preferred_providers_by_role: lead.preferred_providers_by_role,
-                role_enabled: lead.role_enabled,
-                notes_by_role: lead.notes_by_role,
-                affiliate_prices_by_role: lead.affiliate_prices_by_role,
+              distribution_method_by_role: lead.distribution_method_by_role || {},
+              role_enabled: lead.role_enabled || {},
+              affiliate_prices_by_role: lead.affiliate_prices_by_role || {},
+              preferred_providers_by_role: lead.preferred_providers_by_role || {},
+              notes_by_role: lead.notes_by_role || {},
             };
 
             console.log('🔍 Saving lead with payload:', payload);
@@ -506,6 +506,16 @@ export default function MyLeadsCreatedAccordion() {
                                         <Picker.Item label="JUMPBALL" value="JUMPBALL" />
                                     </Picker>
 
+                                    <Text style={styles.label}>Select Role:</Text>
+                                    <Picker
+                                      selectedValue={activeRole}
+                                      onValueChange={(role) => toggleTab(lead.lead_id, role)}
+                                    >
+                                      {JOB_TITLES.map((role) => (
+                                        <Picker.Item key={role} label={role} value={role} />
+                                      ))}
+                                    </Picker>
+
                                     <View style={styles.tabRow}>
                                         {JOB_TITLES.map((role) => {
                                             const isPurchased = (lead.purchased_by ?? []).some((p) => p.job_title === role);
@@ -589,16 +599,15 @@ export default function MyLeadsCreatedAccordion() {
                                                             toggleProviderByRole(lead.lead_id, providerId, activeRole);
                                                         }
                                                     }}
-                                                    style={styles.providerPicker}
                                                 >
-                                                    <Picker.Item label="Add Provider..." value="" />
-                                                    {availableProviders.map((provider) => (
-                                                        <Picker.Item
-                                                            key={provider.id}
-                                                            label={`${provider.first_name} ${provider.last_name}`}
-                                                            value={provider.id}
-                                                        />
-                                                    ))}
+                                                  <Picker.Item label="Add a provider..." value="null" />
+                                                  {availableProviders.map((p) => (
+                                                    <Picker.Item
+                                                      key={p.id}
+                                                      label={`${p.first_name} ${p.last_name}`}
+                                                      value={String(p.id)}
+                                                    />
+                                                  ))}
                                                 </Picker>
                                             )}
                                         </View>

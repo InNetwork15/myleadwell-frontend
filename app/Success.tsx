@@ -15,7 +15,7 @@ export default function Success() {
         });
 
         setTimeout(() => {
-            router.replace('/home'); // Or your actual Home screen route
+            router.replace('/HomeScreen'); // Or your actual Home screen route
         }, 3000);
     }, []);
 

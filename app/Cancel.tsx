@@ -15,7 +15,7 @@ export default function Cancel() {
     });
 
     setTimeout(() => {
-      router.replace('/home'); // Adjust route if needed
+      router.replace('/HomeScreen'); // Adjust route if needed
     }, 3000);
   }, []);
 

@@ -504,7 +504,7 @@ export default function MyLeadsCreatedAccordion() {
 
                                       // Check if the role is locked (purchased)
                                       const isLocked = (lead.purchased_by ?? []).some(
-                                        (purchase) => purchase.job_title === activeRole
+                                        (p) => p.job_title?.toLowerCase() === activeRole.toLowerCase()
                                       );
 
                                       return (

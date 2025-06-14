@@ -452,7 +452,6 @@ export default function MyLeadsCreatedAccordion() {
                             <TouchableOpacity onPress={() => toggleAccordion(lead.lead_id)}>
                                 <Text style={styles.title}>{lead.lead_name}</Text>
                                 <Text>{lead.state}, {lead.county}</Text>
-                                <Text>Distribution: {lead.distribution_method || 'Not Set'}</Text>
                                 <Text>💰 Affiliate Prices:</Text>
                                 {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
                                     <Text key={role} style={styles.priceDetail}>

@@ -12,8 +12,6 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwt_decode from 'jwt-decode';
 import { API_BASE_URL } from '../config';
-import { getUserFromToken } from '../utils/auth';
-
 
 const AffiliateEarningsScreen = () => {
   const router = useRouter();
@@ -26,37 +24,26 @@ const AffiliateEarningsScreen = () => {
   const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    init();
+    initialize();
   }, []);
 
-  const init = async () => {
+  const initialize = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
       if (!storedToken) throw new Error('No token found');
-
       const decoded: any = jwt_decode(storedToken);
-      const uid = decoded?.id;
-
-      if (!uid) throw new Error('No user ID in token');
-
-      console.log('🔐 Decoded user ID:', uid);
+      if (!decoded?.id) throw new Error('Invalid token');
       setToken(storedToken);
-      setUserId(uid);
-      await AsyncStorage.setItem('user_id', uid.toString());
-
-      await fetchEarnings(storedToken, uid);
-    } catch (err) {
-      console.error('❌ Init/auth error:', err);
+      setUserId(decoded.id);
+      await fetchEarnings(storedToken);
+    } catch (error) {
+      console.error('Init error:', error);
       setLoading(false);
     }
   };
 
-  
-
-  const fetchEarnings = async (authToken: string, uid: number) => {
+  const fetchEarnings = async (authToken: string) => {
     try {
-      console.log('📡 Fetching earnings for UID:', uid);
-
       const [paidRes, pendingRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/affiliate-earnings`, {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -70,28 +57,25 @@ const AffiliateEarningsScreen = () => {
       const pending = pendingRes.data || [];
 
       setPaidEarnings(paid);
-      setTotalPaid(
-paid.reduce((sum: number, l: any) => sum + (parseFloat(l.payout_amount) || 0), 0)
-
-      );
-
       setPendingEarnings(pending);
-      setTotalPending(
-        pending.reduce((sum: number, l: any) => sum + parseFloat(l.payout_amount || 0), 0)
-      );
 
-      console.log('✅ Earnings loaded:', { paid, pending });
-    } catch (err: any) {
-      console.error('❌ Fetch earnings error:', err?.response?.data || err.message);
+      setTotalPaid(
+        paid.reduce((sum: number, item: any) => sum + (parseFloat(item.payout_amount) || 0), 0)
+      );
+      setTotalPending(
+        pending.reduce((sum: number, item: any) => sum + (parseFloat(item.payout_amount) || 0), 0)
+      );
+    } catch (error: any) {
+      console.error('Fetch error:', error?.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshEarnings = async () => {
-    if (token && userId !== null) {
+  const refreshData = async () => {
+    if (token) {
       setLoading(true);
-      await fetchEarnings(token, userId);
+      await fetchEarnings(token);
     }
   };
 
@@ -110,7 +94,7 @@ paid.reduce((sum: number, l: any) => sum + (parseFloat(l.payout_amount) || 0), 0
         <Text style={styles.homeButtonText}>🏠 Home</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.refreshButton} onPress={refreshEarnings}>
+      <TouchableOpacity style={styles.refreshButton} onPress={refreshData}>
         <Text style={styles.refreshButtonText}>🔄 Refresh</Text>
       </TouchableOpacity>
 
@@ -119,40 +103,38 @@ paid.reduce((sum: number, l: any) => sum + (parseFloat(l.payout_amount) || 0), 0
 
       <Text style={styles.sectionTitle}>Paid Earnings</Text>
       {paidEarnings.length === 0 ? (
-        <Text style={styles.noData}>No paid earnings yet.</Text>
+        <Text style={styles.noData}>No paid earnings found.</Text>
       ) : (
-        paidEarnings.map((lead: any, index: number) => (
-          <View key={`paid-${lead.id || index}`} style={styles.card}>
-            <Text style={styles.clientName}>{lead.lead_name}</Text>
-            <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
-            <Text>👤 Purchased By: {lead.provider_name || 'Unknown'}</Text>
-            <Text>💵 Payout: ${lead.payout_amount}</Text>
-<Text>
-  📆 Paid on:{' '}
-  {lead.payout_sent_at
-    ? new Date(lead.payout_sent_at).toLocaleDateString()
-    : 'Not yet sent'}
-</Text>
+        paidEarnings.map((entry: any, idx: number) => (
+          <View key={`paid-${entry.id || idx}`} style={styles.card}>
+            <Text style={styles.clientName}>{entry.lead_name}</Text>
+            <Text>👤 Purchased By: {entry.provider_name || 'Unknown'}</Text>
+            <Text>💵 Paid: ${entry.payout_amount}</Text>
+            <Text>
+              📆 Paid On:{' '}
+              {entry.payout_sent_at
+                ? new Date(entry.payout_sent_at).toLocaleDateString()
+                : 'Unknown'}
+            </Text>
           </View>
         ))
       )}
 
       <Text style={styles.sectionTitle}>Pending Earnings</Text>
       {pendingEarnings.length === 0 ? (
-        <Text style={styles.noData}>No pending earnings.</Text>
+        <Text style={styles.noData}>No pending payments yet.</Text>
       ) : (
-        pendingEarnings.map((lead: any, index: number) => (
-          <View key={`pending-${lead.id || index}`} style={[styles.card, { backgroundColor: '#e6f7ff' }]}>
-            <Text style={styles.clientName}>{lead.lead_name}</Text>
-            <Text>📅 Submitted: {new Date(lead.created_at).toLocaleDateString()}</Text>
-            <Text>👤 Purchased By: {lead.provider_name || 'Unknown'}</Text>
-            <Text>💵 Expected Payout: ${lead.payout_amount}</Text>
-<Text>
-  📆 Purchased on:{' '}
-  {lead.purchased_at
-    ? new Date(lead.purchased_at).toLocaleDateString()
-    : 'Date unavailable'}
-</Text>
+        pendingEarnings.map((entry: any, idx: number) => (
+          <View key={`pending-${entry.id || idx}`} style={[styles.card, { backgroundColor: '#eaf7ff' }]}>
+            <Text style={styles.clientName}>{entry.lead_name}</Text>
+            <Text>👤 Purchased By: {entry.provider_name || 'Unknown'}</Text>
+            <Text>💵 Expected: ${entry.payout_amount}</Text>
+            <Text>
+              📆 Purchased On:{' '}
+              {entry.purchased_at
+                ? new Date(entry.purchased_at).toLocaleDateString()
+                : 'Unknown'}
+            </Text>
           </View>
         ))
       )}
@@ -171,20 +153,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   subHeader: {
     fontSize: 16,
-    fontWeight: 'bold',
     marginBottom: 16,
     color: '#666',
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 16,
+    marginTop: 20,
     marginBottom: 8,
   },
   card: {
@@ -205,12 +186,12 @@ const styles = StyleSheet.create({
   },
   noData: {
     fontSize: 14,
-    color: '#666',
+    color: '#999',
     marginBottom: 12,
   },
   homeButton: {
     alignSelf: 'flex-start',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f1f3f5',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,

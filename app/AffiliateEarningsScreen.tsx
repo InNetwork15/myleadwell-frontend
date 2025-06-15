@@ -71,8 +71,8 @@ const AffiliateEarningsScreen = () => {
       contentContainerStyle={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.homeButtonText}>← Home</Text>
+      <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('HomeScreen')}>
+        <Text style={styles.homeButtonText}>Home</Text>
       </TouchableOpacity>
 
       <Text style={styles.header}>Affiliate Earnings</Text>

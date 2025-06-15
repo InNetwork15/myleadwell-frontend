@@ -6,12 +6,15 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { loadAuthData } from '../utils/auth';
 
 const AffiliateEarningsScreen = () => {
+  const navigation = useNavigation();
   const [totalPaid, setTotalPaid] = useState(0);
   const [totalPending, setTotalPending] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -68,6 +71,10 @@ const AffiliateEarningsScreen = () => {
       contentContainerStyle={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('Home')}>
+        <Text style={styles.homeButtonText}>← Home</Text>
+      </TouchableOpacity>
+
       <Text style={styles.header}>Affiliate Earnings</Text>
       <View style={styles.card}>
         <Text style={styles.label}>Total Paid:</Text>
@@ -90,6 +97,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  homeButton: {
+    marginBottom: 15,
+  },
+  homeButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
   },
   header: {
     fontSize: 24,

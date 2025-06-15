@@ -108,12 +108,30 @@ if (!token || !user)  {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <TouchableOpacity onPress={() => router.push('/')} style={{ marginRight: 12 }}>
-          <Ionicons name="arrow-back" size={28} color="#007bff" />
-        </TouchableOpacity>
-        <Text style={styles.header}>📊 Provider Conversion Metrics</Text>
-      </View>
+      <TouchableOpacity
+        style={{
+          alignSelf: 'flex-start',
+          backgroundColor: '#f8f9fa',
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: '#ced4da',
+          marginBottom: 12,
+        }}
+        onPress={() => router.push('/HomeScreen')}
+      >
+        <Text
+          style={{
+            color: '#007bff',
+            fontWeight: '600',
+            fontSize: 16,
+          }}
+        >
+          Home
+        </Text>
+      </TouchableOpacity>
+      <Text style={styles.header}>📊 Provider Conversion Metrics</Text>
       <Text style={styles.subtitle}>Your lifetime performance as a provider</Text>
 
       {/* Defensive UI for conversionData */}

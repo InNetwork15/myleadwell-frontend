@@ -355,7 +355,7 @@ export default function MyLeadsCreatedAccordion() {
             const hasAvailableRole = JOB_TITLES.some((role) => {
                 const isEnabled = (lead.role_enabled?.[role] === true);
                 const hasPrice = !!lead.affiliate_prices_by_role && lead.affiliate_prices_by_role[role] > 0;
-                const isNotPurchased = !(lead.purchased_by ?? []).some((buyer) => buyer.job_title === role);
+                const isNotPurchased = !(lead.purchased_by ?? []).some((provider) => provider.job_title === role);
                 return isEnabled && hasPrice && isNotPurchased;
             });
             if (!hasAvailableRole) {
@@ -444,7 +444,7 @@ export default function MyLeadsCreatedAccordion() {
                     const enabledRoles = Object.entries(lead.role_enabled ?? {})
                         .filter(([_, enabled]) => enabled)
                         .map(([role]) => role);
-                    const purchasedRoles = (lead.purchased_by ?? []).map(buyer => buyer.job_title);
+                    const purchasedRoles = (lead.purchased_by ?? []).map(provider => provider.job_title);
                     const canChangeDistribution = enabledRoles.some(role => !purchasedRoles.includes(role));
 
                     return (
@@ -462,10 +462,10 @@ export default function MyLeadsCreatedAccordion() {
                                     <View style={styles.purchasedByContainer}>
                                         <Text style={styles.purchasedByLabel}>Purchased By:</Text>
                                         <View style={styles.purchasedByNames}>
-                                            {lead.purchased_by.map((buyer, idx) => (
+                                            {lead.purchased_by.map((provider, idx) => (
                                                 <View key={idx} style={styles.purchasedBadge}>
                                                     <Text style={styles.purchasedName}>
-                                                        {buyer.job_title}: {buyer.first_name} {buyer.last_name}
+                                                        {provider.job_title}: {provider.first_name} {provider.last_name}
                                                     </Text>
                                                 </View>
                                             ))}
@@ -492,7 +492,7 @@ export default function MyLeadsCreatedAccordion() {
                                     </Picker>
 
                                     {(() => {
-                                      const isPurchased = (lead.purchased_by ?? []).some((buyer) => buyer.job_title === activeRole);
+                                      const isPurchased = (lead.purchased_by ?? []).some((provider) => provider.job_title === activeRole);
                                       const distribution = lead.distribution_method_by_role?.[activeRole] ?? '';
                                       const price = lead.affiliate_prices_by_role?.[activeRole] ?? '';
                                       const note = lead.notes_by_role?.[activeRole] ?? '';

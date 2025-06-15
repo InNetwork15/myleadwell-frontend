@@ -1,20 +1,33 @@
 ﻿import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Pressable,
+    ActivityIndicator,
+    Alert,
+    Button,
+    Platform,
+    ToastAndroid,
+    TouchableOpacity,
+    TextInput,
+    Switch,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
-import { API_BASE_URL } from '../config';
-import { loadAuthData } from '../utils/auth';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+import * as WebBrowser from 'expo-web-browser';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+
+import { API_BASE_URL } from '../config'; // adjust path if needed
 
 const AffiliateEarningsScreen = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [totalPaid, setTotalPaid] = useState(0);
   const [totalPending, setTotalPending] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -71,8 +84,28 @@ const AffiliateEarningsScreen = () => {
       contentContainerStyle={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('HomeScreen')}>
-        <Text style={styles.homeButtonText}>Home</Text>
+      <TouchableOpacity
+        style={{
+          alignSelf: 'flex-start',
+          backgroundColor: '#f8f9fa',
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: '#ced4da',
+          marginBottom: 12,
+        }}
+        onPress={() => router.push('/HomeScreen')}
+      >
+        <Text
+          style={{
+            color: '#007bff',
+            fontWeight: '600',
+            fontSize: 16,
+          }}
+        >
+          Home
+        </Text>
       </TouchableOpacity>
 
       <Text style={styles.header}>Affiliate Earnings</Text>

@@ -1,30 +1,17 @@
 ﻿import React, { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    Pressable,
-    ActivityIndicator,
-    Alert,
-    Button,
-    Platform,
-    ToastAndroid,
-    TouchableOpacity,
-    TextInput,
-    Switch,
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import axios from 'axios';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Toast from 'react-native-toast-message';
-import * as WebBrowser from 'expo-web-browser';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
-
-import { API_BASE_URL } from '../config'; // adjust path if needed
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+import { loadAuthData } from '../utils/auth';
 
 const AffiliateEarningsScreen = () => {
   const router = useRouter();
@@ -130,13 +117,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  homeButton: {
-    marginBottom: 15,
-  },
-  homeButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
   },
   header: {
     fontSize: 24,

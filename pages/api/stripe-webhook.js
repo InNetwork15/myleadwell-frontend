@@ -1,6 +1,6 @@
 ﻿import { buffer } from 'micro';
 import Stripe from 'stripe';
-import db from '../../utils/db'; // adjust path if needed
+import db from '../../utils/db'; // Adjust path if needed
 
 export const config = {
   api: {
@@ -36,18 +36,18 @@ export default async function handler(req, res) {
     const payment_intent_id = session.payment_intent;
 
     try {
-      // Check if this lead has already been purchased by this provider for this job title
+      // Check for existing purchase
       const existing = await db.query(
         `SELECT id FROM lead_purchases WHERE lead_id = $1 AND provider_id = $2 AND job_title = $3`,
         [lead_id, provider_id, job_title]
       );
 
       if (existing.rows.length > 0) {
-        console.log('🔁 Duplicate purchase detected — already processed');
-        return res.status(200).json({ message: 'Already handled' });
+        console.log('🔁 Duplicate lead purchase already exists. Skipping insert.');
+        return res.status(200).json({ message: 'Duplicate ignored' });
       }
 
-      // Insert new purchase
+      // Insert new lead purchase
       await db.query(
         `INSERT INTO lead_purchases (
           lead_id, provider_id, status, purchased_at, job_title,
@@ -59,17 +59,17 @@ export default async function handler(req, res) {
           'confirmed',
           job_title,
           payment_intent_id,
-          session.amount_total / 100, // Convert cents to dollars
+          session.amount_total / 100
         ]
       );
 
-      console.log(`✅ Recorded purchase for lead ${lead_id}, provider ${provider_id}`);
+      console.log(`✅ Lead ${lead_id} purchased by provider ${provider_id} inserted.`);
       return res.status(200).json({ received: true });
     } catch (err) {
-      console.error('❌ Failed to record purchase in DB:', err.message);
+      console.error('❌ Error inserting purchase:', err.message);
       return res.status(500).json({ error: 'Failed to record purchase in database' });
     }
   }
 
-  res.status(200).json({ received: true });
+  return res.status(200).json({ received: true });
 }

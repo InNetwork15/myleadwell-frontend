@@ -32,34 +32,36 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const lead_id = session.metadata.lead_id;
-    const provider_id = session.metadata.provider_id;
-    const job_title = session.metadata.job_title;
+    const lead_id = session.metadata?.lead_id;
+    const provider_id = session.metadata?.provider_id;
+    const job_title = session.metadata?.job_title;
+
+    console.log(`📦 Stripe session completed: lead_id=${lead_id}, provider_id=${provider_id}, job_title=${job_title}`);
 
     try {
-      // Check if this purchase already exists
+      // 1. Check if this lead/job_title is already purchased
       const existing = await db.query(
         `SELECT 1 FROM lead_purchases WHERE lead_id = $1 AND job_title = $2`,
         [lead_id, job_title]
       );
 
-      if (existing.rowCount > 0 || (existing.rows && existing.rows.length > 0)) {
-        console.log(`🔁 Purchase already exists for lead_id=${lead_id}, job_title=${job_title}. Skipping insert.`);
-        return res.status(200).json({ message: 'Duplicate purchase – already processed.' });
+      if (existing.rowCount > 0) {
+        console.log(`⚠️ Duplicate lead purchase for lead_id=${lead_id} and job_title=${job_title}. Skipping insert.`);
+        return res.status(200).send(); // Return 200 to stop retries
       }
 
-      // If not, insert the new purchase
+      // 2. Insert into lead_purchases
       await db.query(
         `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
          VALUES ($1, $2, $3, NOW(), $4)`,
-        [lead_id, provider_id, job_title, 100] // adjust revenue as needed
+        [lead_id, provider_id, job_title, 100] // Adjust revenue as needed
       );
 
-      console.log(`✅ Lead purchase recorded: lead_id=${lead_id}, job_title=${job_title}`);
-      return res.status(200).json({ message: 'Purchase recorded successfully.' });
+      console.log(`✅ Lead purchase recorded for lead_id=${lead_id}, job_title=${job_title}`);
+      return res.status(200).send();
 
     } catch (err) {
-      console.error('❌ Error handling completed checkout.session webhook:', err.message, err.stack);
+      console.error('❌ Error recording lead purchase in DB:', err.message);
       return res.status(500).json({ error: 'Failed to record purchase in database' });
     }
   }

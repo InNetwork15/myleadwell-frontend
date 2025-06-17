@@ -79,8 +79,9 @@ const AvailableLeadsScreen = () => {
       } else {
         // Enrich leads with provider_price based on user's job_title
         const enrichedLeads = leadsArray.map((lead: any) => {
-          const price = user?.job_title ? lead.affiliate_prices_by_role?.[user.job_title] : null;
-          return { ...lead, provider_price: price };
+          const rawPrice = user?.job_title ? lead.affiliate_prices_by_role?.[user.job_title] : null;
+          const adjustedPrice = rawPrice ? (rawPrice * 1.35).toFixed(2) : null;
+          return { ...lead, provider_price: adjustedPrice };
         });
         setLeads(enrichedLeads);
       }
@@ -325,10 +326,13 @@ const AvailableLeadsScreen = () => {
               <Text style={styles.detail}>📍 {lead.state}, {lead.county}</Text>
               <Text style={styles.detail}>👤 Affiliate: {lead.affiliate_name}</Text>
               <Text style={styles.detail}>
-                💲 Lead Cost: $
+                💲 Lead Cost (Your Price):{' '}
                 {typeof lead.provider_price === 'number' && !isNaN(lead.provider_price)
-                  ? lead.provider_price.toFixed(2)
+                  ? lead.provider_price
                   : 'N/A'}
+              </Text>
+              <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>
+                Price includes 35% platform fee.
               </Text>
               <TouchableOpacity
                 disabled={alreadyPurchasedByRole}

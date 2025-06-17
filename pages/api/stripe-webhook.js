@@ -32,41 +32,34 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const { lead_id, provider_id, job_title } = session.metadata;
-    const payment_intent_id = session.payment_intent;
+    const lead_id = session.metadata.lead_id;
+    const provider_id = session.metadata.provider_id;
+    const job_title = session.metadata.job_title;
 
     try {
-      // Check for existing purchase
+      // Check if this purchase already exists
       const existing = await db.query(
-        `SELECT id FROM lead_purchases WHERE lead_id = $1 AND provider_id = $2 AND job_title = $3`,
-        [lead_id, provider_id, job_title]
+        `SELECT 1 FROM lead_purchases WHERE lead_id = $1 AND job_title = $2`,
+        [lead_id, job_title]
       );
 
-      if (existing.rows.length > 0) {
-        console.log('🔁 Duplicate lead purchase already exists. Skipping insert.');
-        return res.status(200).json({ message: 'Duplicate ignored' });
+      if (existing.rowCount > 0 || (existing.rows && existing.rows.length > 0)) {
+        console.log(`🔁 Purchase already exists for lead_id=${lead_id}, job_title=${job_title}. Skipping insert.`);
+        return res.status(200).json({ message: 'Duplicate purchase – already processed.' });
       }
 
-      // Insert new lead purchase
+      // If not, insert the new purchase
       await db.query(
-        `INSERT INTO lead_purchases (
-          lead_id, provider_id, status, purchased_at, job_title,
-          payment_intent_id, lead_price
-        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)`,
-        [
-          lead_id,
-          provider_id,
-          'confirmed',
-          job_title,
-          payment_intent_id,
-          session.amount_total / 100
-        ]
+        `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
+         VALUES ($1, $2, $3, NOW(), $4)`,
+        [lead_id, provider_id, job_title, 100] // adjust revenue as needed
       );
 
-      console.log(`✅ Lead ${lead_id} purchased by provider ${provider_id} inserted.`);
-      return res.status(200).json({ received: true });
+      console.log(`✅ Lead purchase recorded: lead_id=${lead_id}, job_title=${job_title}`);
+      return res.status(200).json({ message: 'Purchase recorded successfully.' });
+
     } catch (err) {
-      console.error('❌ Error inserting purchase:', err.message);
+      console.error('❌ Error handling completed checkout.session webhook:', err.message, err.stack);
       return res.status(500).json({ error: 'Failed to record purchase in database' });
     }
   }

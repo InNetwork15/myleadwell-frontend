@@ -49,36 +49,38 @@ export default async function handler(req, res) {
     const provider_id = parseInt(session.metadata?.provider_id, 10);
     const job_title = session.metadata?.job_title;
     const payment_intent_id = session.payment_intent;
-    const lead_price = session.amount_total / 100;
+    const amountTotal = session.amount_total;
+    const affiliatePrice = session.metadata?.affiliate_price;
 
     try {
-      const query = `
-        INSERT INTO lead_purchases (
-          lead_id, provider_id, job_title, status,
-          purchased_at, updated_at, last_updated,
-          provider_revenue, payment_intent_id, lead_price
-        )
-        VALUES (
-          $1, $2, $3, 'confirmed',
-          NOW(), NOW(), NOW(),
-          $4, $5, $4
-        )
-      `;
-      const values = [
-        lead_id,
-        provider_id,
-        job_title,
-        lead_price,
-        payment_intent_id
-      ];
-
-      await pool.query(query, values);
+      await pool.query(
+        `INSERT INTO lead_purchases (
+          lead_id,
+          provider_id,
+          status,
+          purchased_at,
+          payment_intent_id,
+          job_title,
+          lead_price,
+          affiliate_price
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          lead_id,
+          provider_id,
+          'pending',
+          new Date(),
+          payment_intent_id,
+          job_title,
+          amountTotal / 100,
+          affiliatePrice || 0
+        ]
+      );
 
       console.log('✅ Lead purchase recorded for lead:', lead_id);
       return res.status(200).json({ received: true });
-    } catch (err) {
-      console.error('❌ Failed to record purchase in database:', err.message);
-      return res.status(500).json({ error: 'Failed to record purchase in database' });
+    } catch (error) {
+      console.error('Webhook error inserting to DB:', error.message, error.stack);
+      return res.status(500).json({ error: 'Webhook DB insert failed', details: error.message });
     }
   }
 

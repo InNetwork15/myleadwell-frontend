@@ -77,7 +77,12 @@ const AvailableLeadsScreen = () => {
       if (!Array.isArray(leadsArray) || leadsArray.length === 0) {
         setLeads([]);
       } else {
-        setLeads(leadsArray);
+        // Enrich leads with provider_price based on user's job_title
+        const enrichedLeads = leadsArray.map((lead: any) => {
+          const price = user?.job_title ? lead.affiliate_prices_by_role?.[user.job_title] : null;
+          return { ...lead, provider_price: price };
+        });
+        setLeads(enrichedLeads);
       }
     } catch (error: any) {
       console.error('❌ Error fetching leads:', {
@@ -148,6 +153,7 @@ const AvailableLeadsScreen = () => {
         {
           lead_id: lead.id,
           provider_id: user.id,
+          job_title: user.job_title, // <-- include job_title in the payload
         },
         {
           headers: {

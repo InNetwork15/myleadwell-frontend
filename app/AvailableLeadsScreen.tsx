@@ -79,9 +79,12 @@ const AvailableLeadsScreen = () => {
       } else {
         // Enrich leads with provider_price based on user's job_title
         const enrichedLeads = leadsArray.map((lead: any) => {
-          const rawPrice = user?.job_title ? lead.affiliate_prices_by_role?.[user.job_title] : null;
-          const adjustedPrice = rawPrice ? (rawPrice * 1.35).toFixed(2) : null;
-          return { ...lead, provider_price: adjustedPrice };
+          const rawPrice = lead.provider_price;
+          const adjustedPrice = rawPrice ? (parseFloat(rawPrice) * 1.35).toFixed(2) : null;
+          return {
+            ...lead,
+            display_price: adjustedPrice,
+          };
         });
         setLeads(enrichedLeads);
       }
@@ -319,33 +322,46 @@ const AvailableLeadsScreen = () => {
             (p) => p.job_title?.toLowerCase() === user?.job_title?.toLowerCase()
           );
           return (
-            <View key={lead.id} style={styles.card}>
-              <Text style={styles.title}>{maskName(lead.lead_name)}</Text>
-              <Text style={styles.detail}>📧 {maskEmail(lead.lead_email)}</Text>
-              <Text style={styles.detail}>📞 {maskPhone(lead.lead_phone)}</Text>
-              <Text style={styles.detail}>📍 {lead.state}, {lead.county}</Text>
-              <Text style={styles.detail}>👤 Affiliate: {lead.affiliate_name}</Text>
-              <Text style={styles.detail}>
-                💲 Lead Cost (Your Price):{' '}
-                {typeof lead.provider_price === 'number' && !isNaN(lead.provider_price)
-                  ? lead.provider_price
-                  : 'N/A'}
+            <View
+              key={lead.id}
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 16,
+                shadowColor: '#000',
+                shadowOpacity: 0.08,
+                shadowRadius: 8,
+                padding: 16,
+                marginBottom: 24,
+                borderWidth: 1,
+                borderColor: '#e5e7eb',
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 4 }}>🔒 REDACTED</Text>
+              <Text style={{ fontSize: 14, color: '#4b5563' }}>
+                📍 {lead.county}, {lead.state}
               </Text>
-              <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>
+              <Text style={{ fontSize: 14, color: '#4b5563' }}>
+                👤 Affiliate: {lead.affiliate_name}
+              </Text>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: '#15803d', marginTop: 8 }}>
+                {lead.display_price
+                  ? `Lead Cost (Your Price): $${lead.display_price}`
+                  : 'Lead Cost: Unavailable'}
+              </Text>
+              <Text style={{ fontSize: 12, color: '#6b7280' }}>
                 Price includes 35% platform fee.
               </Text>
               <TouchableOpacity
-                disabled={alreadyPurchasedByRole}
                 style={{
-                  backgroundColor: alreadyPurchasedByRole ? 'gray' : '#007bff',
-                  padding: 12,
-                  borderRadius: 8,
-                  marginTop: 10,
+                  backgroundColor: '#2563eb',
+                  marginTop: 16,
+                  paddingVertical: 10,
+                  borderRadius: 12,
                 }}
                 onPress={() => handlePurchase(lead)}
               >
-                <Text style={{ color: 'white', textAlign: 'center' }}>
-                  {alreadyPurchasedByRole ? 'Already Purchased' : 'Purchase Lead'}
+                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
+                  Purchase Lead
                 </Text>
               </TouchableOpacity>
             </View>

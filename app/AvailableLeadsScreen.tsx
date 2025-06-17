@@ -345,11 +345,8 @@ const AvailableLeadsScreen = () => {
               </Text>
               <Text style={{ fontSize: 15, fontWeight: '600', color: '#15803d', marginTop: 8 }}>
                 {lead.display_price
-                  ? `Lead Cost (Your Price): $${lead.display_price}`
+                  ? `Lead Cost: $${lead.display_price}`
                   : 'Lead Cost: Unavailable'}
-              </Text>
-              <Text style={{ fontSize: 12, color: '#6b7280' }}>
-                Price includes 35% platform fee.
               </Text>
               <TouchableOpacity
                 style={{

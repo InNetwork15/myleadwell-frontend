@@ -32,36 +32,32 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const lead_id = session.metadata?.lead_id;
-    const provider_id = session.metadata?.provider_id;
-    const job_title = session.metadata?.job_title;
-
-    console.log(`📦 Stripe session completed: lead_id=${lead_id}, provider_id=${provider_id}, job_title=${job_title}`);
+    const { lead_id, provider_id, job_title } = session.metadata;
 
     try {
-      // 1. Check if this lead/job_title is already purchased
+      // ✅ Check for duplicate
       const existing = await db.query(
         `SELECT 1 FROM lead_purchases WHERE lead_id = $1 AND job_title = $2`,
         [lead_id, job_title]
       );
 
       if (existing.rowCount > 0) {
-        console.log(`⚠️ Duplicate lead purchase for lead_id=${lead_id} and job_title=${job_title}. Skipping insert.`);
-        return res.status(200).send(); // Return 200 to stop retries
+        console.log(`⚠️ Lead ${lead_id} already purchased for role ${job_title}. Skipping insert.`);
+        return res.status(200).send(); // Prevents Stripe from retrying
       }
 
-      // 2. Insert into lead_purchases
+      // ✅ Insert purchase record
       await db.query(
         `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
          VALUES ($1, $2, $3, NOW(), $4)`,
-        [lead_id, provider_id, job_title, 100] // Adjust revenue as needed
+        [lead_id, provider_id, job_title, 100] // Adjust revenue if needed
       );
 
-      console.log(`✅ Lead purchase recorded for lead_id=${lead_id}, job_title=${job_title}`);
+      console.log(`✅ Lead purchase recorded: lead ${lead_id}, role ${job_title}`);
       return res.status(200).send();
 
     } catch (err) {
-      console.error('❌ Error recording lead purchase in DB:', err.message);
+      console.error('❌ DB Error:', err.message, err.stack);
       return res.status(500).json({ error: 'Failed to record purchase in database' });
     }
   }

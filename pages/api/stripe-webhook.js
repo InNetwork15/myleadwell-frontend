@@ -1,10 +1,6 @@
-﻿// pages/api/stripe-webhook.js
-
-import { buffer } from 'micro';
+﻿import { buffer } from 'micro';
 import Stripe from 'stripe';
-import pkg from 'pg';
-
-const { Pool } = pkg;
+import db from '../../utils/db'; // adjust path if needed
 
 export const config = {
   api: {
@@ -18,13 +14,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
@@ -34,7 +23,6 @@ export default async function handler(req, res) {
   try {
     const rawBody = await buffer(req);
     const sig = req.headers['stripe-signature'];
-
     event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
     console.log('✅ Stripe event received:', event.type);
   } catch (err) {
@@ -44,43 +32,42 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-
-    const lead_id = parseInt(session.metadata?.lead_id, 10);
-    const provider_id = parseInt(session.metadata?.provider_id, 10);
-    const job_title = session.metadata?.job_title;
+    const { lead_id, provider_id, job_title } = session.metadata;
     const payment_intent_id = session.payment_intent;
-    const amountTotal = session.amount_total;
-    const affiliatePrice = session.metadata?.affiliate_price;
 
     try {
-      await pool.query(
+      // Check if this lead has already been purchased by this provider for this job title
+      const existing = await db.query(
+        `SELECT id FROM lead_purchases WHERE lead_id = $1 AND provider_id = $2 AND job_title = $3`,
+        [lead_id, provider_id, job_title]
+      );
+
+      if (existing.rows.length > 0) {
+        console.log('🔁 Duplicate purchase detected — already processed');
+        return res.status(200).json({ message: 'Already handled' });
+      }
+
+      // Insert new purchase
+      await db.query(
         `INSERT INTO lead_purchases (
-          lead_id,
-          provider_id,
-          status,
-          purchased_at,
-          payment_intent_id,
-          job_title,
-          lead_price,
-          affiliate_price
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          lead_id, provider_id, status, purchased_at, job_title,
+          payment_intent_id, lead_price
+        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)`,
         [
           lead_id,
           provider_id,
-          'pending',
-          new Date(),
-          payment_intent_id,
+          'confirmed',
           job_title,
-          amountTotal / 100,
-          affiliatePrice || 0
+          payment_intent_id,
+          session.amount_total / 100, // Convert cents to dollars
         ]
       );
 
-      console.log('✅ Lead purchase recorded for lead:', lead_id);
+      console.log(`✅ Recorded purchase for lead ${lead_id}, provider ${provider_id}`);
       return res.status(200).json({ received: true });
-    } catch (error) {
-      console.error('Webhook error inserting to DB:', error.message, error.stack);
-      return res.status(500).json({ error: 'Webhook DB insert failed', details: error.message });
+    } catch (err) {
+      console.error('❌ Failed to record purchase in DB:', err.message);
+      return res.status(500).json({ error: 'Failed to record purchase in database' });
     }
   }
 

@@ -47,10 +47,13 @@ export default async function handler(req, res) {
       }
 
       // ✅ Insert purchase record
+      const defaultRevenue = 100;
+      const providerRevenue = isNaN(Number(session.amount_total)) ? defaultRevenue : Number(session.amount_total) / 100;
+
       await db.query(
         `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
          VALUES ($1, $2, $3, NOW(), $4)`,
-        [lead_id, provider_id, job_title, 100] // Adjust revenue if needed
+        [lead_id, provider_id, job_title, providerRevenue]
       );
 
       console.log(`✅ Lead purchase recorded: lead ${lead_id}, role ${job_title}`);

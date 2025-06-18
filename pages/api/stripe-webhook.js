@@ -32,7 +32,10 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const { lead_id, provider_id, job_title } = session.metadata;
+    const { lead_id, provider_id, job_title, affiliate_price, lead_price, provider_revenue } = session.metadata;
+
+    console.log('🧾 Parsed session metadata:', { lead_id, provider_id, job_title });
+    console.log('💰 Using affiliate_price:', affiliate_price, 'lead_price:', lead_price, 'provider_revenue:', provider_revenue);
 
     try {
       // ✅ Check for duplicate
@@ -46,25 +49,27 @@ export default async function handler(req, res) {
         return res.status(200).send(); // Prevents Stripe from retrying
       }
 
-      // ✅ Insert purchase record
+      // Defensive revenue calculation
       const defaultRevenue = 100;
       const providerRevenue = isNaN(Number(session.amount_total)) ? defaultRevenue : Number(session.amount_total) / 100;
 
-      await db.query(
-  `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
-   VALUES ($1, $2, $3, NOW(), $4)`,
-  [Number(lead_id), Number(provider_id), job_title, providerRevenue]
-);
+      try {
+        await db.query(
+          `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
+           VALUES ($1, $2, $3, NOW(), $4)`,
+          [Number(lead_id), Number(provider_id), job_title, providerRevenue]
+        );
+      } catch (err) {
+        console.error('❌ Error inserting lead purchase:', err);
+        throw err;
+      }
 
-console.log('📝 Inserting purchase:', {
-  lead_id,
-  provider_id,
-  job_title,
-  providerRevenue,
-});
-
-console.error('❌ DB Error:', err);
-
+      console.log('📝 Inserting purchase:', {
+        lead_id,
+        provider_id,
+        job_title,
+        providerRevenue,
+      });
 
       console.log(`✅ Lead purchase recorded: lead ${lead_id}, role ${job_title}`);
       return res.status(200).send();

@@ -51,10 +51,20 @@ export default async function handler(req, res) {
       const providerRevenue = isNaN(Number(session.amount_total)) ? defaultRevenue : Number(session.amount_total) / 100;
 
       await db.query(
-        `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
-         VALUES ($1, $2, $3, NOW(), $4)`,
-        [lead_id, provider_id, job_title, providerRevenue]
-      );
+  `INSERT INTO lead_purchases (lead_id, provider_id, job_title, purchased_at, provider_revenue)
+   VALUES ($1, $2, $3, NOW(), $4)`,
+  [Number(lead_id), Number(provider_id), job_title, providerRevenue]
+);
+
+console.log('📝 Inserting purchase:', {
+  lead_id,
+  provider_id,
+  job_title,
+  providerRevenue,
+});
+
+console.error('❌ DB Error:', err);
+
 
       console.log(`✅ Lead purchase recorded: lead ${lead_id}, role ${job_title}`);
       return res.status(200).send();

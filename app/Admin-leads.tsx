@@ -91,7 +91,7 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [sortBy, setSortBy] = useState('created_at_desc');
   const [search, setSearch] = useState('');
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
   const [editedLead, setEditedLead] = useState<any>(null);
   const [newLeadStatus, setNewLeadStatus] = useState<string | null>(null);
   const [giftCardStatus, setGiftCardStatus] = useState<string | null>(null);
@@ -168,11 +168,11 @@ export default function AdminLeadsScreen(): JSX.Element {
   }, [statusFilter, stateFilter, affiliateFilter]);
 
   useEffect(() => {
-    if (expandedId) {
+    if (expandedLeadId) {
       const fetchGiftCardStatus = async () => {
         try {
           const token = await AsyncStorage.getItem('token');
-          const res = await axios.get(`${API_BASE_URL}/admin/leads/${expandedId}/gift-card-status`, {
+          const res = await axios.get(`${API_BASE_URL}/admin/leads/${expandedLeadId}/gift-card-status`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setGiftCardStatus(res.data.status);
@@ -183,7 +183,7 @@ export default function AdminLeadsScreen(): JSX.Element {
       };
       fetchGiftCardStatus();
     }
-  }, [expandedId]);
+  }, [expandedLeadId]);
 
   const refreshLeads = async () => {
     try {
@@ -403,7 +403,7 @@ export default function AdminLeadsScreen(): JSX.Element {
       });
       setLeads(res.data);
       setEditedLead(null);
-      setExpandedId(null);
+      setExpandedLeadId(null);
       setExpandedSections((prev) => {
         const newSections = { ...prev };
         delete newSections[leadId];
@@ -622,7 +622,7 @@ export default function AdminLeadsScreen(): JSX.Element {
           <View key={lead.id} style={styles.card}>
             <Pressable
               onPress={() => {
-                setExpandedId(expandedId === lead.id ? null : lead.id);
+                setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id);
                 setEditedLead({});
                 setNewLeadStatus(lead.lead_status || 'pending');
               }}
@@ -644,14 +644,13 @@ export default function AdminLeadsScreen(): JSX.Element {
                   )}
                 </Text>
                 <Ionicons
-                  name={expandedId === lead.id ? 'chevron-up' : 'chevron-down'}
+                  name={expandedLeadId === lead.id ? 'chevron-up' : 'chevron-down'}
                   size={20}
                   color="#007bff"
                 />
               </View>
             </Pressable>
-
-            {expandedId === lead.id && (
+            {expandedLeadId === lead.id && (
               <View style={styles.expanded}>
                 {/* Lead Details */}
                 <View style={styles.section}>

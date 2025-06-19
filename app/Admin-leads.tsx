@@ -214,7 +214,8 @@ export default function AdminLeadsScreen(): JSX.Element {
     })
     .filter((lead) => {
       if (statusFilter === 'all') return true;
-      return lead.status === statusFilter; // <-- changed from lead.lead_status
+      const purchaseStatus = lead.purchases?.[0]?.status || 'none';
+      return purchaseStatus === statusFilter;
     })
     .filter((lead) => {
       if (!search.trim()) return true;

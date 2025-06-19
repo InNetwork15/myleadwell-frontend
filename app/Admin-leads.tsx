@@ -82,16 +82,6 @@ const JOB_TITLES = [
   'Home Inspector',
 ];
 
-const leadStatusOptions = [
-  'All',
-  'new',
-  'attempted-contact',
-  'in-progress',
-  'closed-sale-made',
-  'closed-no-sale',
-  'ineligible',
-];
-
 export default function AdminLeadsScreen(): JSX.Element {
   const router = useNavigation();
   const [payoutFilter, setPayoutFilter] = useState('all');
@@ -110,7 +100,6 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [purchaseFilter, setPurchaseFilter] = useState('all');
-  const [expandedLeadIds, setExpandedLeadIds] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -217,22 +206,28 @@ export default function AdminLeadsScreen(): JSX.Element {
   };
 
   const filteredLeads = leads
+    // Purchase filter
     .filter((lead) => {
-      // Purchase filter
-      return (
-        purchaseFilter === 'all' ||
-        (purchaseFilter === 'yes' &&
-          lead.purchases?.some((p) => p.purchase_event_status === 'purchased')) ||
-        (purchaseFilter === 'no' &&
-          (!lead.purchases || lead.purchases.length === 0 || lead.purchases.every((p) => p.purchase_event_status !== 'purchased')))
-      );
+      if (purchaseFilter === 'yes') {
+        return lead.purchases?.some((p) => p.purchase_event_status === 'purchased');
+      } else if (purchaseFilter === 'no') {
+        return !lead.purchases || lead.purchases.every((p) => p.purchase_event_status !== 'purchased');
+      }
+      return true;
     })
     .filter((lead) => {
-      // Lead status filter
-      return (
-        statusFilter === 'all' ||
-        lead.purchases?.[0]?.status === statusFilter
-      );
+      const hasPaid = lead.purchases?.some((purchase) => purchase.payout_status === 'paid');
+      const hasUnpaid = lead.purchases?.some((purchase) => purchase.payout_status !== 'paid');
+      if (payoutFilter === 'paid') return hasPaid;
+      if (payoutFilter === 'unpaid') return !hasPaid && hasUnpaid;
+      return true;
+    })
+    .filter((lead) => {
+      if (statusFilter === 'all') return true;
+      const purchaseEventStatus = lead.purchases?.[0]?.purchase_event_status || '';
+      if (statusFilter === 'purchased') return purchaseEventStatus === 'purchased';
+      if (statusFilter === 'not_purchased') return !lead.purchases || lead.purchases.length === 0 || purchaseEventStatus !== 'purchased';
+      return true;
     })
     .filter((lead) => {
       if (!search.trim()) return true;
@@ -510,13 +505,6 @@ export default function AdminLeadsScreen(): JSX.Element {
         role_enabled: updatedRoles,
       };
     });
-  };
-
-  const isExpanded = expandedLeadIds.includes(lead.id);
-  const toggleExpanded = () => {
-    setExpandedLeadIds(prev =>
-      isExpanded ? prev.filter(id => id !== lead.id) : [...prev, lead.id]
-    );
   };
 
   return (

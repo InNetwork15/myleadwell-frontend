@@ -99,6 +99,7 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [activeProviders, setActiveProviders] = useState<Provider[]>([]);
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
+  const [purchaseFilter, setPurchaseFilter] = useState('all');
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -205,6 +206,15 @@ export default function AdminLeadsScreen(): JSX.Element {
   };
 
   const filteredLeads = leads
+    // Purchase filter
+    .filter((lead) => {
+      if (purchaseFilter === 'yes') {
+        return lead.purchases?.some((p) => p.purchase_event_status === 'purchased');
+      } else if (purchaseFilter === 'no') {
+        return !lead.purchases || lead.purchases.every((p) => p.purchase_event_status !== 'purchased');
+      }
+      return true;
+    })
     .filter((lead) => {
       const hasPaid = lead.purchases?.some((purchase) => purchase.payout_status === 'paid');
       const hasUnpaid = lead.purchases?.some((purchase) => purchase.payout_status !== 'paid');
@@ -539,12 +549,13 @@ export default function AdminLeadsScreen(): JSX.Element {
             <TouchableOpacity onPress={() => setStatusFilter('all')}>
               <Text style={[styles.filterText, statusFilter === 'all' && styles.filterActive]}>All</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setStatusFilter('sold')}>
-              <Text style={[styles.filterText, statusFilter === 'sold' && styles.filterActive]}>Sold</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setStatusFilter('pending')}>
-              <Text style={[styles.filterText, statusFilter === 'pending' && styles.filterActive]}>Pending</Text>
-            </TouchableOpacity>
+            {['new', 'attempted-contact', 'in-progress', 'closed-sale-made', 'closed-no-sale', 'ineligible'].map((status) => (
+              <TouchableOpacity key={status} onPress={() => setStatusFilter(status)}>
+                <Text style={[styles.filterText, statusFilter === status && styles.filterActive]}>
+                  {status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           <View style={styles.filterGroup}>
@@ -584,6 +595,19 @@ export default function AdminLeadsScreen(): JSX.Element {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setSortBy('payout_amount_asc')}>
               <Text style={[styles.filterText, sortBy === 'payout_amount_asc' && styles.filterActive]}>Payout ↑</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Purchased:</Text>
+            <TouchableOpacity onPress={() => setPurchaseFilter('all')}>
+              <Text style={[styles.filterText, purchaseFilter === 'all' && styles.filterActive]}>All</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPurchaseFilter('yes')}>
+              <Text style={[styles.filterText, purchaseFilter === 'yes' && styles.filterActive]}>Yes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPurchaseFilter('no')}>
+              <Text style={[styles.filterText, purchaseFilter === 'no' && styles.filterActive]}>No</Text>
             </TouchableOpacity>
           </View>
         </View>

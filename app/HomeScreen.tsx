@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native'; // <-- Add Image import
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image, ScrollView } from 'react-native'; // <-- Add Image import
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -53,7 +53,7 @@ export default function HomeScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
             <Image
 source={require('../assets/leadwellimage.png')}
                 style={styles.logo}
@@ -96,13 +96,13 @@ source={require('../assets/leadwellimage.png')}
                 <Text style={styles.buttonText}>Log Out</Text>
             </TouchableOpacity>
             <Toast />
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         padding: 24,
         justifyContent: 'flex-start',
         alignItems: 'center',

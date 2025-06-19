@@ -115,7 +115,10 @@ export default function AdminLeadsScreen(): JSX.Element {
         });
 
         console.log('✅ Admin Leads:', res.data);
-        setLeads(res.data);
+        setLeads(res.data.map((lead: any) => ({
+          ...lead,
+          lead_status: lead.status, // This lets you keep using lead.lead_status everywhere else if you want
+        })));
 
         const providerMap: { [key: string]: string } = {};
         res.data.forEach((lead: Lead) => {
@@ -211,7 +214,7 @@ export default function AdminLeadsScreen(): JSX.Element {
     })
     .filter((lead) => {
       if (statusFilter === 'all') return true;
-      return lead.lead_status === statusFilter;
+      return lead.status === statusFilter; // <-- changed from lead.lead_status
     })
     .filter((lead) => {
       if (!search.trim()) return true;
@@ -224,6 +227,7 @@ export default function AdminLeadsScreen(): JSX.Element {
       );
     })
     .sort((a, b) => {
+      // Step 2: Update sort logic
       if (sortBy === 'created_at_desc') {
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       } else if (sortBy === 'created_at_asc') {

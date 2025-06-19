@@ -298,23 +298,35 @@ export default function AdminLeadsScreen(): JSX.Element {
   };
 
   const StatusBadge = ({ status, type }: { status: string; type: string }) => {
-    const stylesMap: { [key: string]: string } = {
-      sold: 'bg-green-500 text-white',
-      'closed-sale-made': 'bg-green-500 text-white',
-      paid: 'bg-blue-500 text-white',
-      pending: 'bg-yellow-500 text-black',
-      unpaid: 'bg-red-500 text-white',
-      expired: 'bg-gray-500 text-white',
-      sent: 'bg-green-500 text-white',
-      not_sent: 'bg-gray-500 text-white',
-      error: 'bg-red-500 text-white',
+    const backgroundMap: { [key: string]: string } = {
+      sold: '#10b981',
+      'closed-sale-made': '#10b981',
+      paid: '#3b82f6',
+      pending: '#facc15',
+      unpaid: '#ef4444',
+      expired: '#9ca3af',
+      ineligible: '#9ca3af',
+      'in-progress': '#f59e0b',
+      'attempted-contact': '#a78bfa',
+      error: '#dc2626',
     };
+
+    const bgColor = backgroundMap[type] || '#6b7280';
+
     return (
       <Text
-        style={[
-          styles.badge,
-          { backgroundColor: stylesMap[type] || '#6b7280', color: stylesMap[type]?.includes('text-white') ? '#fff' : '#000' },
-        ]}
+        style={{
+          backgroundColor: bgColor,
+          color: '#fff',
+          fontSize: 13,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 6,
+          marginHorizontal: 4,
+          fontWeight: '600',
+          minWidth: 80,
+          textAlign: 'center',
+        }}
       >
         {status}
       </Text>

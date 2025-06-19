@@ -70,7 +70,7 @@ const US_STATES = [
   'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
-const LEAD_STATUSES = ['pending', 'sold', 'expired'];
+const LEAD_STATUSES = ['all', 'purchased', 'not_purchased'];
 const DISTRIBUTION_METHODS = ['NETWORK', 'JUMPBALL'];
 const BOOLEAN_OPTIONS = ['true', 'false'];
 const GIFT_CARD_OPTIONS = ['visa', 'amazon', 'mastercard', 'none'];
@@ -215,7 +215,9 @@ export default function AdminLeadsScreen(): JSX.Element {
     .filter((lead) => {
       if (statusFilter === 'all') return true;
       const purchaseEventStatus = lead.purchases?.[0]?.purchase_event_status || '';
-      return purchaseEventStatus === statusFilter;
+      if (statusFilter === 'purchased') return purchaseEventStatus === 'purchased';
+      if (statusFilter === 'not_purchased') return !lead.purchases || lead.purchases.length === 0 || purchaseEventStatus !== 'purchased';
+      return true;
     })
     .filter((lead) => {
       if (!search.trim()) return true;

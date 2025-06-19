@@ -33,8 +33,6 @@ export default function AdminUsersScreen() {
   const [editUser, setEditUser] = useState<{ id?: number; first_name?: string; last_name?: string; email?: string; phone?: string; job_title?: string; roles?: string[]; state?: string; service_areas?: string[]; affiliate_link?: string } | null>(null);
   const [newUser, setNewUser] = useState<{ first_name?: string; last_name?: string; email?: string; phone?: string; password?: string; job_title?: string; roles: string[] } | null>(null);
   const [token, setToken] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [purchaseFilter, setPurchaseFilter] = useState('all');
 
   const fetchUsers = async () => {
     const token = await AsyncStorage.getItem('token');
@@ -166,23 +164,6 @@ export default function AdminUsersScreen() {
       Toast.show({ type: 'error', text1: '❌ Failed to create user' });
     }
   };
-
-  const filteredLeads = users
-  // Purchase filter
-  .filter((lead) => {
-    if (purchaseFilter === 'yes') {
-      return lead.purchases?.some((p) => p.purchase_event_status === 'purchased');
-    } else if (purchaseFilter === 'no') {
-      return !lead.purchases || lead.purchases.every((p) => p.purchase_event_status !== 'purchased');
-    }
-    return true;
-  })
-  // Lead status filter
-  .filter((lead) => {
-    if (statusFilter === 'all') return true;
-    return lead.purchases?.some((p) => p.status === statusFilter);
-  })
-  // ...rest of your filters and sort...
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -404,34 +385,6 @@ export default function AdminUsersScreen() {
           </View>
         </View>
       )}
-
-      {/* 1. Update Lead Status Options (replace your old status filter UI with this) */}
-      <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-        <TouchableOpacity onPress={() => setStatusFilter('all')}>
-          <Text style={[styles.filterText, statusFilter === 'all' && styles.filterActive]}>All</Text>
-        </TouchableOpacity>
-        {['new', 'attempted-contact', 'in-progress', 'closed-sale-made', 'closed-no-sale', 'ineligible'].map((status) => (
-          <TouchableOpacity key={status} onPress={() => setStatusFilter(status)}>
-            <Text style={[styles.filterText, statusFilter === status && styles.filterActive]}>
-              {status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* 3. Add purchase filter UI */}
-      <View style={styles.filterGroup}>
-        <Text style={styles.filterLabel}>Purchased:</Text>
-        <TouchableOpacity onPress={() => setPurchaseFilter('all')}>
-          <Text style={[styles.filterText, purchaseFilter === 'all' && styles.filterActive]}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setPurchaseFilter('yes')}>
-          <Text style={[styles.filterText, purchaseFilter === 'yes' && styles.filterActive]}>Yes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setPurchaseFilter('no')}>
-          <Text style={[styles.filterText, purchaseFilter === 'no' && styles.filterActive]}>No</Text>
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
 }
@@ -477,21 +430,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginRight: 8,
-  },
-  filterGroup: {
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  filterLabel: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  filterText: {
-    marginRight: 16,
-    color: '#007bff',
-  },
-  filterActive: {
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
   },
 });

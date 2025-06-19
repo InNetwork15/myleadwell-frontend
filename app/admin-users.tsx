@@ -121,7 +121,7 @@ export default function AdminUsersScreen() {
     console.log('📤 Saving edited user:', payload);
 
     try {
-      await axios.put(`$/update-user/${editUser.id}`, payload, { // ✅ Updated route
+      await axios.put(`${API_BASE_URL}/update-user/${editUser.id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -146,7 +146,7 @@ export default function AdminUsersScreen() {
     try {
       console.log('📤 Creating user with:', newUser);
 
-      await axios.post('${API_BASE_URL}/create-user', newUser, {
+      await axios.post(`${API_BASE_URL}/create-user`, newUser, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

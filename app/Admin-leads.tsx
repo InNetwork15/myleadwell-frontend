@@ -98,6 +98,7 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: { [section: string]: boolean } }>({});
   const [activeProviders, setActiveProviders] = useState<Provider[]>([]);
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -125,13 +126,9 @@ export default function AdminLeadsScreen(): JSX.Element {
           });
         });
         setProviderNames(providerMap);
-      } catch (err) {
-        console.error('❌ Error fetching admin leads:', err);
-           Toast.show({
-             type: 'error',
-             text1: 'Failed to load leads',
-             text2: err?.response?.data?.error || err.message || 'Unexpected error',
-           });
+      } catch (error) {
+        console.error("❌ Failed to fetch admin leads:", error);
+        setError("Unable to load leads. Please check your admin permissions or try again.");
       }
     };
 
@@ -571,6 +568,12 @@ export default function AdminLeadsScreen(): JSX.Element {
             </TouchableOpacity>
           </View>
         </View>
+
+        {error && (
+          <View style={{ backgroundColor: '#fee2e2', padding: 12, borderRadius: 8, marginBottom: 12 }}>
+            <Text style={{ color: '#b91c1c', fontWeight: 'bold' }}>{error}</Text>
+          </View>
+        )}
 
         {filteredLeads.map((lead) => (
           <View key={lead.id} style={styles.card}>

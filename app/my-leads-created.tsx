@@ -537,10 +537,11 @@ export default function MyLeadsCreatedAccordion() {
                                           <Text style={styles.label}>Affiliate Price:</Text>
                                           <TextInput
                                             style={styles.input}
-                                            keyboardType="numeric"
-                                            value={String(price)}
+                                            keyboardType="decimal-pad"
+                                            value={`$${Number(price).toFixed(2)}`}
                                             onChangeText={(val) => {
-                                              const parsed = parseFloat(val) || 0;
+                                              const cleaned = val.replace(/[^0-9.]/g, ''); // Strip $ and non-numeric
+                                              const parsed = parseFloat(cleaned);
                                               setLeads((prev) =>
                                                 prev.map((l) =>
                                                   l.lead_id === lead.lead_id
@@ -548,7 +549,7 @@ export default function MyLeadsCreatedAccordion() {
                                                         ...l,
                                                         affiliate_prices_by_role: {
                                                           ...l.affiliate_prices_by_role,
-                                                          [activeRole]: parsed,
+                                                          [activeRole]: isNaN(parsed) ? 0 : parsed,
                                                         },
                                                       }
                                                     : l
@@ -915,6 +916,8 @@ const styles = StyleSheet.create({
       paddingHorizontal: 16,
       marginBottom: 16,
       fontSize: 16,
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+      textAlign: 'right',
     },
     removeText: {
       color: '#dc3545',

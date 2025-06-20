@@ -330,7 +330,7 @@ const handleSubmit = async () => {
                             I agree to the{" "}
                             <Text
                                 style={{ color: 'blue', textDecorationLine: 'underline' }}
-                                onPress={() => Linking.openURL('https://yoursite.com/terms')}
+                                onPress={() => router.push('/terms')}
                             >
                                 terms & conditions
                             </Text>{" "}

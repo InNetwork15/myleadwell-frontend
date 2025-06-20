@@ -74,13 +74,17 @@ source={require('../assets/leadwellimage.png')}
   </TouchableOpacity>
 )}
 
-<TouchableOpacity style={styles.button} onPress={() => router.push('/AvailableLeadsScreen')}>
-  <Text style={styles.buttonText}>View Available Leads</Text>
-</TouchableOpacity>
+{(roles.includes('provider') || roles.includes('admin')) && (
+  <>
+    <TouchableOpacity style={styles.button} onPress={() => router.push('/AvailableLeadsScreen')}>
+      <Text style={styles.buttonText}>View Available Leads</Text>
+    </TouchableOpacity>
 
-<TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads')}>
-  <Text style={styles.buttonText}>My Purchased Leads</Text>
-</TouchableOpacity>
+    <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads')}>
+      <Text style={styles.buttonText}>My Purchased Leads</Text>
+    </TouchableOpacity>
+  </>
+)}
 
 {(roles.includes('provider') || roles.includes('admin')) && (
   <TouchableOpacity style={styles.button} onPress={() => router.push('/ProviderConversionScreen')}>

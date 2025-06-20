@@ -70,7 +70,15 @@ const US_STATES = [
   'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
-const LEAD_STATUSES = ['all', 'purchased', 'not_purchased'];
+const LEAD_STATUSES = [
+  { label: 'All', value: 'all' },
+  { label: 'New', value: 'new' },
+  { label: 'Attempted Contact', value: 'attempted-contact' },
+  { label: 'In Progress', value: 'in-progress' },
+  { label: 'Closed Sale Made', value: 'closed-sale-made' },
+  { label: 'Closed No Sale', value: 'closed-no-sale' },
+  { label: 'Ineligible', value: 'ineligible' },
+];
 const DISTRIBUTION_METHODS = ['NETWORK', 'JUMPBALL'];
 const BOOLEAN_OPTIONS = ['true', 'false'];
 const GIFT_CARD_OPTIONS = ['visa', 'amazon', 'mastercard', 'none'];
@@ -224,10 +232,7 @@ export default function AdminLeadsScreen(): JSX.Element {
     })
     .filter((lead) => {
       if (statusFilter === 'all') return true;
-      const purchaseEventStatus = lead.purchases?.[0]?.purchase_event_status || '';
-      if (statusFilter === 'purchased') return purchaseEventStatus === 'purchased';
-      if (statusFilter === 'not_purchased') return !lead.purchases || lead.purchases.length === 0 || purchaseEventStatus !== 'purchased';
-      return true;
+      return lead.purchases?.[0]?.status === statusFilter;
     })
     .filter((lead) => {
       if (!search.trim()) return true;
@@ -546,13 +551,10 @@ export default function AdminLeadsScreen(): JSX.Element {
 
           <View style={styles.filterGroup}>
             <Text style={styles.filterLabel}>Lead Status:</Text>
-            <TouchableOpacity onPress={() => setStatusFilter('all')}>
-              <Text style={[styles.filterText, statusFilter === 'all' && styles.filterActive]}>All</Text>
-            </TouchableOpacity>
-            {['new', 'attempted-contact', 'in-progress', 'closed-sale-made', 'closed-no-sale', 'ineligible'].map((status) => (
-              <TouchableOpacity key={status} onPress={() => setStatusFilter(status)}>
-                <Text style={[styles.filterText, statusFilter === status && styles.filterActive]}>
-                  {status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+            {LEAD_STATUSES.map(({ label, value }) => (
+              <TouchableOpacity key={value} onPress={() => setStatusFilter(value)}>
+                <Text style={[styles.filterText, statusFilter === value && styles.filterActive]}>
+                  {label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -580,22 +582,6 @@ export default function AdminLeadsScreen(): JSX.Element {
                 <Text style={[styles.filterText, affiliateFilter === affiliate && styles.filterActive]}>{affiliate}</Text>
               </TouchableOpacity>
             ))}
-          </View>
-
-          <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Sort By:</Text>
-            <TouchableOpacity onPress={() => setSortBy('created_at_desc')}>
-              <Text style={[styles.filterText, sortBy === 'created_at_desc' && styles.filterActive]}>Date ↓</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSortBy('created_at_asc')}>
-              <Text style={[styles.filterText, sortBy === 'created_at_asc' && styles.filterActive]}>Date ↑</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSortBy('payout_amount_desc')}>
-              <Text style={[styles.filterText, sortBy === 'payout_amount_desc' && styles.filterActive]}>Payout ↓</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSortBy('payout_amount_asc')}>
-              <Text style={[styles.filterText, sortBy === 'payout_amount_asc' && styles.filterActive]}>Payout ↑</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.filterGroup}>
@@ -750,7 +736,7 @@ export default function AdminLeadsScreen(): JSX.Element {
                                 style={styles.picker}
                               >
                                 {LEAD_STATUSES.map((status) => (
-                                  <Picker.Item key={status} label={status} value={status} />
+                                  <Picker.Item key={status.value} label={status.label} value={status.value} />
                                 ))}
                               </Picker>
                             </View>

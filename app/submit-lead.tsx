@@ -16,7 +16,7 @@ import axios from 'axios';
 import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FRONTEND_BASE_URL } from '../config';
-import { useRouter, useLocalSearchParams } from 'expo-router'; // Ensure correct import
+import { useRouter, useLocalSearchParams } from 'expo-router'; // already present
 import { Picker } from '@react-native-picker/picker';
 import CheckBox from "expo-checkbox";
 import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
@@ -125,13 +125,34 @@ export default function SubmitLeadScreen() {
     const [countiesByState, setCountiesByState] = useState<Record<string, string[]>>({});
     const [selectedState, setSelectedState] = useState('');
     const [selectedCounty, setSelectedCounty] = useState('');
-    const affiliateName = "Affiliate Partner"; // Example affiliate name
+    const [affiliateName, setAffiliateName] = useState("Affiliate Partner"); // Example affiliate name
 
     const MOCK_PROVIDERS = [
         { id: '1', name: 'Sarah Thompson', job_title: 'Mortgage Broker' },
         { id: '2', name: 'David Lee', job_title: 'Real Estate Agent' },
         { id: '3', name: 'Monica Smith', job_title: 'Insurance Agent' },
     ];
+
+    // Fetch affiliate name based on ref
+    useEffect(() => {
+        const fetchAffiliateName = async () => {
+            if (!ref) return;
+            try {
+                const response = await axios.get(`${API_URL}/affiliate-name/${ref}`);
+                const name = response.data?.name;
+                if (name) {
+                    setAffiliateName(name);
+                } else {
+                    setAffiliateName("Affiliate Partner"); // fallback
+                }
+            } catch (err) {
+                console.error("Failed to fetch affiliate name", err);
+                setAffiliateName("Affiliate Partner");
+            }
+        };
+
+        fetchAffiliateName();
+    }, [ref]);
 
 const handleSubmit = async () => {
   console.log("🟢 Submit button pressed");

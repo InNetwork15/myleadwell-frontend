@@ -120,7 +120,6 @@ export default function SubmitLeadScreen() {
     const [preferredProviders, setPreferredProviders] = useState<string[]>([]);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [joinNetwork, setJoinNetwork] = useState(false);
-    const [selectedGiftCard, setSelectedGiftCard] = useState('');
     const [states, setStates] = useState<string[]>([]);
     const [countiesByState, setCountiesByState] = useState<Record<string, string[]>>({});
     const [selectedState, setSelectedState] = useState('');
@@ -186,14 +185,6 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (!selectedGiftCard) {
-    Toast.show({
-      type: "error",
-      text1: "Please choose a gift card.",
-    });
-    return;
-  }
-
   if (!agreedToTerms) {
     Toast.show({
       type: "error",
@@ -213,7 +204,6 @@ const handleSubmit = async () => {
     ref,
     agreed_to_terms: agreedToTerms,
     join_network: joinNetwork,
-    selected_gift_card: selectedGiftCard,
   };
 
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -230,7 +220,6 @@ const handleSubmit = async () => {
     setPreferredProviders([]);
     setAgreedToTerms(false);
     setJoinNetwork(false);
-    setSelectedGiftCard("");
     setSelectedState("");
     setSelectedCounty("");
 
@@ -371,20 +360,6 @@ const handleSubmit = async () => {
                             </Text>
                         </View>
                     )}
-
-                    {/* Gift Card Option */}
-                    <View style={{ marginVertical: 10 }}>
-                        <Text>Your Gift Card Choice</Text>
-                        <Picker
-                            selectedValue={selectedGiftCard}
-                            onValueChange={(value) => setSelectedGiftCard(value)}
-                        >
-                            <Picker.Item label="Select Gift Card" value="" />
-                            <Picker.Item label="Visa Gift Card" value="visa" />
-                            <Picker.Item label="Amazon" value="amazon" />
-                            <Picker.Item label="Starbucks" value="starbucks" />
-                        </Picker>
-                    </View>
 
                     {/* Submit Button */}
                     <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>

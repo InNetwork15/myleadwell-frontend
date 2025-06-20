@@ -60,42 +60,50 @@ source={require('../assets/leadwellimage.png')}
                 resizeMode="contain"
             />
             <Text style={styles.title}>MyLeadWell</Text>
-            <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads-created')}>
-                <Text style={styles.buttonText}>My Leads Created</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => router.push('/AvailableLeadsScreen')}>
-                <Text style={styles.buttonText}>View Available Leads</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads')}>
-                <Text style={styles.buttonText}>My Purchased Leads</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={() => router.push('/account')}>
                 <Text style={styles.buttonText}>My Account</Text>
             </TouchableOpacity>
-            {(roles.includes('affiliate') || roles.includes('admin')) && (
-                <TouchableOpacity style={styles.button} onPress={() => router.push('/AffiliateEarningsScreen')}>
-                    <Text style={styles.buttonText}>Affiliate Earnings</Text>
-                </TouchableOpacity>
-            )}
-            {(roles.includes('provider') || roles.includes('admin')) && (
-                <TouchableOpacity style={styles.button} onPress={() => router.push('/ProviderConversionScreen')}>
-                    <Text style={styles.buttonText}>Provider Conversion Metrics</Text>
-                </TouchableOpacity>
-            )}
-            {roles.includes('admin') && (
-                <>
-                    <TouchableOpacity style={styles.button} onPress={() => router.push('/Admin-leads')}>
-                        <Text style={styles.buttonText}>Admin: View All Leads</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => router.push('/admin-users')}>
-                        <Text style={styles.buttonText}>Admin: Manage Users</Text>
-                    </TouchableOpacity>
-                </>
-            )}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.buttonText}>Log Out</Text>
-            </TouchableOpacity>
-            <Toast />
+
+<TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads-created')}>
+  <Text style={styles.buttonText}>My Leads Created</Text>
+</TouchableOpacity>
+
+{(roles.includes('affiliate') || roles.includes('admin')) && (
+  <TouchableOpacity style={styles.button} onPress={() => router.push('/AffiliateEarningsScreen')}>
+    <Text style={styles.buttonText}>Affiliate Earnings</Text>
+  </TouchableOpacity>
+)}
+
+<TouchableOpacity style={styles.button} onPress={() => router.push('/AvailableLeadsScreen')}>
+  <Text style={styles.buttonText}>View Available Leads</Text>
+</TouchableOpacity>
+
+<TouchableOpacity style={styles.button} onPress={() => router.push('/my-leads')}>
+  <Text style={styles.buttonText}>My Purchased Leads</Text>
+</TouchableOpacity>
+
+{(roles.includes('provider') || roles.includes('admin')) && (
+  <TouchableOpacity style={styles.button} onPress={() => router.push('/ProviderConversionScreen')}>
+    <Text style={styles.buttonText}>Provider Conversion Metrics</Text>
+  </TouchableOpacity>
+)}
+
+{roles.includes('admin') && (
+  <>
+    <TouchableOpacity style={styles.button} onPress={() => router.push('/Admin-leads')}>
+      <Text style={styles.buttonText}>Admin: View All Leads</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.button} onPress={() => router.push('/admin-users')}>
+      <Text style={styles.buttonText}>Admin: Manage Users</Text>
+    </TouchableOpacity>
+  </>
+)}
+
+<TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+  <Text style={styles.buttonText}>Log Out</Text>
+</TouchableOpacity>
+
+<Toast />
         </ScrollView>
     );
 }

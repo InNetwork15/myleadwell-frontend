@@ -369,6 +369,16 @@ const handleSubmit = async () => {
                     <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                         <Text style={styles.buttonText}>Submit Lead</Text>
                     </TouchableOpacity>
+
+                    {/* Terms and Privacy Links */}
+                    <View style={{ flexDirection: 'row', marginTop: 8, gap: 16 }}>
+                        <TouchableOpacity onPress={() => router.push('/terms')}>
+                            <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>Terms & Conditions</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => router.push('/privacy')}>
+                            <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>Privacy Policy</Text>
+                        </TouchableOpacity>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
             <Toast /> {/* Add Toast component here */}

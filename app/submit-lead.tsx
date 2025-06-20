@@ -331,34 +331,34 @@ const handleSubmit = async () => {
                     </View>
 
                     {/* Terms & Consent */}
-                    <View style={{ marginVertical: 10 }}>
-                        <CheckBox
-                            value={agreedToTerms}
-                            onValueChange={setAgreedToTerms}
-                        />
-                        <Text>
-                            I agree to the{" "}
-                            <Text
-                                style={{ color: 'blue', textDecorationLine: 'underline' }}
-                                onPress={() => router.push('/terms')}
-                            >
-                                terms & conditions
-                            </Text>{" "}
-                            and consent to share my info with THE NETWORK.
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+                      <CheckBox
+                        value={agreedToTerms}
+                        onValueChange={setAgreedToTerms}
+                      />
+                      <Text style={{ marginLeft: 8 }}>
+                        I agree to the{' '}
+                        <Text
+                          style={{ color: 'blue', textDecorationLine: 'underline' }}
+                          onPress={() => router.push('/terms')}
+                        >
+                          terms & conditions
                         </Text>
+                        {' '}and consent to share my info with THE NETWORK.
+                      </Text>
                     </View>
 
                     {/* Join NETWORK */}
                     {affiliateName && (
-                        <View style={{ marginVertical: 10 }}>
-                            <CheckBox
-                                value={joinNetwork}
-                                onValueChange={setJoinNetwork}
-                            />
-                            <Text style={{ marginVertical: 10 }}>
-                                I want {affiliateName}'s NETWORK to contact me.
-                            </Text>
-                        </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+                        <CheckBox
+                          value={joinNetwork}
+                          onValueChange={setJoinNetwork}
+                        />
+                        <Text style={{ marginLeft: 8 }}>
+                          I want {affiliateName}'s NETWORK to contact me.
+                        </Text>
+                      </View>
                     )}
 
                     {/* Submit Button */}

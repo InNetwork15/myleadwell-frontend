@@ -536,11 +536,11 @@ export default function MyLeadsCreatedAccordion() {
 
                                           <Text style={styles.label}>Affiliate Price:</Text>
                                           <TextInput
-                                            style={styles.input}
+                                            style={[styles.input, { textAlign: 'left' }]}
                                             keyboardType="decimal-pad"
-                                            value={`$${Number(price).toFixed(2)}`}
+                                            value={price !== null && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
                                             onChangeText={(val) => {
-                                              const cleaned = val.replace(/[^0-9.]/g, ''); // Strip $ and non-numeric
+                                              const cleaned = val.replace(/[^0-9.]/g, '');
                                               const parsed = parseFloat(cleaned);
                                               setLeads((prev) =>
                                                 prev.map((l) =>
@@ -916,8 +916,7 @@ const styles = StyleSheet.create({
       paddingHorizontal: 16,
       marginBottom: 16,
       fontSize: 16,
-      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-      textAlign: 'right',
+      textAlign: 'left', // Ensures left alignment
     },
     removeText: {
       color: '#dc3545',

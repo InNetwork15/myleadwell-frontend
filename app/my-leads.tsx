@@ -249,28 +249,37 @@ export default function MyLeadsScreen() {
             <Text>📞 {lead.lead_phone}</Text>
             <Text>📍 State: {lead.state || '—'}</Text>
             <Text>🗺 County: {lead.county || '—'}</Text>
-            <Text>📦 Status:</Text>
-            <Picker
-              selectedValue={statusByLead[lead.lead_id] ?? lead.purchase_status ?? 'new'}
-              onValueChange={(value) => handleStatusChange(lead.lead_id, String(value))}
-            >
-              <Picker.Item label="New" value="new" />
-              <Picker.Item label="Attempted Contact" value="attempted-contact" />
-              <Picker.Item label="Ineligible" value="ineligible" />
-              <Picker.Item label="In Progress" value="in-progress" />
-              <Picker.Item label="Closed Sale Made" value="closed-sale-made" />
-              <Picker.Item label="Closed No Sale" value="closed-no-sale" />
-            </Picker>
 
+            {/* (2) Status label and Picker on one line */}
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ marginRight: 8 }}>📦 Status:</Text>
+              <Picker
+                style={{ flex: 1 }}
+                selectedValue={statusByLead[lead.lead_id] ?? lead.purchase_status ?? 'new'}
+                onValueChange={(value) => handleStatusChange(lead.lead_id, String(value))}
+              >
+                <Picker.Item label="New" value="new" />
+                <Picker.Item label="Attempted Contact" value="attempted-contact" />
+                <Picker.Item label="Ineligible" value="ineligible" />
+                <Picker.Item label="In Progress" value="in-progress" />
+                <Picker.Item label="Closed Sale Made" value="closed-sale-made" />
+                <Picker.Item label="Closed No Sale" value="closed-no-sale" />
+              </Picker>
+            </View>
+
+            {/* (3) Revenue label and input on one line, only when closed-sale-made */}
             {statusByLead[lead.lead_id] === 'closed-sale-made' && (
               <>
-                <TextInput
-                  style={styles.provider_revenueInput}
-                  placeholder="Enter provider_revenue"
-                  keyboardType="numeric"
-                  onChangeText={(value) => handleprovider_revenueChange(lead.lead_id, value)} // ✅ Use the defined function
-                  value={String(statusByLead[`${lead.lead_id}_provider_revenue`] ?? '')}
-                />
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                  <Text style={{ marginRight: 8 }}>💵 Revenue:</Text>
+                  <TextInput
+                    style={[styles.provider_revenueInput, { flex: 1 }]}
+                    placeholder="Enter provider_revenue"
+                    keyboardType="numeric"
+                    onChangeText={(value) => handleprovider_revenueChange(lead.lead_id, value)}
+                    value={String(statusByLead[`${lead.lead_id}_provider_revenue`] ?? '')}
+                  />
+                </View>
                 {statusByLead[`${lead.lead_id}_provider_revenue`] && (
                   <Text style={styles.currencyDisplay}>
                     {formatCurrency(statusByLead[`${lead.lead_id}_provider_revenue`] ?? null)}
@@ -287,7 +296,7 @@ export default function MyLeadsScreen() {
             </Text>
 
             <TouchableOpacity
-              disabled={savingLeadId === lead.lead_id} // ✅ Disable button while saving
+              disabled={savingLeadId === lead.lead_id}
               onPress={() =>
                 handleSaveStatus(
                   lead,

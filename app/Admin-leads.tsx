@@ -92,6 +92,7 @@ const JOB_TITLES = [
 
 export default function AdminLeadsScreen(): JSX.Element {
   const router = useNavigation();
+  const [payoutFilter, setPayoutFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stateFilter, setStateFilter] = useState('all');
   const [affiliateFilter, setAffiliateFilter] = useState('all');
@@ -107,6 +108,9 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [purchaseFilter, setPurchaseFilter] = useState('all');
+  const [payoutPreviewVisible, setPayoutPreviewVisible] = useState(false);
+  const [payoutCandidates, setPayoutCandidates] = useState<Purchase[]>([]);
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -122,8 +126,20 @@ export default function AdminLeadsScreen(): JSX.Element {
           params,
         });
 
-        console.log('✅ Admin Leads:', res.data);
-        setLeads(res.data.map((lead: any) => ({
+        // 🛡️ Safeguard: Only show eligible leads
+        const eligibleLeads = res.data.filter((lead: any) => {
+          const purchaseDate = new Date(lead.purchased_at);
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+          return (
+            lead.payout_status !== 'paid' &&
+            lead.lead_status !== 'ineligible' &&
+            purchaseDate <= sevenDaysAgo
+          );
+        });
+
+        setLeads(eligibleLeads.map((lead: any) => ({
           ...lead,
           lead_status: lead.status, // This lets you keep using lead.lead_status everywhere else if you want
         })));
@@ -223,6 +239,13 @@ export default function AdminLeadsScreen(): JSX.Element {
       return true;
     })
     .filter((lead) => {
+      const hasPaid = lead.purchases?.some((purchase) => purchase.payout_status === 'paid');
+      const hasUnpaid = lead.purchases?.some((purchase) => purchase.payout_status !== 'paid');
+      if (payoutFilter === 'paid') return hasPaid;
+      if (payoutFilter === 'unpaid') return !hasPaid && hasUnpaid;
+      return true;
+    })
+    .filter((lead) => {
       if (statusFilter === 'all') return true;
       return lead.purchases?.[0]?.status === statusFilter;
     })
@@ -306,7 +329,239 @@ export default function AdminLeadsScreen(): JSX.Element {
     }
   };
 
-  // You need to return your JSX here
+  const StatusBadge = ({ status, type }: { status: string; type: string }) => {
+    const backgroundMap: { [key: string]: string } = {
+      sold: '#10b981',
+      'closed-sale-made': '#10b981',
+      paid: '#3b82f6',
+      pending: '#facc15',
+      unpaid: '#ef4444',
+      expired: '#9ca3af',
+      ineligible: '#9ca3af',
+      'in-progress': '#f59e0b',
+      'attempted-contact': '#a78bfa',
+      error: '#dc2626',
+    };
+
+    const bgColor = backgroundMap[type] || '#6b7280';
+
+    return (
+      <Text
+        style={{
+          backgroundColor: bgColor,
+          color: '#fff',
+          fontSize: 13,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 6,
+          marginHorizontal: 4,
+          fontWeight: '600',
+          minWidth: 80,
+          textAlign: 'center',
+        }}
+      >
+        {status}
+      </Text>
+    );
+  };
+
+  const isRecentPayout = (date: string) => {
+    const payoutDate = new Date(date);
+    const today = new Date('2025-06-01T14:44:00-04:00');
+    return payoutDate.toDateString() === today.toDateString();
+  };
+
+  const toggleSection = (leadId: string, section: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [leadId]: {
+        ...prev[leadId],
+        [section]: !prev[leadId]?.[section],
+      },
+    }));
+  };
+
+  const handleSave = async (leadId: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('Missing token');
+      }
+
+      if (!editedLead || Object.keys(editedLead).length === 0) {
+        Toast.show({
+          type: 'error',
+          text1: 'Save Failed',
+          text2: 'No changes to save.',
+        });
+        return;
+      }
+
+      const payload = { ...editedLead };
+      Object.keys(payload).forEach((key) => {
+        if (isJsonField(key) && typeof payload[key] === 'string') {
+          try {
+            payload[key] = JSON.parse(payload[key]);
+          } catch (e) {
+            console.error(`Failed to parse JSON for field ${key}:`, e);
+          }
+        }
+      });
+
+      await axios.put(`${API_BASE_URL}/admin/leads/${leadId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Lead Saved',
+        text2: 'Lead updated successfully.',
+      });
+
+      const res = await axios.get(`${API_BASE_URL}/admin/leads`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLeads(res.data);
+      setEditedLead(null);
+      setExpandedLeadId(null);
+      setExpandedSections((prev) => {
+        const newSections = { ...prev };
+        delete newSections[leadId];
+        return newSections;
+      });
+    } catch (err) {
+      console.error('Error saving lead:', err);
+      let errorMessage = 'Failed to save lead.';
+      if (
+        err &&
+        'response' in err &&
+        (err as any).response &&
+        'data' in (err as any).response &&
+        (err as any).response.data &&
+        'error' in (err as any).response.data
+      ) {
+        errorMessage = (err as any).response.data.error || errorMessage;
+      }
+      Toast.show({
+        type: 'error',
+        text1: 'Save Failed',
+        text2: errorMessage,
+      });
+    }
+  };
+
+  const handleUpdateStatus = async (leadId: string) => {
+    if (!newLeadStatus) return;
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios.patch(
+        `${API_BASE_URL}/admin/leads/${leadId}/status`,
+        { lead_status: newLeadStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Toast.show({
+        type: 'success',
+        text1: 'Status Updated',
+        text2: 'Lead status updated successfully.',
+      });
+      const res = await axios.get(`${API_BASE_URL}/admin/leads`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLeads(res.data);
+      setNewLeadStatus(null);
+    } catch (err) {
+      console.error('Error updating status:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Status Update Failed',
+        text2: 'Failed to update lead status.',
+      });
+    }
+  };
+
+  const handleNotifyProviders = async (leadId: string) => {
+    Toast.show({
+      type: 'info',
+      text1: 'Notifying Providers',
+      text2: 'This feature is not yet implemented.',
+    });
+  };
+
+  const handleProviderChange = (role: string, providerId: string) => {
+    setEditedLead((prev: any) => {
+      const currentProviders = prev.preferred_providers_by_role
+        ? typeof prev.preferred_providers_by_role === 'string'
+          ? JSON.parse(prev.preferred_providers_by_role)
+          : prev.preferred_providers_by_role
+        : lead.preferred_providers_by_role || {};
+
+      const updatedProviders = {
+        ...currentProviders,
+        [role]: providerId === 'none' ? [] : [providerId],
+      };
+
+      return {
+        ...prev,
+        preferred_providers_by_role: updatedProviders,
+      };
+    });
+  };
+
+  const handleRoleEnabledChange = (role: string, enabled: string) => {
+    setEditedLead((prev: any) => {
+      const currentRoles = prev.role_enabled
+        ? typeof prev.role_enabled === 'string'
+          ? JSON.parse(prev.role_enabled)
+          : prev.role_enabled
+        : lead.role_enabled || {};
+
+      const updatedRoles = {
+        ...currentRoles,
+        [role]: enabled === 'true',
+      };
+
+      return {
+        ...prev,
+        role_enabled: updatedRoles,
+      };
+    });
+  };
+
+  const getUnpaidPurchases = () => {
+    const unpaid: Purchase[] = [];
+    leads.forEach((lead) => {
+      lead.purchases?.forEach((purchase) => {
+        if (purchase.payout_status !== 'paid' && purchase.payout_amount) {
+          unpaid.push({ ...purchase, lead_name: lead.lead_name, lead_id: lead.id });
+        }
+      });
+    });
+    return unpaid;
+  };
+
+  const handleAdministerPayouts = async () => {
+    try {
+      const leadsToPay = payoutCandidates.filter(
+        (lead: any) => selectedLeads.includes(lead.lead_id) && (lead.projected_payout || lead.payout_amount) > 0
+      );
+      if (leadsToPay.length === 0) {
+        Toast.show({ type: 'error', text1: 'No eligible leads selected' });
+        return;
+      }
+      const token = await AsyncStorage.getItem('token');
+      await axios.post(`${API_BASE_URL}/admin/process-affiliate-payouts`, { leads: leadsToPay }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Toast.show({ type: 'success', text1: 'Payouts processed' });
+      setPayoutPreviewVisible(false);
+      refreshLeads();
+      setSelectedLeads([]);
+    } catch (err) {
+      console.error("❌ Failed to administer payouts:", err);
+      Toast.show({ type: 'error', text1: 'Failed to process payouts' });
+    }
+  };
+
   return (
     <>
       <View style={styles.buttonRow}>
@@ -318,6 +573,16 @@ export default function AdminLeadsScreen(): JSX.Element {
         </TouchableOpacity>
         <TouchableOpacity style={styles.refreshButton} onPress={refreshLeads}>
           <Text style={styles.refreshButtonText}>Refresh Leads</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.administerButton}
+          onPress={() => {
+            const unpaid = getUnpaidPurchases();
+            setPayoutCandidates(unpaid);
+            setPayoutPreviewVisible(true);
+          }}
+        >
+          <Text style={styles.administerButtonText}>Preview Payouts</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.container}>
@@ -331,6 +596,19 @@ export default function AdminLeadsScreen(): JSX.Element {
         />
 
         <View style={styles.filterRow}>
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Payout Status:</Text>
+            <TouchableOpacity onPress={() => setPayoutFilter('all')}>
+              <Text style={[styles.filterText, payoutFilter === 'all' && styles.filterActive]}>All</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPayoutFilter('paid')}>
+              <Text style={[styles.filterText, payoutFilter === 'paid' && styles.filterActive]}>Paid</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPayoutFilter('unpaid')}>
+              <Text style={[styles.filterText, payoutFilter === 'unpaid' && styles.filterActive]}>Unpaid</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.filterGroup}>
             <Text style={styles.filterLabel}>Lead Status:</Text>
             {LEAD_STATUSES.map(({ label, value }) => (
@@ -388,31 +666,46 @@ export default function AdminLeadsScreen(): JSX.Element {
 
         {filteredLeads.map((lead) => (
           <View key={lead.id} style={styles.card}>
-            <Pressable
-              onPress={() => {
-                setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id);
-                setEditedLead({});
-                setNewLeadStatus(lead.lead_status || 'pending');
-              }}
-            >
-              <View style={styles.cardHeader}>
-                <Text style={styles.title}>
-                  {lead.lead_name} — <StatusBadge status={lead.lead_status || 'pending'} type={lead.lead_status || 'pending'} />
-                  {(lead.purchases?.length ?? 0) > 0 && (
-                    <>
-                      {' (Purchase: '}
-                      <StatusBadge status={lead.purchases![0].status || '—'} type={lead.purchases![0].status || '—'} />
-                      {')'}
-                    </>
-                  )}
-                </Text>
-                <Ionicons
-                  name={expandedLeadId === lead.id ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color="#007bff"
-                />
-              </View>
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <CheckBox
+                value={selectedLeads.includes(lead.id)}
+                onValueChange={(checked) => {
+                  setSelectedLeads((prev) =>
+                    checked ? [...prev, lead.id] : prev.filter((id) => id !== lead.id)
+                  );
+                }}
+              />
+              <Pressable
+                onPress={() => {
+                  setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id);
+                  setEditedLead({});
+                  setNewLeadStatus(lead.lead_status || 'pending');
+                }}
+              >
+                <View style={styles.cardHeader}>
+                  <Text style={styles.title}>
+                    {lead.lead_name} — <StatusBadge status={lead.lead_status || 'pending'} type={lead.lead_status || 'pending'} />
+                    {(lead.purchases?.length ?? 0) > 0 && (
+                      <>
+                        {' (Purchase: '}
+                        <StatusBadge status={lead.purchases![0].status || '—'} type={lead.purchases![0].status || '—'} />
+                        {', Payout: '}
+                        <StatusBadge
+                          status={lead.purchases![0].payout_status || 'unpaid'}
+                          type={lead.purchases![0].payout_status || 'unpaid'}
+                        />
+                        {')'}
+                      </>
+                    )}
+                  </Text>
+                  <Ionicons
+                    name={expandedLeadId === lead.id ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color="#007bff"
+                  />
+                </View>
+              </Pressable>
+            </View>
             {expandedLeadId === lead.id && (
               <View style={styles.expanded}>
                 {/* Lead Details */}
@@ -887,6 +1180,64 @@ export default function AdminLeadsScreen(): JSX.Element {
           </View>
         ))}
 
+        {/* Replace your old Administer Payments button with this: */}
+        <TouchableOpacity
+          onPress={() => {
+            const unpaid = getUnpaidPurchases().filter(p => selectedLeads.includes(p.lead_id));
+            setPayoutCandidates(unpaid);
+            setPayoutPreviewVisible(true);
+          }}
+          style={[
+            styles.paymentButton,
+            { opacity: selectedLeads.length === 0 ? 0.5 : 1 }
+          ]}
+          disabled={selectedLeads.length === 0}
+        >
+          <Text style={styles.paymentButtonText}>Administer Payments</Text>
+        </TouchableOpacity>
+
+        {/* Confirmation Modal */}
+        {payoutPreviewVisible && (
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>Payout Preview</Text>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {payoutCandidates.map((p, index) => (
+                  <View key={index} style={styles.modalItem}>
+                    <Text>
+                      {p.provider_name || p.provider_id} - ${p.payout_amount} - Lead: {p.lead_name}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              {/* Summary */}
+              <Text>Total Leads Selected: {selectedLeads.length}</Text>
+              <Text>
+                Total Payout: $
+                {payoutCandidates
+                  .filter((lead: any) => selectedLeads.includes(lead.lead_id))
+                  .reduce((sum, lead: any) => sum + (lead.projected_payout || lead.payout_amount || 0), 0)
+                  .toFixed(2)}
+              </Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleAdministerPayouts}
+                  disabled={selectedLeads.length === 0}
+                >
+                  <Text style={{ color: '#fff' }}>Confirm & Send Payouts</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setPayoutPreviewVisible(false)}
+                >
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
         <Toast />
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -990,6 +1341,18 @@ const styles = StyleSheet.create({
   },
   saveText: { color: '#fff', fontWeight: 'bold' },
   jsonInput: { height: 120, textAlignVertical: 'top' },
+  paymentButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  paymentButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   homeButton: {
     alignSelf: 'flex-start',
     backgroundColor: '#f8f9fa',
@@ -1014,6 +1377,18 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 16,
+  },
+  administerButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  administerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
   },
   modalOverlay: {

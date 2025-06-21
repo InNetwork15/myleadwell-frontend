@@ -330,6 +330,14 @@ const token = await AsyncStorage.getItem('token');
   <Text style={styles.buttonText}>📋 Copy Link</Text>
 </Pressable>
 
+            {/* First Name */}
+            <Text style={styles.label}>First Name:</Text>
+            <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} />
+
+            {/* Last Name */}
+            <Text style={styles.label}>Last Name:</Text>
+            <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
+
             {/* Email */}
             <Text style={styles.label}>Email:</Text>
             <TextInput
@@ -348,14 +356,6 @@ const token = await AsyncStorage.getItem('token');
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
             />
-
-            {/* First Name */}
-            <Text style={styles.label}>First Name:</Text>
-            <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} />
-
-            {/* Last Name */}
-            <Text style={styles.label}>Last Name:</Text>
-            <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
 
             {/* Job Title */}
             <Text style={styles.label}>Job Title:</Text>

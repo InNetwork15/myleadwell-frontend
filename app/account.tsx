@@ -330,6 +330,30 @@ const token = await AsyncStorage.getItem('token');
   <Text style={styles.buttonText}>📋 Copy Link</Text>
 </Pressable>
 
+{/* Stripe Integration Section - moved here, and removed Refresh Stripe Status button */}
+<View style={{ marginTop: 40 }}>
+  <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Stripe Integration</Text>
+  <Text style={{ marginBottom: 10 }}>
+    {stripeStatus === 'connected'
+      ? '✅ Stripe account connected and ready for payouts'
+      : stripeStatus === 'pending'
+      ? '⚠️ Stripe account created but onboarding incomplete. Complete setup to receive payouts.'
+      : '🔌 Not connected to Stripe. Connect to receive payouts for leads.'}
+  </Text>
+  <Button
+    title={
+      stripeStatus === 'connected'
+        ? 'Manage Stripe Account'
+        : stripeStatus === 'pending'
+        ? 'Complete Stripe Setup'
+        : 'Connect with Stripe'
+    }
+    onPress={handleStripeConnect}
+    color="#28a745"
+    disabled={loading}
+  />
+</View>
+
             {/* First Name */}
             <Text style={styles.label}>First Name:</Text>
             <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} />
@@ -496,36 +520,6 @@ handleSave(); // ✅ auto-save new county
                             </TouchableOpacity>
                         </View>
                     ))}
-            </View>
-
-            {/* Stripe Integration Section */}
-            <View style={{ marginTop: 40 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Stripe Integration</Text>
-                <Text style={{ marginBottom: 10 }}>
-                    {stripeStatus === 'connected'
-                        ? '✅ Stripe account connected and ready for payouts'
-                        : stripeStatus === 'pending'
-                        ? '⚠️ Stripe account created but onboarding incomplete. Complete setup to receive payouts.'
-                        : '🔌 Not connected to Stripe. Connect to receive payouts for leads.'}
-                </Text>
-                <Button
-                    title={
-                        stripeStatus === 'connected'
-                            ? 'Manage Stripe Account'
-                            : stripeStatus === 'pending'
-                            ? 'Complete Stripe Setup'
-                            : 'Connect with Stripe'
-                    }
-                    onPress={handleStripeConnect}
-                    color="#28a745"
-                    disabled={loading}
-                />
-                <Button
-                    title="Refresh Stripe Status"
-                    onPress={fetchProfile}
-                    color="#007bff"
-                    disabled={loading}
-                />
             </View>
 
             {/* Logout Button */}

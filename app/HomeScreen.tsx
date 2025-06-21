@@ -100,6 +100,9 @@ source={require('../assets/leadwellimage.png')}
     <TouchableOpacity style={styles.button} onPress={() => router.push('/admin-users')}>
       <Text style={styles.buttonText}>Admin: Manage Users</Text>
     </TouchableOpacity>
+    <TouchableOpacity style={styles.button} onPress={() => router.push('/AdministerPayouts')}>
+      <Text style={styles.buttonText}>Administer Payouts</Text>
+    </TouchableOpacity>
   </>
 )}
 

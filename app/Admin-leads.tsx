@@ -108,6 +108,8 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [purchaseFilter, setPurchaseFilter] = useState('all');
+  const [payoutPreviewVisible, setPayoutPreviewVisible] = useState(false);
+  const [payoutCandidates, setPayoutCandidates] = useState<Purchase[]>([]);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -510,6 +512,33 @@ export default function AdminLeadsScreen(): JSX.Element {
         role_enabled: updatedRoles,
       };
     });
+  };
+
+  const getUnpaidPurchases = () => {
+    const unpaid: Purchase[] = [];
+    leads.forEach((lead) => {
+      lead.purchases?.forEach((purchase) => {
+        if (purchase.payout_status !== 'paid' && purchase.payout_amount) {
+          unpaid.push({ ...purchase, lead_name: lead.lead_name, lead_id: lead.id });
+        }
+      });
+    });
+    return unpaid;
+  };
+
+  const handleAdministerPayouts = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await axios.post(`${API_BASE_URL}/admin/payouts/run`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Toast.show({ type: 'success', text1: 'Payouts processed' });
+      setPayoutPreviewVisible(false);
+      refreshLeads();
+    } catch (err) {
+      console.error("❌ Failed to administer payouts:", err);
+      Toast.show({ type: 'error', text1: 'Failed to process payouts' });
+    }
   };
 
   return (
@@ -1110,33 +1139,47 @@ export default function AdminLeadsScreen(): JSX.Element {
           </View>
         ))}
 
+        {/* Replace your old Administer Payments button with this: */}
         <TouchableOpacity
-          style={styles.paymentButton}
-          onPress={async () => {
-            try {
-              const token = await AsyncStorage.getItem('token');
-              const res = await fetch(`${API_BASE_URL}/admin/process-affiliate-payouts`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              const data = await res.json();
-              if (res.ok) {
-                Alert.alert('Success', `Processed ${data.processed} payouts.`);
-                const leadsRes = await axios.get(`${API_BASE_URL}/admin/leads`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                setLeads(leadsRes.data);
-              } else {
-                Alert.alert('Error', data.error || 'Failed to process payouts.');
-              }
-            } catch (err) {
-              console.error('Payout error:', err);
-              Alert.alert('Error', 'Network error processing payouts.');
-            }
+          onPress={() => {
+            const candidates = getUnpaidPurchases();
+            setPayoutCandidates(candidates);
+            setPayoutPreviewVisible(true);
           }}
+          style={styles.paymentButton}
         >
           <Text style={styles.paymentButtonText}>Administer Payments</Text>
         </TouchableOpacity>
+
+        {/* Confirmation Modal */}
+        {payoutPreviewVisible && (
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>Confirm Affiliate Payouts</Text>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {payoutCandidates.map((p, idx) => (
+                  <View key={idx} style={styles.modalItem}>
+                    <Text>
+                      {p.provider_name || 'Affiliate'} • {p.payout_amount} • {p.lead_name} (ID: {p.lead_id})
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <View style={styles.modalActions}>
+                <TouchableOpacity onPress={() => setPayoutPreviewVisible(false)} style={styles.cancelButton}>
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleAdministerPayouts}
+                  style={styles.confirmButton}
+                >
+                  <Text style={{ color: '#fff' }}>Confirm & Pay</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
         <Toast />
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -1277,5 +1320,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  modalOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center',
+  },
+  modalBox: {
+    backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%',
+  },
+  modalTitle: {
+    fontWeight: 'bold', fontSize: 18, marginBottom: 10,
+  },
+  modalItem: {
+    paddingVertical: 6, borderBottomWidth: 1, borderColor: '#eee',
+  },
+  modalActions: {
+    flexDirection: 'row', justifyContent: 'space-between', marginTop: 20,
+  },
+  cancelButton: {
+    padding: 10,
+  },
+  confirmButton: {
+    padding: 10, backgroundColor: '#10b981', borderRadius: 6,
   },
 });

@@ -211,7 +211,7 @@ const token = await AsyncStorage.getItem('token');
             setLoading(true);
             const response = await retry(() =>
                 axios.post(
-                    `${API_BASE_URL}/api/stripe/onboard`,
+                    `${API_BASE_URL}/api/stripe/create-account-link`, // <-- updated endpoint
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 )

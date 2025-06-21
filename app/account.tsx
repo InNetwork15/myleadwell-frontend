@@ -209,13 +209,12 @@ const token = await AsyncStorage.getItem('token');
             }
 
             setLoading(true);
-            const response = await retry(() =>
-                axios.post(
-                    `${API_BASE_URL}/api/stripe/create-account-link`, // <-- updated endpoint
-                    {},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                )
+            const response = await axios.post(
+                `${API_BASE_URL}/api/stripe/create-account-link`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
             );
+            console.log("🔗 Stripe response:", response.data);
 
             setLoading(false);
 
@@ -230,15 +229,15 @@ const token = await AsyncStorage.getItem('token');
                 await Linking.openURL(response.data.url);
                 setStripeStatus('pending');
                 Toast.show({ type: 'success', text1: 'Redirecting to Stripe onboarding' });
-                startPolling(); // Start polling after redirecting
+                startPolling();
             } else {
                 console.error('No Stripe onboarding URL returned:', response.data);
                 Toast.show({ type: 'error', text1: 'No Stripe onboarding URL provided' });
             }
-        } catch (error) {
+        } catch (err) {
             setLoading(false);
-            console.error('❌ Error initiating Stripe connect:', error);
-            Toast.show({ type: 'error', text1: 'Failed to connect to Stripe' });
+            console.error("❌ Stripe connect error:", err.response?.data || err.message);
+            Toast.show({ type: "error", text1: "Failed to connect to Stripe" });
         }
     };
 

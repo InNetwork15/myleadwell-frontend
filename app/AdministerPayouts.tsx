@@ -86,10 +86,11 @@ export default function AdministerPayouts() {
       ) : (
         previewLeads.map((lead, idx) => (
           <View key={idx} style={styles.card}>
-            <Text style={styles.bold}>{lead.lead_name}</Text>
-            <Text>Affiliate: {lead.affiliate_name}</Text>
-            <Text>Job: {lead.job_title}</Text>
-            <Text>Projected: ${lead.projected_payout?.toFixed(2)}</Text>
+            <Text style={styles.label}>Lead Name: <Text style={styles.bold}>{lead.lead_name}</Text></Text>
+            <Text style={styles.label}>Affiliate: <Text style={styles.bold}>{lead.affiliate_name}</Text></Text>
+            <Text style={styles.label}>Provider: <Text style={styles.bold}>{lead.provider_name}</Text></Text>
+            <Text style={styles.label}>Lead Status: <Text style={styles.bold}>{lead.lead_status}</Text></Text>
+            <Text style={styles.label}>Payout Amount: <Text style={styles.bold}>${lead.projected_payout?.toFixed(2)}</Text></Text>
           </View>
         ))
       )}
@@ -137,6 +138,10 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     marginBottom: 10,
+  },
+  label: {
+    fontWeight: '600',
+    marginBottom: 4,
   },
   bold: {
     fontWeight: '600',

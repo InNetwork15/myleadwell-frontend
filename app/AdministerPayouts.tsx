@@ -93,7 +93,7 @@ export default function AdministerPayouts() {
             <Text style={styles.label}>Payout Amount: <Text style={styles.bold}>${lead.projected_payout?.toFixed(2)}</Text></Text>
           </View>
         ))
-      }
+      )}
 
       <TouchableOpacity style={styles.button} onPress={handlePayouts} disabled={loading || previewLeads.length === 0}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Run Payouts</Text>}

@@ -306,6 +306,8 @@ export default function AdminLeadsScreen(): JSX.Element {
     }
   };
 
+  // You need to return your JSX here
+  return (
     <>
       <View style={styles.buttonRow}>
         <TouchableOpacity

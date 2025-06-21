@@ -306,20 +306,6 @@ export default function AdminLeadsScreen(): JSX.Element {
     }
   };
 
-  const StatusBadge = ({ status, type }: { status: string; type: string }) => {
-    const backgroundMap: { [key: string]: string } = {
-      sold: '#10b981',
-      'closed-sale-made': '#10b981',
-      paid: '#3b82f6',
-      pending: '#facc15',
-      unpaid: '#ef4444',
-      expired: '#9ca3af',
-      ineligible: '#9ca3af',
-      'in-progress': '#f59e0b',
-      'attempted-contact': '#a78bfa',
-      error: '#dc2626',
-    };
-
     const bgColor = backgroundMap[type] || '#6b7280';
 
     return (

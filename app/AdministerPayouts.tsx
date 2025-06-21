@@ -87,13 +87,13 @@ export default function AdministerPayouts() {
         previewLeads.map((lead, idx) => (
           <View key={idx} style={styles.card}>
             <Text style={styles.label}>Lead Name: <Text style={styles.bold}>{lead.lead_name}</Text></Text>
-            <Text style={styles.label}>Affiliate: <Text style={styles.bold}>{lead.affiliate_name}</Text></Text>
-            <Text style={styles.label}>Provider: <Text style={styles.bold}>{lead.provider_name}</Text></Text>
+            <Text style={styles.label}>Affiliate: <Text style={styles.bold}>{lead.affiliate_name || 'N/A'}</Text></Text>
+            <Text style={styles.label}>Provider: <Text style={styles.bold}>{lead.provider_name || 'N/A'}</Text></Text>
             <Text style={styles.label}>Lead Status: <Text style={styles.bold}>{lead.lead_status}</Text></Text>
             <Text style={styles.label}>Payout Amount: <Text style={styles.bold}>${lead.projected_payout?.toFixed(2)}</Text></Text>
           </View>
         ))
-      )}
+      }
 
       <TouchableOpacity style={styles.button} onPress={handlePayouts} disabled={loading || previewLeads.length === 0}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Run Payouts</Text>}
@@ -117,50 +117,47 @@ export default function AdministerPayouts() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: '#F0F4F8', // light blue-gray background
-    minHeight: '100%',
+    backgroundColor: '#F3F4F6', // soft neutral background
   },
   button: {
-    backgroundColor: '#19334D', // navy blue
-    padding: 16,
-    borderRadius: 10,
+    backgroundColor: '#1D4ED8', // brand blue
+    padding: 14,
+    borderRadius: 12,
     marginBottom: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   buttonText: {
-    color: '#FFFFFF', // white text
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-    textTransform: 'uppercase',
   },
   message: {
     textAlign: 'center',
     fontSize: 16,
     marginTop: 20,
-    color: '#19334D',
+    color: '#6B7280',
   },
   card: {
-    backgroundColor: '#FFFFFF', // clean white card
+    backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 16,
     marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#19334D',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#9CA3AF',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 2,
   },
   label: {
     fontWeight: '600',
+    color: '#374151',
     marginBottom: 6,
-    color: '#19334D',
   },
   bold: {
     fontWeight: '600',
@@ -169,7 +166,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     marginBottom: 16,
-    color: '#19334D',
+    color: '#1D4ED8',
     textAlign: 'center',
   },
   sectionTitle: {
@@ -177,7 +174,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 24,
     marginBottom: 12,
-    color: '#19334D',
+    color: '#1D4ED8',
   },
   subtext: {
     fontStyle: 'italic',

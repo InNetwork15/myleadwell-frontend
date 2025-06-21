@@ -36,7 +36,7 @@ const AccountScreen = () => {
     const [userId, setUserId] = useState('');
     const [states, setStates] = useState<string[]>([]);
     const [countiesByState, setCountiesByState] = useState<Record<string, string[]>>({});
-    const [selectedState, setSelectedState] = useState('');
+    const [selectedStates, setSelectedStates] = useState<string[]>([]);
     const [serviceAreas, setServiceAreas] = useState<{ state: string; county: string }[]>([]);
     const [user, setUser] = useState<any>(null);
     const [isStripeConnected, setStripeConnected] = useState(false);
@@ -147,7 +147,7 @@ const token = await AsyncStorage.getItem('token');
                 email: email,
                 phone: phone,
                 job_title: jobTitle,
-                state: selectedState,
+                state: selectedStates,
                 service_areas: serviceAreas,
                 affiliate_link: customRef,
             };
@@ -356,54 +356,73 @@ const token = await AsyncStorage.getItem('token');
             </View>
 
             {/* State Selection */}
-            <Text style={styles.label}>State</Text>
-            <Picker
-                selectedValue={selectedState}
-                onValueChange={(value) => {
-                    setSelectedState(value);
-                    setServiceAreas([]);
-                    setSelectedCounty('');
-                }}
-            >
-                <Picker.Item label="Select State" value="" />
-                {states.map((state) => (
-                    <Picker.Item
-                        key={state}
-                        label={ABBREVIATION_TO_STATE[state] || state}
-                        value={state}
-                    />
-                ))}
-            </Picker>
+            <Text style={styles.label}>States</Text>
+<View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+  {states.map((state) => {
+    const isSelected = selectedStates.includes(state);
+    return (
+      <TouchableOpacity
+        key={state}
+        onPress={() => {
+          if (isSelected) {
+            setSelectedStates(selectedStates.filter((s) => s !== state));
+            setServiceAreas(serviceAreas.filter((area) => area.state !== state));
+          } else {
+            setSelectedStates([...selectedStates, state]);
+          }
+        }}
+        style={{
+          backgroundColor: isSelected ? '#007bff' : '#eee',
+          borderRadius: 20,
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          margin: 4,
+        }}
+      >
+        <Text style={{ color: isSelected ? '#fff' : '#000' }}>
+          {ABBREVIATION_TO_STATE[state] || state}
+        </Text>
+      </TouchableOpacity>
+    );
+  })}
+</View>
 
             {/* County Selection with Dropdown */}
             <Text style={styles.label}>Service Areas (Counties)</Text>
-            {selectedState ? (
-                <View style={styles.pickerWrapper}>
-                    <Picker
-                        selectedValue={selectedCounty}
-                        onValueChange={(itemValue) => {
-                            if (itemValue && !serviceAreas.some((area) => area.county === itemValue)) {
-                                setServiceAreas([...serviceAreas, { state: selectedState, county: itemValue }]);
-                                setSelectedCounty('');
-                            }
-                        }}
-                        style={styles.picker}
-                    >
-                        <Picker.Item label="Select a County" value="" />
-                        {countiesByState[selectedState]?.map((county) => (
-                            <Picker.Item key={county} label={county} value={county} />
-                        ))}
-                    </Picker>
-                </View>
-            ) : (
-                <Text style={{ color: '#666', marginTop: 5 }}>Please select a state first</Text>
-            )}
+            {selectedStates.length > 0 ? (
+  selectedStates.map((state) => (
+    <View key={state}>
+      <Text style={styles.label}>{ABBREVIATION_TO_STATE[state] || state} Counties</Text>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue=""
+          onValueChange={(itemValue) => {
+            if (
+              itemValue &&
+              !serviceAreas.some((area) => area.county === itemValue && area.state === state)
+            ) {
+              setServiceAreas([...serviceAreas, { state, county: itemValue }]);
+            }
+          }}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select a County" value="" />
+          {countiesByState[state]?.map((county) => (
+            <Picker.Item key={county} label={county} value={county} />
+          ))}
+        </Picker>
+      </View>
+    </View>
+  ))
+) : (
+  <Text style={{ color: '#666', marginTop: 5 }}>Please select at least one state</Text>
+)}
 
             {/* Display Selected Service Areas */}
             <Text style={styles.label}>Selected Service Areas:</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {serviceAreas
-                    .filter((area) => area.state === selectedState)
+                    // Show all selected service areas, grouped visually
                     .map((area, index) => (
                         <View
                             key={`${area.state}-${area.county}-${index}`}

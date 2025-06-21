@@ -553,6 +553,16 @@ export default function AdminLeadsScreen(): JSX.Element {
         <TouchableOpacity style={styles.refreshButton} onPress={refreshLeads}>
           <Text style={styles.refreshButtonText}>Refresh Leads</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.administerButton}
+          onPress={() => {
+            const unpaid = getUnpaidPurchases();
+            setPayoutCandidates(unpaid);
+            setPayoutPreviewVisible(true);
+          }}
+        >
+          <Text style={styles.administerButtonText}>Preview Payouts</Text>
+        </TouchableOpacity>
       </View>
       <ScrollView style={styles.container}>
         <Text style={styles.header}>📋 Admin Leads</Text>
@@ -1155,25 +1165,28 @@ export default function AdminLeadsScreen(): JSX.Element {
         {payoutPreviewVisible && (
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Confirm Affiliate Payouts</Text>
+              <Text style={styles.modalTitle}>Payout Preview</Text>
               <ScrollView style={{ maxHeight: 300 }}>
-                {payoutCandidates.map((p, idx) => (
-                  <View key={idx} style={styles.modalItem}>
+                {payoutCandidates.map((p, index) => (
+                  <View key={index} style={styles.modalItem}>
                     <Text>
-                      {p.provider_name || 'Affiliate'} • {p.payout_amount} • {p.lead_name} (ID: {p.lead_id})
+                      {p.provider_name || p.provider_id} - ${p.payout_amount} - Lead: {p.lead_name}
                     </Text>
                   </View>
                 ))}
               </ScrollView>
               <View style={styles.modalActions}>
-                <TouchableOpacity onPress={() => setPayoutPreviewVisible(false)} style={styles.cancelButton}>
-                  <Text>Cancel</Text>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleAdministerPayouts}
+                >
+                  <Text style={{ color: '#fff' }}>Confirm & Send Payouts</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={handleAdministerPayouts}
-                  style={styles.confirmButton}
+                  style={styles.cancelButton}
+                  onPress={() => setPayoutPreviewVisible(false)}
                 >
-                  <Text style={{ color: '#fff' }}>Confirm & Pay</Text>
+                  <Text>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1319,6 +1332,18 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 16,
+  },
+  administerButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  administerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
   },
   modalOverlay: {

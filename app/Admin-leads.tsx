@@ -110,7 +110,6 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [purchaseFilter, setPurchaseFilter] = useState('all');
   const [payoutPreviewVisible, setPayoutPreviewVisible] = useState(false);
   const [payoutCandidates, setPayoutCandidates] = useState<Purchase[]>([]);
-  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -126,20 +125,8 @@ export default function AdminLeadsScreen(): JSX.Element {
           params,
         });
 
-        // 🛡️ Safeguard: Only show eligible leads
-        const eligibleLeads = res.data.filter((lead: any) => {
-          const purchaseDate = new Date(lead.purchased_at);
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-          return (
-            lead.payout_status !== 'paid' &&
-            lead.lead_status !== 'ineligible' &&
-            purchaseDate <= sevenDaysAgo
-          );
-        });
-
-        setLeads(eligibleLeads.map((lead: any) => ({
+        console.log('✅ Admin Leads:', res.data);
+        setLeads(res.data.map((lead: any) => ({
           ...lead,
           lead_status: lead.status, // This lets you keep using lead.lead_status everywhere else if you want
         })));
@@ -541,21 +528,13 @@ export default function AdminLeadsScreen(): JSX.Element {
 
   const handleAdministerPayouts = async () => {
     try {
-      const leadsToPay = payoutCandidates.filter(
-        (lead: any) => selectedLeads.includes(lead.lead_id) && (lead.projected_payout || lead.payout_amount) > 0
-      );
-      if (leadsToPay.length === 0) {
-        Toast.show({ type: 'error', text1: 'No eligible leads selected' });
-        return;
-      }
       const token = await AsyncStorage.getItem('token');
-      await axios.post(`${API_BASE_URL}/admin/process-affiliate-payouts`, { leads: leadsToPay }, {
+      const res = await axios.post(`${API_BASE_URL}/admin/payouts/run`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       Toast.show({ type: 'success', text1: 'Payouts processed' });
       setPayoutPreviewVisible(false);
       refreshLeads();
-      setSelectedLeads([]);
     } catch (err) {
       console.error("❌ Failed to administer payouts:", err);
       Toast.show({ type: 'error', text1: 'Failed to process payouts' });
@@ -573,16 +552,6 @@ export default function AdminLeadsScreen(): JSX.Element {
         </TouchableOpacity>
         <TouchableOpacity style={styles.refreshButton} onPress={refreshLeads}>
           <Text style={styles.refreshButtonText}>Refresh Leads</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.administerButton}
-          onPress={() => {
-            const unpaid = getUnpaidPurchases();
-            setPayoutCandidates(unpaid);
-            setPayoutPreviewVisible(true);
-          }}
-        >
-          <Text style={styles.administerButtonText}>Preview Payouts</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.container}>
@@ -666,46 +635,36 @@ export default function AdminLeadsScreen(): JSX.Element {
 
         {filteredLeads.map((lead) => (
           <View key={lead.id} style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <CheckBox
-                value={selectedLeads.includes(lead.id)}
-                onValueChange={(checked) => {
-                  setSelectedLeads((prev) =>
-                    checked ? [...prev, lead.id] : prev.filter((id) => id !== lead.id)
-                  );
-                }}
-              />
-              <Pressable
-                onPress={() => {
-                  setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id);
-                  setEditedLead({});
-                  setNewLeadStatus(lead.lead_status || 'pending');
-                }}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.title}>
-                    {lead.lead_name} — <StatusBadge status={lead.lead_status || 'pending'} type={lead.lead_status || 'pending'} />
-                    {(lead.purchases?.length ?? 0) > 0 && (
-                      <>
-                        {' (Purchase: '}
-                        <StatusBadge status={lead.purchases![0].status || '—'} type={lead.purchases![0].status || '—'} />
-                        {', Payout: '}
-                        <StatusBadge
-                          status={lead.purchases![0].payout_status || 'unpaid'}
-                          type={lead.purchases![0].payout_status || 'unpaid'}
-                        />
-                        {')'}
-                      </>
-                    )}
-                  </Text>
-                  <Ionicons
-                    name={expandedLeadId === lead.id ? 'chevron-up' : 'chevron-down'}
-                    size={20}
-                    color="#007bff"
-                  />
-                </View>
-              </Pressable>
-            </View>
+            <Pressable
+              onPress={() => {
+                setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id);
+                setEditedLead({});
+                setNewLeadStatus(lead.lead_status || 'pending');
+              }}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.title}>
+                  {lead.lead_name} — <StatusBadge status={lead.lead_status || 'pending'} type={lead.lead_status || 'pending'} />
+                  {(lead.purchases?.length ?? 0) > 0 && (
+                    <>
+                      {' (Purchase: '}
+                      <StatusBadge status={lead.purchases![0].status || '—'} type={lead.purchases![0].status || '—'} />
+                      {', Payout: '}
+                      <StatusBadge
+                        status={lead.purchases![0].payout_status || 'unpaid'}
+                        type={lead.purchases![0].payout_status || 'unpaid'}
+                      />
+                      {')'}
+                    </>
+                  )}
+                </Text>
+                <Ionicons
+                  name={expandedLeadId === lead.id ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color="#007bff"
+                />
+              </View>
+            </Pressable>
             {expandedLeadId === lead.id && (
               <View style={styles.expanded}>
                 {/* Lead Details */}
@@ -1183,15 +1142,11 @@ export default function AdminLeadsScreen(): JSX.Element {
         {/* Replace your old Administer Payments button with this: */}
         <TouchableOpacity
           onPress={() => {
-            const unpaid = getUnpaidPurchases().filter(p => selectedLeads.includes(p.lead_id));
-            setPayoutCandidates(unpaid);
+            const candidates = getUnpaidPurchases();
+            setPayoutCandidates(candidates);
             setPayoutPreviewVisible(true);
           }}
-          style={[
-            styles.paymentButton,
-            { opacity: selectedLeads.length === 0 ? 0.5 : 1 }
-          ]}
-          disabled={selectedLeads.length === 0}
+          style={styles.paymentButton}
         >
           <Text style={styles.paymentButtonText}>Administer Payments</Text>
         </TouchableOpacity>
@@ -1200,38 +1155,25 @@ export default function AdminLeadsScreen(): JSX.Element {
         {payoutPreviewVisible && (
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Payout Preview</Text>
+              <Text style={styles.modalTitle}>Confirm Affiliate Payouts</Text>
               <ScrollView style={{ maxHeight: 300 }}>
-                {payoutCandidates.map((p, index) => (
-                  <View key={index} style={styles.modalItem}>
+                {payoutCandidates.map((p, idx) => (
+                  <View key={idx} style={styles.modalItem}>
                     <Text>
-                      {p.provider_name || p.provider_id} - ${p.payout_amount} - Lead: {p.lead_name}
+                      {p.provider_name || 'Affiliate'} • {p.payout_amount} • {p.lead_name} (ID: {p.lead_id})
                     </Text>
                   </View>
                 ))}
               </ScrollView>
-              {/* Summary */}
-              <Text>Total Leads Selected: {selectedLeads.length}</Text>
-              <Text>
-                Total Payout: $
-                {payoutCandidates
-                  .filter((lead: any) => selectedLeads.includes(lead.lead_id))
-                  .reduce((sum, lead: any) => sum + (lead.projected_payout || lead.payout_amount || 0), 0)
-                  .toFixed(2)}
-              </Text>
               <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={styles.confirmButton}
-                  onPress={handleAdministerPayouts}
-                  disabled={selectedLeads.length === 0}
-                >
-                  <Text style={{ color: '#fff' }}>Confirm & Send Payouts</Text>
+                <TouchableOpacity onPress={() => setPayoutPreviewVisible(false)} style={styles.cancelButton}>
+                  <Text>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setPayoutPreviewVisible(false)}
+                  onPress={handleAdministerPayouts}
+                  style={styles.confirmButton}
                 >
-                  <Text>Cancel</Text>
+                  <Text style={{ color: '#fff' }}>Confirm & Pay</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1377,18 +1319,6 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     color: '#fff',
     fontWeight: '600',
-    fontSize: 16,
-  },
-  administerButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  administerButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
     fontSize: 16,
   },
   modalOverlay: {

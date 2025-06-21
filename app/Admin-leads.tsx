@@ -92,7 +92,6 @@ const JOB_TITLES = [
 
 export default function AdminLeadsScreen(): JSX.Element {
   const router = useNavigation();
-  const [payoutFilter, setPayoutFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stateFilter, setStateFilter] = useState('all');
   const [affiliateFilter, setAffiliateFilter] = useState('all');
@@ -108,8 +107,6 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [purchaseFilter, setPurchaseFilter] = useState('all');
-  const [payoutPreviewVisible, setPayoutPreviewVisible] = useState(false);
-  const [payoutCandidates, setPayoutCandidates] = useState<Purchase[]>([]);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -223,13 +220,6 @@ export default function AdminLeadsScreen(): JSX.Element {
       } else if (purchaseFilter === 'no') {
         return !lead.purchases || lead.purchases.every((p) => p.purchase_event_status !== 'purchased');
       }
-      return true;
-    })
-    .filter((lead) => {
-      const hasPaid = lead.purchases?.some((purchase) => purchase.payout_status === 'paid');
-      const hasUnpaid = lead.purchases?.some((purchase) => purchase.payout_status !== 'paid');
-      if (payoutFilter === 'paid') return hasPaid;
-      if (payoutFilter === 'unpaid') return !hasPaid && hasUnpaid;
       return true;
     })
     .filter((lead) => {
@@ -514,31 +504,40 @@ export default function AdminLeadsScreen(): JSX.Element {
     });
   };
 
-  const getUnpaidPurchases = () => {
-    const unpaid: Purchase[] = [];
-    leads.forEach((lead) => {
-      lead.purchases?.forEach((purchase) => {
-        if (purchase.payout_status !== 'paid' && purchase.payout_amount) {
-          unpaid.push({ ...purchase, lead_name: lead.lead_name, lead_id: lead.id });
-        }
-      });
-    });
-    return unpaid;
-  };
+  const StatusBadge = ({ status, type }: { status: string; type: string }) => {
+    const backgroundMap: { [key: string]: string } = {
+      sold: '#10b981',
+      'closed-sale-made': '#10b981',
+      paid: '#3b82f6',
+      pending: '#facc15',
+      unpaid: '#ef4444',
+      expired: '#9ca3af',
+      ineligible: '#9ca3af',
+      'in-progress': '#f59e0b',
+      'attempted-contact': '#a78bfa',
+      error: '#dc2626',
+    };
 
-  const handleAdministerPayouts = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      const res = await axios.post(`${API_BASE_URL}/admin/payouts/run`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      Toast.show({ type: 'success', text1: 'Payouts processed' });
-      setPayoutPreviewVisible(false);
-      refreshLeads();
-    } catch (err) {
-      console.error("❌ Failed to administer payouts:", err);
-      Toast.show({ type: 'error', text1: 'Failed to process payouts' });
-    }
+    const bgColor = backgroundMap[type] || '#6b7280';
+
+    return (
+      <Text
+        style={{
+          backgroundColor: bgColor,
+          color: '#fff',
+          fontSize: 13,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 6,
+          marginHorizontal: 4,
+          fontWeight: '600',
+          minWidth: 80,
+          textAlign: 'center',
+        }}
+      >
+        {status}
+      </Text>
+    );
   };
 
   return (
@@ -553,16 +552,6 @@ export default function AdminLeadsScreen(): JSX.Element {
         <TouchableOpacity style={styles.refreshButton} onPress={refreshLeads}>
           <Text style={styles.refreshButtonText}>Refresh Leads</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.administerButton}
-          onPress={() => {
-            const unpaid = getUnpaidPurchases();
-            setPayoutCandidates(unpaid);
-            setPayoutPreviewVisible(true);
-          }}
-        >
-          <Text style={styles.administerButtonText}>Preview Payouts</Text>
-        </TouchableOpacity>
       </View>
       <ScrollView style={styles.container}>
         <Text style={styles.header}>📋 Admin Leads</Text>
@@ -575,19 +564,6 @@ export default function AdminLeadsScreen(): JSX.Element {
         />
 
         <View style={styles.filterRow}>
-          <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Payout Status:</Text>
-            <TouchableOpacity onPress={() => setPayoutFilter('all')}>
-              <Text style={[styles.filterText, payoutFilter === 'all' && styles.filterActive]}>All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setPayoutFilter('paid')}>
-              <Text style={[styles.filterText, payoutFilter === 'paid' && styles.filterActive]}>Paid</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setPayoutFilter('unpaid')}>
-              <Text style={[styles.filterText, payoutFilter === 'unpaid' && styles.filterActive]}>Unpaid</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.filterGroup}>
             <Text style={styles.filterLabel}>Lead Status:</Text>
             {LEAD_STATUSES.map(({ label, value }) => (
@@ -1149,50 +1125,6 @@ export default function AdminLeadsScreen(): JSX.Element {
           </View>
         ))}
 
-        {/* Replace your old Administer Payments button with this: */}
-        <TouchableOpacity
-          onPress={() => {
-            const candidates = getUnpaidPurchases();
-            setPayoutCandidates(candidates);
-            setPayoutPreviewVisible(true);
-          }}
-          style={styles.paymentButton}
-        >
-          <Text style={styles.paymentButtonText}>Administer Payments</Text>
-        </TouchableOpacity>
-
-        {/* Confirmation Modal */}
-        {payoutPreviewVisible && (
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>Payout Preview</Text>
-              <ScrollView style={{ maxHeight: 300 }}>
-                {payoutCandidates.map((p, index) => (
-                  <View key={index} style={styles.modalItem}>
-                    <Text>
-                      {p.provider_name || p.provider_id} - ${p.payout_amount} - Lead: {p.lead_name}
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={styles.confirmButton}
-                  onPress={handleAdministerPayouts}
-                >
-                  <Text style={{ color: '#fff' }}>Confirm & Send Payouts</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setPayoutPreviewVisible(false)}
-                >
-                  <Text>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-
         <Toast />
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -1296,18 +1228,6 @@ const styles = StyleSheet.create({
   },
   saveText: { color: '#fff', fontWeight: 'bold' },
   jsonInput: { height: 120, textAlignVertical: 'top' },
-  paymentButton: {
-    backgroundColor: '#28a745',
-    paddingVertical: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  paymentButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
   homeButton: {
     alignSelf: 'flex-start',
     backgroundColor: '#f8f9fa',
@@ -1332,18 +1252,6 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     color: '#fff',
     fontWeight: '600',
-    fontSize: 16,
-  },
-  administerButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  administerButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
     fontSize: 16,
   },
   modalOverlay: {

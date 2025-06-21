@@ -82,7 +82,7 @@ export default function AdministerPayouts() {
 
       <Text style={styles.sectionTitle}>🧾 Leads Eligible for Payout</Text>
       {previewLeads.length === 0 ? (
-        <Text style={styles.subtext}>No leads eligible for payout.</Text>
+        <Text style={styles.message}>💧 No leads eligible for payout yet.</Text>
       ) : (
         previewLeads.map((lead, idx) => (
           <View key={idx} style={styles.card}>
@@ -116,47 +116,72 @@ export default function AdministerPayouts() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 16,
+    backgroundColor: '#F0F4F8', // light blue-gray background
+    minHeight: '100%',
+  },
+  button: {
+    backgroundColor: '#19334D', // navy blue
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  buttonText: {
+    color: '#FFFFFF', // white text
+    fontWeight: 'bold',
+    fontSize: 16,
+    textTransform: 'uppercase',
+  },
+  message: {
+    textAlign: 'center',
+    fontSize: 16,
+    marginTop: 20,
+    color: '#19334D',
+  },
+  card: {
+    backgroundColor: '#FFFFFF', // clean white card
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#19334D',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  label: {
+    fontWeight: '600',
+    marginBottom: 6,
+    color: '#19334D',
+  },
+  bold: {
+    fontWeight: '600',
   },
   title: {
     fontSize: 22,
     fontWeight: '600',
     marginBottom: 16,
+    color: '#19334D',
+    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 24,
     marginBottom: 12,
+    color: '#19334D',
   },
   subtext: {
     fontStyle: 'italic',
     color: '#555',
-  },
-  card: {
-    backgroundColor: '#f0f4f8',
-    padding: 14,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  label: {
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  bold: {
-    fontWeight: '600',
-  },
-  button: {
-    backgroundColor: '#28a745',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
+    textAlign: 'center',
   },
 });

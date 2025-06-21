@@ -311,6 +311,25 @@ const token = await AsyncStorage.getItem('token');
             </TouchableOpacity>
             <Text style={styles.header}>👤 My Account</Text>
 
+            {/* Customize Affiliate Link at the top, inline */}
+<View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginBottom: 8 }}>
+  <Text style={styles.label}>Customize Your Link:</Text>
+  <TextInput
+    style={[styles.input, { flex: 1, marginLeft: 8, marginTop: 0 }]}
+    value={customRef}
+    onChangeText={setCustomRef}
+    placeholder="Enter your unique link"
+    autoCapitalize="none"
+  />
+</View>
+
+{/* Unique Referral Link */}
+<Text style={styles.previewLabel}>Your Unique Link:</Text>
+<Text selectable style={styles.link}>{referralLink}</Text>
+<Pressable style={styles.button} onPress={handleCopyLink}>
+  <Text style={styles.buttonText}>📋 Copy Link</Text>
+</Pressable>
+
             {/* Email */}
             <Text style={styles.label}>Email:</Text>
             <TextInput
@@ -478,19 +497,6 @@ handleSave(); // ✅ auto-save new county
                         </View>
                     ))}
             </View>
-
-            {/* Customize Affiliate Link */}
-            <Text style={styles.label}>Customize Your Affiliate Link:</Text>
-            <TextInput style={styles.input} value={customRef} onChangeText={setCustomRef} />
-
-            {/* Referral Link */}
-            <Text style={styles.previewLabel}>Your Referral Link:</Text>
-            <Text selectable style={styles.link}>{referralLink}</Text>
-
-            {/* Copy Link */}
-            <Pressable style={styles.button} onPress={handleCopyLink}>
-                <Text style={styles.buttonText}>📋 Copy Link</Text>
-            </Pressable>
 
             {/* Stripe Integration Section */}
             <View style={{ marginTop: 40 }}>

@@ -73,7 +73,7 @@ const token = await AsyncStorage.getItem('token');
                 setPhone(userData.phone || '');
                 setJobTitle(userData.job_title || '');
                 setCustomRef(userData.affiliate_link || '');
-                setSelectedState(userData.state || '');
+                setSelectedStates(userData.states || []);
                 setServiceAreas(userData.service_areas || []);
                 setStripeConnected(!!userData.stripe_account_id);
                 setStripeStatus(userData.stripe_onboarding_status || 'not_connected');
@@ -147,7 +147,7 @@ const token = await AsyncStorage.getItem('token');
                 email: email,
                 phone: phone,
                 job_title: jobTitle,
-                state: selectedStates,
+                states: selectedStates,
                 service_areas: serviceAreas,
                 affiliate_link: customRef,
             };
@@ -365,10 +365,10 @@ const token = await AsyncStorage.getItem('token');
         key={state}
         onPress={() => {
           if (isSelected) {
-            setSelectedStates(selectedStates.filter((s) => s !== state));
+            setSelectedStates(selectedStates.filter((s) => s !== state).sort());
             setServiceAreas(serviceAreas.filter((area) => area.state !== state));
           } else {
-            setSelectedStates([...selectedStates, state]);
+            setSelectedStates([...new Set([...selectedStates, state])].sort());
           }
         }}
         style={{
@@ -392,8 +392,26 @@ const token = await AsyncStorage.getItem('token');
             {selectedStates.length > 0 ? (
   selectedStates.map((state) => (
     <View key={state}>
-      <Text style={styles.label}>{ABBREVIATION_TO_STATE[state] || state} Counties</Text>
-      <View style={styles.pickerWrapper}>
+  <Text style={styles.label}>{ABBREVIATION_TO_STATE[state] || state} Counties</Text>
+
+  <TouchableOpacity
+    onPress={() => {
+      const all = countiesByState[state] || [];
+      const newAreas = all
+        .filter(c => !serviceAreas.some(a => a.county === c && a.state === state))
+        .map(c => ({ state, county: c }));
+      const updated = [...serviceAreas, ...newAreas];
+      setServiceAreas(updated);
+      handleSave(); // Auto-save when selecting all
+    }}
+  >
+    <Text style={{ color: 'green', fontWeight: 'bold', marginBottom: 6 }}>
+      🗺️ Add All Counties in {ABBREVIATION_TO_STATE[state] || state}
+    </Text>
+  </TouchableOpacity>
+
+  <View style={styles.pickerWrapper}>
+
         <Picker
           selectedValue=""
           onValueChange={(itemValue) => {
@@ -402,6 +420,9 @@ const token = await AsyncStorage.getItem('token');
               !serviceAreas.some((area) => area.county === itemValue && area.state === state)
             ) {
               setServiceAreas([...serviceAreas, { state, county: itemValue }]);
+              const updated = [...serviceAreas, { state, county: itemValue }];
+setServiceAreas(updated);
+handleSave(); // ✅ auto-save new county
             }
           }}
           style={styles.picker}
@@ -423,6 +444,12 @@ const token = await AsyncStorage.getItem('token');
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {serviceAreas
                     // Show all selected service areas, grouped visually
+                    .slice()
+                    .sort((a, b) =>
+                      a.state === b.state
+                        ? a.county.localeCompare(b.county)
+                        : a.state.localeCompare(b.state)
+                    )
                     .map((area, index) => (
                         <View
                             key={`${area.state}-${area.county}-${index}`}
@@ -439,7 +466,11 @@ const token = await AsyncStorage.getItem('token');
                             <Text>{area.county}</Text>
                             <TouchableOpacity
                                 onPress={() =>
-                                    setServiceAreas(serviceAreas.filter((a) => a.county !== area.county))
+                                    setServiceAreas(
+                                        serviceAreas.filter(
+                                            (a) => !(a.county === area.county && a.state === area.state)
+                                        )
+                                    )
                                 }
                             >
                                 <Text style={{ marginLeft: 8, color: 'red' }}>✕</Text>

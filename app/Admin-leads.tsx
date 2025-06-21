@@ -621,11 +621,6 @@ export default function AdminLeadsScreen(): JSX.Element {
                     <>
                       {' (Purchase: '}
                       <StatusBadge status={lead.purchases![0].status || '—'} type={lead.purchases![0].status || '—'} />
-                      {', Payout: '}
-                      <StatusBadge
-                        status={lead.purchases![0].payout_status || 'unpaid'}
-                        type={lead.purchases![0].payout_status || 'unpaid'}
-                      />
                       {')'}
                     </>
                   )}

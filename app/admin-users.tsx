@@ -37,7 +37,7 @@ export default function AdminUsersScreen() {
     job_title?: string;
     roles?: string[];
     state?: string;
-    service_areas?: string[]; // ✅ Added
+    service_areas?: { state: string; county: string }[]; // <-- updated type
     affiliate_link?: string;
   }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | number | null>(null);
@@ -50,7 +50,7 @@ export default function AdminUsersScreen() {
     job_title?: string;
     roles?: string[];
     state?: string;
-    service_areas?: string[]; // ✅ Added
+    service_areas?: { state: string; county: string }[]; // <-- updated type
     affiliate_link?: string;
   } | null>(null);
   const [newUser, setNewUser] = useState<{ first_name?: string; last_name?: string; email?: string; phone?: string; password?: string; job_title?: string; roles: string[] } | null>(null);
@@ -298,6 +298,17 @@ export default function AdminUsersScreen() {
               <Text style={{ color: '#fff' }}>{r}</Text>
             </TouchableOpacity>
           ))}
+
+          {editUser?.service_areas && editUser.service_areas.length > 0 && (
+            <View style={{ marginBottom: 10 }}>
+              <Text style={styles.label}>Service Areas:</Text>
+              {editUser.service_areas.map((area, idx) => (
+                <Text key={idx} style={{ marginLeft: 8 }}>
+                  {area.county}, {area.state}
+                </Text>
+              ))}
+            </View>
+          )}
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity

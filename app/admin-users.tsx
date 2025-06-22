@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
+import { STATE_ABBREVIATIONS } from '../utils/stateAbbreviations'; // Make sure this import exists
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com';
 
@@ -181,7 +182,7 @@ export default function AdminUsersScreen() {
       phone: editUser.phone,
       roles: editUser.roles || [],
       job_title: editUser.job_title,
-      states: editUser.states || [], // <-- changed from state
+      states: editUser.states || [], // ✅ Use states array
       service_areas: editUser.service_areas || [],
       affiliate_link: editUser.affiliate_link || '',
     };
@@ -332,6 +333,35 @@ export default function AdminUsersScreen() {
             ))}
           </Picker>
 
+          <Text style={styles.label}>States:</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}>
+            {Object.keys(STATE_ABBREVIATIONS).map((fullName) => {
+              const abbr = STATE_ABBREVIATIONS[fullName];
+              const selected = editUser.states?.includes(abbr);
+              return (
+                <TouchableOpacity
+                  key={abbr}
+                  onPress={() => {
+                    const existing = editUser.states || [];
+                    const updated = selected
+                      ? existing.filter((s) => s !== abbr)
+                      : [...existing, abbr];
+                    setEditUser({ ...editUser, states: updated });
+                  }}
+                  style={{
+                    backgroundColor: selected ? '#28a745' : '#eee',
+                    borderRadius: 12,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    margin: 4,
+                  }}
+                >
+                  <Text style={{ color: selected ? '#fff' : '#000' }}>{abbr}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           <Text style={styles.sub}>Roles:</Text>
           {ROLE_OPTIONS.map((r) => (
             <TouchableOpacity
@@ -364,17 +394,6 @@ export default function AdminUsersScreen() {
               )}
             </View>
           )}
-          <View style={styles.row}>
-            <Text style={styles.label}>States (comma separated):</Text>
-            <TextInput
-              value={editUser.states?.join(', ') || ''}
-              onChangeText={(text) =>
-                setEditUser({ ...editUser, states: text.split(',').map(s => s.trim()).filter(Boolean) })
-              }
-              style={styles.input}
-            />
-          </View>
-
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity
               onPress={() => {
@@ -453,6 +472,35 @@ export default function AdminUsersScreen() {
             ))}
           </Picker>
 
+          <Text style={styles.label}>States:</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}>
+            {Object.keys(STATE_ABBREVIATIONS).map((fullName) => {
+              const abbr = STATE_ABBREVIATIONS[fullName];
+              const selected = newUser.states?.includes(abbr);
+              return (
+                <TouchableOpacity
+                  key={abbr}
+                  onPress={() => {
+                    const existing = newUser.states || [];
+                    const updated = selected
+                      ? existing.filter((s) => s !== abbr)
+                      : [...existing, abbr];
+                    setNewUser((u) => ({ ...u, roles: u?.roles || [], states: updated }));
+                  }}
+                  style={{
+                    backgroundColor: selected ? '#28a745' : '#eee',
+                    borderRadius: 12,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    margin: 4,
+                  }}
+                >
+                  <Text style={{ color: selected ? '#fff' : '#000' }}>{abbr}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           <Text style={styles.sub}>Roles:</Text>
           {ROLE_OPTIONS.map((r) => (
             <TouchableOpacity
@@ -472,21 +520,6 @@ export default function AdminUsersScreen() {
               <Text style={{ color: '#fff' }}>{r}</Text>
             </TouchableOpacity>
           ))}
-          <View style={styles.row}>
-            <Text style={styles.label}>States (comma separated):</Text>
-            <TextInput
-              value={newUser.states?.join(', ') || ''}
-              onChangeText={(text) =>
-                setNewUser((u) => ({
-                  ...u,
-                  roles: u?.roles || [],
-                  states: text.split(',').map(s => s.trim()).filter(Boolean),
-                }))
-              }
-              style={styles.input}
-            />
-          </View>
-
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity onPress={handleCreate} style={styles.saveBtn}>
               <Text style={{ color: '#fff' }}>Save</Text>

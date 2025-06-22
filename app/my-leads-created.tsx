@@ -465,7 +465,10 @@ export default function MyLeadsCreatedAccordion() {
                                 <Text>💰 Affiliate Prices:</Text>
                                 {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
                                     <Text key={role} style={styles.priceDetail}>
-                                        {role}: ${typeof price === 'number' ? price.toFixed(2) : 'Not set'}
+                                        {role}:{' '}
+                                        {Number.isFinite(price)
+                                            ? `$${Number(price).toFixed(2)}`
+                                            : 'N/A'}
                                     </Text>
                                 ))}
                                 {lead.purchased_by && lead.purchased_by.length > 0 ? (

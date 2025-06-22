@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿﻿import React, { useEffect, useState } from 'react';More actions
 import {
     View,
     Text,
@@ -462,9 +462,11 @@ export default function MyLeadsCreatedAccordion() {
                                     <View style={styles.purchasedByContainer}>
                                         <Text style={styles.purchasedByLabel}>Purchased By:</Text>
                                         <View style={styles.purchasedByNames}>
+
                                             {lead.purchased_by.map((provider, idx) => (
                                                 <View key={idx} style={styles.purchasedBadge}>
                                                     <Text style={styles.purchasedName}>
+
                                                         {provider.job_title}: {provider.first_name} {provider.last_name}
                                                     </Text>
                                                 </View>
@@ -492,6 +494,7 @@ export default function MyLeadsCreatedAccordion() {
                                     </Picker>
 
                                     {(() => {
+
                                       const isPurchased = (lead.purchased_by ?? []).some((provider) => provider.job_title === activeRole);
                                       const distribution = lead.distribution_method_by_role?.[activeRole] ?? '';
                                       const price = lead.affiliate_prices_by_role?.[activeRole] ?? '';
@@ -536,12 +539,11 @@ export default function MyLeadsCreatedAccordion() {
 
                                           <Text style={styles.label}>Affiliate Price:</Text>
                                           <TextInput
-                                            style={[styles.input, { textAlign: 'left' }]}
-                                            keyboardType="decimal-pad"
-                                            value={price !== null && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
+                                            style={styles.input}
+                                            keyboardType="numeric"
+                                            value={String(price)}
                                             onChangeText={(val) => {
-                                              const cleaned = val.replace(/[^0-9.]/g, '');
-                                              const parsed = parseFloat(cleaned);
+                                              const parsed = parseFloat(val) || 0;
                                               setLeads((prev) =>
                                                 prev.map((l) =>
                                                   l.lead_id === lead.lead_id
@@ -549,7 +551,7 @@ export default function MyLeadsCreatedAccordion() {
                                                         ...l,
                                                         affiliate_prices_by_role: {
                                                           ...l.affiliate_prices_by_role,
-                                                          [activeRole]: isNaN(parsed) ? 0 : parsed,
+                                                          [activeRole]: parsed,
                                                         },
                                                       }
                                                     : l
@@ -916,11 +918,10 @@ const styles = StyleSheet.create({
       paddingHorizontal: 16,
       marginBottom: 16,
       fontSize: 16,
-      textAlign: 'left', // Ensures left alignment
     },
     removeText: {
       color: '#dc3545',
-      fontSize: 16,
+      fontSize: 16,More actions
       fontWeight: '500',
     },
 });

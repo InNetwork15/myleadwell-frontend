@@ -87,6 +87,12 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
     }
 };
 
+const formatRevenue = (value: any) => {
+  console.log('💸 Raw projected_payout:', value); // Debugging
+  const number = typeof value === 'number' ? value : parseFloat(value);
+  return isNaN(number) ? '$0.00' : `$${number.toFixed(2)}`;
+};
+
 export default function MyLeadsCreatedAccordion() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [providers, setProviders] = useState<Provider[]>([]);

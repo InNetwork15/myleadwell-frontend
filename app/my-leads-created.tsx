@@ -1,4 +1,4 @@
-﻿﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -479,7 +479,7 @@ export default function MyLeadsCreatedAccordion() {
                                 <Text>💰 Affiliate Prices:</Text>
                                 {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
                                     <Text key={role} style={styles.priceDetail}>
-                                        {role}: ${typeof price === 'number' ? price.toFixed(2) : 'Not set'}
+                                        {role}: {typeof price === 'number' && !isNaN(price) ? `$${price.toFixed(2)}` : 'Not set'}
                                     </Text>
                                 ))}
                                 {lead.purchased_by && lead.purchased_by.length > 0 ? (
@@ -562,7 +562,7 @@ export default function MyLeadsCreatedAccordion() {
                                           <TextInput
                                             style={[styles.input, { textAlign: 'left' }]}
                                             keyboardType="decimal-pad"
-                                            value={price !== null && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
+                                            value={typeof price === 'number' && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
                                             onChangeText={(val) => {
                                               const cleaned = val.replace(/[^0-9.]/g, '');
                                               const parsed = parseFloat(cleaned);

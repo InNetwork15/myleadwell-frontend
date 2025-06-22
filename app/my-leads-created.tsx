@@ -56,13 +56,14 @@ interface Lead {
     lead_name: string;
     lead_email?: string;
     lead_phone?: string;
-    state: string;
-    county: string;
+    state?: string; // <-- optional or remove if unused
+    county?: string; // <-- optional or remove if unused
+    service_areas?: { state: string; county: string }[]; // <-- ✅ Add this
     affiliate_name: string;
     purchased_by?: { job_title: string; first_name: string; last_name: string }[];
     role_enabled?: { [key: string]: boolean };
     distribution_method: 'JUMPBALL' | 'NETWORK' | string;
-    distribution_method_by_role?: { [key: string]: string }; // <-- Added this line
+    distribution_method_by_role?: { [key: string]: string };
     preferred_provider_ids?: number[];
     status?: string;
     provider_price?: number;
@@ -72,6 +73,7 @@ interface Lead {
     created_at?: string;
     last_updated?: string | null;
 }
+
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     if (Platform.OS === 'android') {
@@ -125,24 +127,41 @@ export default function MyLeadsCreatedAccordion() {
                 return;
             }
 
-            const leadsWithProperData: Lead[] = response.data.map((lead: any) => ({
-                id: lead.id ?? lead.lead_id ?? '', // fallback if id is missing
-                lead_id: lead.lead_id,
-                purchase_id: lead.purchase_id,
-                lead_name: lead.lead_name || 'Unknown',
-                state: lead.state_name || lead.state || 'N/A',
-                county: lead.county_name || lead.county || 'N/A',
-                affiliate_name: lead.affiliate_name || 'Unknown', // fallback if missing
-                distribution_method: lead.distribution_method || null,
-                distribution_method_by_role: lead.distribution_method_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 'JUMPBALL' }), {}), // <-- Added this line
-                affiliate_prices_by_role: lead.affiliate_prices_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 0 }), {}),
-                preferred_providers_by_role: lead.preferred_providers_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: [] }), {}),
-                role_enabled: lead.role_enabled || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: false }), {}),
-                notes_by_role: lead.notes_by_role || JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: '' }), {}),
-                purchased_by: lead.purchased_by || [],
-                created_at: lead.created_at || new Date().toISOString(),
-                last_updated: lead.last_updated || null,
-            }));
+           const leadsWithProperData: Lead[] = response.data.map((lead: any) => ({
+    id: lead.id ?? lead.lead_id ?? '',
+    lead_id: lead.lead_id,
+    purchase_id: lead.purchase_id,
+    lead_name: lead.lead_name || 'Unknown',
+
+    // Optional: Keep these if still used anywhere
+    state: lead.state_name || lead.state || 'N/A',
+    county: lead.county_name || lead.county || 'N/A',
+
+    // ✅ Add this for service_areas if the API returns it
+    service_areas: lead.service_areas || [],
+
+    affiliate_name: lead.affiliate_name || 'Unknown',
+    distribution_method: lead.distribution_method || null,
+    distribution_method_by_role:
+        lead.distribution_method_by_role ||
+        JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 'JUMPBALL' }), {}),
+    affiliate_prices_by_role:
+        lead.affiliate_prices_by_role ||
+        JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 0 }), {}),
+    preferred_providers_by_role:
+        lead.preferred_providers_by_role ||
+        JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: [] }), {}),
+    role_enabled:
+        lead.role_enabled ||
+        JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: false }), {}),
+    notes_by_role:
+        lead.notes_by_role ||
+        JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: '' }), {}),
+    purchased_by: lead.purchased_by || [],
+    created_at: lead.created_at || new Date().toISOString(),
+    last_updated: lead.last_updated || null,
+}));
+
 
             console.log('📦 Loaded leads with defaults:', leadsWithProperData);
             setLeads(leadsWithProperData);
@@ -330,17 +349,22 @@ export default function MyLeadsCreatedAccordion() {
     };
 
     // Filter leads based on selected criteria and search query
-    const filteredLeads = leads.filter((lead) => {
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase();
-            const matchesSearch =
-                lead.lead_name.toLowerCase().includes(query) ||
-                lead.state.toLowerCase().includes(query) ||
-                lead.county.toLowerCase().includes(query);
-            if (!matchesSearch) {
-                return false;
-            }
+  const filteredLeads = leads.filter((lead) => {
+    if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+            (lead.lead_name && lead.lead_name.toLowerCase().includes(query)) ||
+            (lead.state && lead.state.toLowerCase().includes(query)) || // optional fallback
+            (lead.county && lead.county.toLowerCase().includes(query)) || // optional fallback
+            (Array.isArray(lead.service_areas) &&
+                lead.service_areas.some(area =>
+                    area.toLowerCase().includes(query)
+                ));
+
+        if (!matchesSearch) {
+            return false;
         }
+    }
 
         if (showRecent) {
             const createdAt = new Date(lead.created_at ?? '');

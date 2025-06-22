@@ -61,7 +61,7 @@ export default function AdminUsersScreen() {
     const currentUserId = await AsyncStorage.getItem('user_id');
 
     try {
-      const res = await axios.get(`${API_BASE_URL}/all-users`, {
+      const res = await axios.get(`${API_BASE_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

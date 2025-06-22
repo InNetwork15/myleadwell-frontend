@@ -34,7 +34,7 @@ const AccountScreen = () => {
     const [jobTitle, setJobTitle] = useState('');
     const [customRef, setCustomRef] = useState('');
     const [userId, setUserId] = useState('');
-    const [states, setStates] = useState<string[]>([]);
+    const [availableStates, setAvailableStates] = useState<string[]>([]);
     const [countiesByState, setCountiesByState] = useState<Record<string, string[]>>({});
     const [selectedStates, setSelectedStates] = useState<string[]>([]);
     const [serviceAreas, setServiceAreas] = useState<{ state: string; county: string }[]>([]);
@@ -129,7 +129,7 @@ const token = await AsyncStorage.getItem('token');
                 });
 
                 setCountiesByState(byState);
-                setStates(Object.keys(byState).sort());
+                setAvailableStates(Object.keys(byState).sort());
             } catch (err) {
                 console.error("❌ County fetch failed", err);
             }
@@ -401,7 +401,7 @@ const token = await AsyncStorage.getItem('token');
             {/* State Selection */}
             <Text style={styles.label}>States</Text>
 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-  {states.map((state) => {
+  {availableStates.map((state) => {
     const isSelected = selectedStates.includes(state);
     return (
       <TouchableOpacity

@@ -124,7 +124,7 @@ export default function SignupScreen() {
                 password,
                 roles: roles.map((r) => (r === 'Provider' ? 'provider' : 'affiliate')),
                 job_title: roles.includes('Provider') ? job_title : '',
-                state: selectedState, // ✅ renamed from states to state
+                states: selectedState ? [selectedState] : [], // ✅ convert to array
                 service_areas: counties,
                 affiliate_link: customRef.trim() || null,
             };

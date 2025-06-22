@@ -124,9 +124,9 @@ export default function SignupScreen() {
                 password,
                 roles: roles.map((r) => (r === 'Provider' ? 'provider' : 'affiliate')),
                 job_title: roles.includes('Provider') ? job_title : '',
-                states: selectedState,
-                service_areas: counties, // ✅ Now an array of strings
-                affiliate_link: customRef.trim() || null, // Optional: send null if empty
+                state: selectedState, // ✅ renamed from states to state
+                service_areas: counties,
+                affiliate_link: customRef.trim() || null,
             };
 
             console.log('📦 Payload to submit:', JSON.stringify(payload, null, 2));

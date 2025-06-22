@@ -106,6 +106,15 @@ export default function SignupScreen() {
             return;
         }
 
+        if (roles.includes('Provider') && !selectedState) {
+            Toast.show({
+                type: 'error',
+                text1: 'Missing State',
+                text2: 'Please select a state to continue.',
+            });
+            return;
+        }
+
         try {
             const payload = {
                 first_name,
@@ -116,8 +125,8 @@ export default function SignupScreen() {
                 roles: roles.map((r) => (r === 'Provider' ? 'provider' : 'affiliate')),
                 job_title: roles.includes('Provider') ? job_title : '',
                 states: selectedState,
-                service_areas: counties.map((county) => ({ states: selectedState, county })),
-                affiliate_link: customRef,
+                service_areas: counties, // ✅ Now an array of strings
+                affiliate_link: customRef.trim() || null, // Optional: send null if empty
             };
 
             console.log('📦 Payload to submit:', JSON.stringify(payload, null, 2));

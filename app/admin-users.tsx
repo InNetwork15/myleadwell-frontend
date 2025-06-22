@@ -28,9 +28,31 @@ const ROLE_OPTIONS = ['admin', 'provider', 'affiliate'];
 
 export default function AdminUsersScreen() {
   const navigation = useNavigation(); // ✅ Add navigation hook
-  const [users, setUsers] = useState<{ id: number; first_name: string; last_name: string; email: string; phone?: string; job_title?: string; roles?: string[] }[]>([]);
+  const [users, setUsers] = useState<{
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string;
+    job_title?: string;
+    roles?: string[];
+    state?: string;
+    service_areas?: string[]; // ✅ Added
+    affiliate_link?: string;
+  }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | number | null>(null);
-  const [editUser, setEditUser] = useState<{ id?: number; first_name?: string; last_name?: string; email?: string; phone?: string; job_title?: string; roles?: string[]; state?: string; service_areas?: string[]; affiliate_link?: string } | null>(null);
+  const [editUser, setEditUser] = useState<{
+    id?: number;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    job_title?: string;
+    roles?: string[];
+    state?: string;
+    service_areas?: string[]; // ✅ Added
+    affiliate_link?: string;
+  } | null>(null);
   const [newUser, setNewUser] = useState<{ first_name?: string; last_name?: string; email?: string; phone?: string; password?: string; job_title?: string; roles: string[] } | null>(null);
   const [token, setToken] = useState('');
 
@@ -69,7 +91,7 @@ export default function AdminUsersScreen() {
       }
 
       setUsers(usersList); // ✅ Leave IDs as integers
-      console.log("👥 Users loaded for dropdown:", usersList); // ✅ Debug information
+      console.log("👥 Users from backend:", JSON.stringify(usersList, null, 2)); // ✅ Debug
     } catch (err) {
       if (err instanceof Error) {
         console.error("❌ Error loading users:", err.message);

@@ -56,7 +56,7 @@ interface Lead {
     lead_name: string;
     lead_email?: string;
     lead_phone?: string;
-    states: string[];
+    state: string;
     county: string;
     affiliate_name: string;
     purchased_by?: { job_title: string; first_name: string; last_name: string }[];
@@ -85,12 +85,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
             visibilityTime: 5000,
         });
     }
-};
-
-const formatRevenue = (value: any) => {
-  console.log('💸 Raw projected_payout:', value); // Debugging
-  const number = typeof value === 'number' ? value : parseFloat(value);
-  return isNaN(number) ? '$0.00' : `$${number.toFixed(2)}`;
 };
 
 export default function MyLeadsCreatedAccordion() {
@@ -136,12 +130,7 @@ export default function MyLeadsCreatedAccordion() {
                 lead_id: lead.lead_id,
                 purchase_id: lead.purchase_id,
                 lead_name: lead.lead_name || 'Unknown',
-                // state: lead.state_name || lead.state || 'N/A', // ❌ Remove this line if you want to support multi-state
-                states: Array.isArray(lead.states)
-                  ? lead.states
-                  : typeof lead.states === 'string'
-                  ? [lead.states]
-                  : [],
+                state: lead.state_name || lead.state || 'N/A',
                 county: lead.county_name || lead.county || 'N/A',
                 affiliate_name: lead.affiliate_name || 'Unknown', // fallback if missing
                 distribution_method: lead.distribution_method || null,
@@ -303,7 +292,6 @@ export default function MyLeadsCreatedAccordion() {
               affiliate_prices_by_role: lead.affiliate_prices_by_role || {},
               preferred_providers_by_role: lead.preferred_providers_by_role || {},
               notes_by_role: lead.notes_by_role || {},
-              states: lead.states || [],
             };
 
             console.log('🔍 Saving lead with payload:', payload);
@@ -347,7 +335,7 @@ export default function MyLeadsCreatedAccordion() {
             const query = searchQuery.toLowerCase();
             const matchesSearch =
                 lead.lead_name.toLowerCase().includes(query) ||
-                lead.states.some(state => state.toLowerCase().includes(query)) ||
+                lead.state.toLowerCase().includes(query) ||
                 lead.county.toLowerCase().includes(query);
             if (!matchesSearch) {
                 return false;
@@ -463,18 +451,11 @@ export default function MyLeadsCreatedAccordion() {
                         <View key={lead.purchase_id || lead.lead_id || index} style={styles.card}>
                             <TouchableOpacity onPress={() => toggleAccordion(lead.lead_id)}>
                                 <Text style={styles.title}>{lead.lead_name}</Text>
-                                <Text>
-                                  {Array.isArray(lead.states) && lead.states.length > 0
-                                    ? lead.states.join(', ')
-                                    : 'N/A'}, {lead.county}
-                                </Text>
+                                <Text>{lead.state}, {lead.county}</Text>
                                 <Text>💰 Affiliate Prices:</Text>
                                 {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
                                     <Text key={role} style={styles.priceDetail}>
-                                        {role}:{' '}
-                                        {Number.isFinite(price)
-                                            ? `$${Number(price).toFixed(2)}`
-                                            : 'N/A'}
+                                        {role}: ${typeof price === 'number' ? price.toFixed(2) : 'Not set'}
                                     </Text>
                                 ))}
                                 {lead.purchased_by && lead.purchased_by.length > 0 ? (

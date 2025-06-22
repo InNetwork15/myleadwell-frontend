@@ -439,13 +439,16 @@ const token = await AsyncStorage.getItem('token');
 
   <TouchableOpacity
     onPress={() => {
+      if (!selectedStates.includes(state)) {
+        setSelectedStates([...new Set([...selectedStates, state])].sort());
+      }
       const all = countiesByState[state] || [];
       const newAreas = all
         .filter(c => !serviceAreas.some(a => a.county === c && a.state === state))
         .map(c => ({ state, county: c }));
       const updated = [...serviceAreas, ...newAreas];
       setServiceAreas(updated);
-      handleSave(); // Auto-save when selecting all
+      // Toast.show({ text1: "Don't forget to hit Save!" }); // Optional reminder
     }}
   >
     <Text style={{ color: 'green', fontWeight: 'bold', marginBottom: 6 }}>
@@ -463,9 +466,7 @@ const token = await AsyncStorage.getItem('token');
               !serviceAreas.some((area) => area.county === itemValue && area.state === state)
             ) {
               setServiceAreas([...serviceAreas, { state, county: itemValue }]);
-              const updated = [...serviceAreas, { state, county: itemValue }];
-setServiceAreas(updated);
-handleSave(); // ✅ auto-save new county
+              // Toast.show({ text1: "Don't forget to hit Save!" }); // Optional reminder
             }
           }}
           style={styles.picker}

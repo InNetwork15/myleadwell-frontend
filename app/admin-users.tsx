@@ -36,8 +36,8 @@ export default function AdminUsersScreen() {
     phone?: string;
     job_title?: string;
     roles?: string[];
-    state?: string;
-    service_areas?: { state: string; county: string }[]; // <-- updated type
+    states?: string[]; // replaces state
+    service_areas?: { state: string; county: string }[];
     affiliate_link?: string;
   }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | number | null>(null);
@@ -49,11 +49,20 @@ export default function AdminUsersScreen() {
     phone?: string;
     job_title?: string;
     roles?: string[];
-    state?: string;
-    service_areas?: { state: string; county: string }[]; // <-- updated type
+    states?: string[]; // replaces state
+    service_areas?: { state: string; county: string }[];
     affiliate_link?: string;
   } | null>(null);
-  const [newUser, setNewUser] = useState<{ first_name?: string; last_name?: string; email?: string; phone?: string; password?: string; job_title?: string; roles: string[] } | null>(null);
+  const [newUser, setNewUser] = useState<{
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    job_title?: string;
+    roles: string[];
+    states?: string[]; // replaces state
+  } | null>(null);
   const [token, setToken] = useState('');
 
   const fetchUsers = async () => {
@@ -71,7 +80,11 @@ export default function AdminUsersScreen() {
       usersList = usersList.map((user: any) => ({
         ...user,
         roles: Array.isArray(user.roles) ? user.roles : (user.roles ? [user.roles] : []),
-        state: typeof user.state === 'string' ? user.state : '',
+        states: Array.isArray(user.states)
+          ? user.states
+          : user.states
+          ? [user.states]
+          : [],
         service_areas: Array.isArray(user.service_areas)
           ? user.service_areas.map((area: any) =>
               area && typeof area === 'object'
@@ -101,7 +114,11 @@ export default function AdminUsersScreen() {
             : fallbackUser.roles
             ? [fallbackUser.roles]
             : [],
-          state: typeof fallbackUser.state === 'string' ? fallbackUser.state : '',
+          states: Array.isArray(fallbackUser.states)
+            ? fallbackUser.states
+            : fallbackUser.states
+            ? [fallbackUser.states]
+            : [],
           service_areas: Array.isArray(fallbackUser.service_areas)
             ? fallbackUser.service_areas.map((area: any) =>
                 area && typeof area === 'object'
@@ -162,9 +179,9 @@ export default function AdminUsersScreen() {
       last_name: editUser.last_name,
       email: editUser.email,
       phone: editUser.phone,
-      roles: editUser.roles || [], // ✅ Always send roles
+      roles: editUser.roles || [],
       job_title: editUser.job_title,
-      state: editUser.state || '',
+      states: editUser.states || [], // <-- changed from state
       service_areas: editUser.service_areas || [],
       affiliate_link: editUser.affiliate_link || '',
     };
@@ -197,7 +214,12 @@ export default function AdminUsersScreen() {
     try {
       console.log('📤 Creating user with:', newUser);
 
-      await axios.post(`${API_BASE_URL}/create-user`, newUser, {
+      const payload = {
+        ...newUser,
+        states: newUser.states || [], // <-- changed from state
+      };
+
+      await axios.post(`${API_BASE_URL}/create-user`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -342,6 +364,16 @@ export default function AdminUsersScreen() {
               )}
             </View>
           )}
+          <View style={styles.row}>
+            <Text style={styles.label}>States (comma separated):</Text>
+            <TextInput
+              value={editUser.states?.join(', ') || ''}
+              onChangeText={(text) =>
+                setEditUser({ ...editUser, states: text.split(',').map(s => s.trim()).filter(Boolean) })
+              }
+              style={styles.input}
+            />
+          </View>
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity
@@ -440,6 +472,20 @@ export default function AdminUsersScreen() {
               <Text style={{ color: '#fff' }}>{r}</Text>
             </TouchableOpacity>
           ))}
+          <View style={styles.row}>
+            <Text style={styles.label}>States (comma separated):</Text>
+            <TextInput
+              value={newUser.states?.join(', ') || ''}
+              onChangeText={(text) =>
+                setNewUser((u) => ({
+                  ...u,
+                  roles: u?.roles || [],
+                  states: text.split(',').map(s => s.trim()).filter(Boolean),
+                }))
+              }
+              style={styles.input}
+            />
+          </View>
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity onPress={handleCreate} style={styles.saveBtn}>

@@ -562,7 +562,7 @@ export default function MyLeadsCreatedAccordion() {
                                           <TextInput
                                             style={[styles.input, { textAlign: 'left' }]}
                                             keyboardType="decimal-pad"
-                                            value={typeof price === 'number' && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
+                                            value={typeof price === 'number' && !isNaN(price) ? String(price) : ''}
                                             onChangeText={(val) => {
                                               const cleaned = val.replace(/[^0-9.]/g, '');
                                               const parsed = parseFloat(cleaned);
@@ -582,6 +582,9 @@ export default function MyLeadsCreatedAccordion() {
                                             }}
                                             editable={!isLocked}
                                           />
+                                          <Text style={styles.helperText}>
+                                            Displaying: {typeof price === 'number' && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
+                                          </Text>
 
                                           <TouchableOpacity
                                             onPress={() => {
@@ -946,5 +949,10 @@ const styles = StyleSheet.create({
       color: '#dc3545',
       fontSize: 16,
       fontWeight: '500',
+    },
+    helperText: {
+      fontSize: 14,
+      color: '#666',
+      marginTop: 4,
     },
 });

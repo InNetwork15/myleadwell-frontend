@@ -65,38 +65,67 @@ export default function AdminUsersScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      let usersList = res.data;
+      let usersList = Array.isArray(res.data) ? res.data : [];
 
-      // ✅ Normalize affiliate → affiliate for all users
+      // Defensive normalization for each user
       usersList = usersList.map((user: any) => ({
         ...user,
-        roles: (user.roles || []).map((r: string) =>
-          r === 'affiliate' ? 'affiliate' : r
-        ),
+        roles: Array.isArray(user.roles) ? user.roles : (user.roles ? [user.roles] : []),
+        state: typeof user.state === 'string' ? user.state : '',
+        service_areas: Array.isArray(user.service_areas)
+          ? user.service_areas.map((area: any) =>
+              area && typeof area === 'object'
+                ? {
+                    state: typeof area.state === 'string' ? area.state : '',
+                    county: typeof area.county === 'string' ? area.county : '',
+                  }
+                : { state: '', county: '' }
+            )
+          : [],
+        affiliate_link: typeof user.affiliate_link === 'string' ? user.affiliate_link : '',
       }));
 
-      // Add fallback for current user if not included in /all-users
-      if (currentUserId && !usersList.find((user: { id: number }) => user.id === parseInt(currentUserId, 10))) {
+      // Add fallback for current user if not included in /admin/users
+      if (
+        currentUserId &&
+        !usersList.find((user: { id: number }) => user.id === parseInt(currentUserId, 10))
+      ) {
         const userRes = await axios.get(`${API_BASE_URL}/users/${currentUserId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // ✅ Normalize roles for fallback user
-        const normalizedUser = {
-          ...userRes.data,
-          roles: (userRes.data.roles || []).map((r: string) =>
-            r === 'affiliate' ? 'affiliate' : r
-          ),
-        };
-        usersList = [...usersList, normalizedUser];
+        const fallbackUser = userRes.data;
+        usersList.push({
+          ...fallbackUser,
+          roles: Array.isArray(fallbackUser.roles)
+            ? fallbackUser.roles
+            : fallbackUser.roles
+            ? [fallbackUser.roles]
+            : [],
+          state: typeof fallbackUser.state === 'string' ? fallbackUser.state : '',
+          service_areas: Array.isArray(fallbackUser.service_areas)
+            ? fallbackUser.service_areas.map((area: any) =>
+                area && typeof area === 'object'
+                  ? {
+                      state: typeof area.state === 'string' ? area.state : '',
+                      county: typeof area.county === 'string' ? area.county : '',
+                    }
+                  : { state: '', county: '' }
+              )
+            : [],
+          affiliate_link:
+            typeof fallbackUser.affiliate_link === 'string'
+              ? fallbackUser.affiliate_link
+              : '',
+        });
       }
 
-      setUsers(usersList); // ✅ Leave IDs as integers
-      console.log("👥 Users from backend:", JSON.stringify(usersList, null, 2)); // ✅ Debug
+      setUsers(usersList);
+      console.log('👥 Users from backend:', JSON.stringify(usersList, null, 2));
     } catch (err) {
       if (err instanceof Error) {
-        console.error("❌ Error loading users:", err.message);
+        console.error('❌ Error loading users:', err.message);
       } else {
-        console.error("❌ Error loading users:", err);
+        console.error('❌ Error loading users:', err);
       }
     }
   };
@@ -186,6 +215,8 @@ export default function AdminUsersScreen() {
       Toast.show({ type: 'error', text1: '❌ Failed to create user' });
     }
   };
+
+  console.log('🔍 editUser:', editUser);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -299,14 +330,16 @@ export default function AdminUsersScreen() {
             </TouchableOpacity>
           ))}
 
-          {editUser?.service_areas && editUser.service_areas.length > 0 && (
+          {Array.isArray(editUser?.service_areas) && editUser.service_areas.length > 0 && (
             <View style={{ marginBottom: 10 }}>
               <Text style={styles.label}>Service Areas:</Text>
-              {editUser.service_areas.map((area, idx) => (
-                <Text key={idx} style={{ marginLeft: 8 }}>
-                  {area.county}, {area.state}
-                </Text>
-              ))}
+              {editUser.service_areas.map((area, idx) =>
+                area && typeof area === 'object' ? (
+                  <Text key={idx} style={{ marginLeft: 8 }}>
+                    {area.county || ''}, {area.state || ''}
+                  </Text>
+                ) : null
+              )}
             </View>
           )}
 

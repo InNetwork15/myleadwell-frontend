@@ -32,11 +32,10 @@ export default function AdministerPayouts() {
   const fetchHistory = async () => {
     const token = await AsyncStorage.getItem('token');
     try {
-      const res = await axios.get(`${API_BASE_URL}/admin/leads`, {
+      const res = await axios.get(`${API_BASE_URL}/admin/recent-payouts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const paidLeads = (res.data.leads || []).filter((l) => l.payout_status === 'paid');
-      setHistory(paidLeads.slice(0, 10));
+      setHistory(res.data.leads || []);
     } catch (err) {
       console.error('Error fetching history', err);
     }

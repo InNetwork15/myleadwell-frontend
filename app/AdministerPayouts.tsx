@@ -78,6 +78,24 @@ export default function AdministerPayouts() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity
+        style={{
+          alignSelf: 'flex-start',
+          backgroundColor: '#f8f9fa',
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: '#ced4da',
+          marginBottom: 12,
+        }}
+        onPress={() => router.push('/HomeScreen')}
+      >
+        <Text style={{ color: '#007bff', fontWeight: '600', fontSize: 16 }}>
+          Home
+        </Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Administer Affiliate Payouts</Text>
 
       <Text style={styles.sectionTitle}>🧾 Leads Eligible for Payout</Text>

@@ -136,6 +136,11 @@ export default function SubmitLeadScreen() {
     useEffect(() => {
         const fetchAffiliateName = async () => {
             if (!ref) return;
+            if (!API_URL) {
+                console.error("API_URL is undefined. Check your .env or expo config.");
+                setAffiliateName("Affiliate Partner");
+                return;
+            }
             try {
                 const response = await axios.get(`${API_URL}/affiliate-name/${ref}`);
                 const name = response.data?.name;
@@ -198,7 +203,6 @@ const handleSubmit = async () => {
     lead_name,
     lead_email,
     lead_phone,
-    distribution_method: "NETWORK",
     state: selectedState,
     county: selectedCounty,
     ref,
@@ -305,10 +309,10 @@ const handleSubmit = async () => {
                             }}
                         >
                             <Picker.Item label="Select State" value="" />
-                            {states.map((state) => (
+                            {states.map((state, idx) => (
                                 <Picker.Item
-                                    key={state}
-                                    label={state} // Simplified to show only the abbreviation
+                                    key={`${state}-${idx}`}
+                                    label={state}
                                     value={state}
                                 />
                             ))}
@@ -324,8 +328,8 @@ const handleSubmit = async () => {
                             enabled={selectedState !== ''}
                         >
                             <Picker.Item label="Select County" value="" />
-                            {countiesByState[selectedState]?.map((county) => (
-                                <Picker.Item key={county} label={county} value={county} />
+                            {countiesByState[selectedState]?.map((county, idx) => (
+                                <Picker.Item key={`${county}-${idx}`} label={county} value={county} />
                             ))}
                         </Picker> {/* ✅ This line was missing */}
                     </View>

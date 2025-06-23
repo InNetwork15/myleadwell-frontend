@@ -382,6 +382,16 @@ export default function AdminUsersScreen() {
             </TouchableOpacity>
           ))}
 
+          <View style={styles.row}>
+            <Text style={styles.label}>Affiliate Link:</Text>
+            <TextInput
+              value={editUser.affiliate_link || ''}
+              onChangeText={(text) => setEditUser({ ...editUser, affiliate_link: text })}
+              style={styles.input}
+              autoCapitalize="none"
+            />
+          </View>
+
           {Array.isArray(editUser?.service_areas) && editUser.service_areas.length > 0 && (
             <View style={{ marginBottom: 10 }}>
               <Text style={styles.label}>Service Areas:</Text>

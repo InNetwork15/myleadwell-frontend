@@ -80,7 +80,9 @@ const AvailableLeadsScreen = () => {
         // Enrich leads with provider_price based on user's job_title
         const enrichedLeads = leadsArray.map((lead: any) => {
           const rawPrice = lead.provider_price;
-          const adjustedPrice = rawPrice ? (parseFloat(rawPrice) * 1.35).toFixed(2) : null;
+          const adjustedPrice = !isNaN(Number(rawPrice))
+            ? (Number(rawPrice) * 1.35).toFixed(2)
+            : null;
           return {
             ...lead,
             display_price: adjustedPrice,

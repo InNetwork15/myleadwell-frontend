@@ -190,11 +190,12 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (!agreedToTerms) {
+  // Require BOTH checkboxes to be checked
+  if (!agreedToTerms || !joinNetwork) {
     Toast.show({
       type: "error",
       text1: "Consent Required",
-      text2: "You must agree to the terms and conditions.",
+      text2: "You must agree to the terms and opt in to be contacted by the network.",
     });
     return;
   }
@@ -208,6 +209,7 @@ const handleSubmit = async () => {
     ref,
     agreed_to_terms: agreedToTerms,
     join_network: joinNetwork,
+    submitted_by: Number(ref), // ✅ NEW LINE: ensure ref is a number
   };
 
   const headers = token ? { Authorization: `Bearer ${token}` } : {};

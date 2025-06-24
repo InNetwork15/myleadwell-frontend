@@ -143,10 +143,10 @@ const AffiliateEarningsScreen = () => {
             </View>
           ))
         )}
-      </Text>
-    </View>
-  </ScrollView>
-);
+      </View>
+    </ScrollView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

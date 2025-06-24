@@ -159,6 +159,9 @@ const token = await AsyncStorage.getItem('token');
             });
 
             Toast.show({ type: 'success', text1: '✅ Profile saved successfully!' });
+
+            // ✅ Re-fetch profile to update local state with latest backend data
+            await fetchProfile();
         } catch (err) {
             console.error('❌ Error saving profile:', err.response?.data || err.message);
             Toast.show({ type: 'error', text1: 'Failed to save profile.' });

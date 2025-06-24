@@ -128,15 +128,25 @@ const AffiliateEarningsScreen = () => {
           <Text style={styles.leadItem}>No pending leads found.</Text>
         ) : (
           recentPending.slice(0, 10).map((lead, index) => (
-            <Text key={index} style={styles.leadItem}>
-              {lead.lead_name} — ${lead.projected_payout} (submitted {lead.purchased_at ? new Date(lead.purchased_at).toLocaleDateString() : 'N/A'})
-            </Text>
+            <View key={index} style={{ marginBottom: 8 }}>
+              <Text style={styles.leadItem}>
+                <Text style={{ fontWeight: 'bold' }}>{lead.lead_name}</Text>
+                {lead.job_title ? ` — ${lead.job_title}` : ''}
+              </Text>
+              <Text style={styles.leadItem}>
+                Projected Payout:{' '}
+                <Text style={{ color: '#007AFF' }}>${Number(lead.projected_payout).toFixed(2)}</Text>
+              </Text>
+              <Text style={styles.leadItem}>
+                Submitted: {lead.purchased_at ? new Date(lead.purchased_at).toLocaleDateString() : 'N/A'}
+              </Text>
+            </View>
           ))
         )}
-        {/* 🔍 Show raw data for debugging */}
-        <Text style={{ fontSize: 12, marginTop: 10, color: 'gray' }}>
+        {/* Remove or comment out the raw JSON debug line when done */}
+        {/* <Text style={{ fontSize: 12, marginTop: 10, color: 'gray' }}>
           Raw pending JSON: {JSON.stringify(recentPending)}
-        </Text>
+        </Text> */}
       </View>
     </ScrollView>
   );

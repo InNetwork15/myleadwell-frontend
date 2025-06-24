@@ -143,14 +143,10 @@ const AffiliateEarningsScreen = () => {
             </View>
           ))
         )}
-        {/* Remove or comment out the raw JSON debug line when done */}
-        {/* <Text style={{ fontSize: 12, marginTop: 10, color: 'gray' }}>
-          Raw pending JSON: {JSON.stringify(recentPending)}
-        </Text> */}
-      </View>
-    </ScrollView>
-  );
-};
+      </Text>
+    </View>
+  </ScrollView>
+);
 
 const styles = StyleSheet.create({
   container: {

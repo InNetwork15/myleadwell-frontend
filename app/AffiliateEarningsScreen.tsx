@@ -35,6 +35,7 @@ const AffiliateEarningsScreen = () => {
       setTotalPaid(parseFloat(paidRes.data.total_paid || 0));
       setTotalPending(parseFloat(pendingRes.data.total_pending || 0));
       setRecentPaid(paidLeadsRes.data || []);
+      console.log('🟡 Pending Leads API Response:', pendingLeadsRes.data);
       setRecentPending(pendingLeadsRes.data || []);
     } catch (error) {
       console.error('Error fetching earnings:', error);
@@ -132,6 +133,10 @@ const AffiliateEarningsScreen = () => {
             </Text>
           ))
         )}
+        {/* 🔍 Show raw data for debugging */}
+        <Text style={{ fontSize: 12, marginTop: 10, color: 'gray' }}>
+          Raw pending JSON: {JSON.stringify(recentPending)}
+        </Text>
       </View>
     </ScrollView>
   );

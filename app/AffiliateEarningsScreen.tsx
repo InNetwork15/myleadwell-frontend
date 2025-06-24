@@ -20,19 +20,22 @@ const AffiliateEarningsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [recentPaid, setRecentPaid] = useState([]);
+  const [recentPending, setRecentPending] = useState([]);
+
   const fetchEarnings = async (token) => {
     try {
-      const [paidRes, pendingRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/affiliate-earnings-total-paid`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${API_BASE_URL}/affiliate-earnings-total-pending`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+      const [paidRes, pendingRes, paidLeadsRes, pendingLeadsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/affiliate-earnings-total-paid`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/affiliate-earnings-total-pending`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/affiliate-earnings-recent-paid`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/affiliate-earnings-recent-pending`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       setTotalPaid(parseFloat(paidRes.data.total_paid || 0));
       setTotalPending(parseFloat(pendingRes.data.total_pending || 0));
+      setRecentPaid(paidLeadsRes.data || []);
+      setRecentPending(pendingLeadsRes.data || []);
     } catch (error) {
       console.error('Error fetching earnings:', error);
     } finally {
@@ -104,6 +107,32 @@ const AffiliateEarningsScreen = () => {
         <Text style={styles.label}>Total Pending:</Text>
         <Text style={styles.amount}>${totalPending.toFixed(2)}</Text>
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subHeader}>🟢 10 Most Recent Paid Leads</Text>
+        {recentPaid.length === 0 ? (
+          <Text style={styles.leadItem}>No paid leads found.</Text>
+        ) : (
+          recentPaid.slice(0, 10).map((lead, index) => (
+            <Text key={index} style={styles.leadItem}>
+              {lead.lead_name} — ${lead.payout_amount} on {lead.paid_at ? new Date(lead.paid_at).toLocaleDateString() : 'N/A'}
+            </Text>
+          ))
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subHeader}>🟡 10 Most Recent Pending Leads</Text>
+        {recentPending.length === 0 ? (
+          <Text style={styles.leadItem}>No pending leads found.</Text>
+        ) : (
+          recentPending.slice(0, 10).map((lead, index) => (
+            <Text key={index} style={styles.leadItem}>
+              {lead.lead_name} — ${lead.projected_payout} (submitted {lead.purchased_at ? new Date(lead.purchased_at).toLocaleDateString() : 'N/A'})
+            </Text>
+          ))
+        )}
+      </View>
     </ScrollView>
   );
 };
@@ -144,6 +173,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 5,
     color: '#007AFF',
+  },
+  section: { marginTop: 20 },
+  subHeader: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#333',
+  },
+  leadItem: {
+    fontSize: 14,
+    marginBottom: 6,
+    color: '#555',
   },
 });
 

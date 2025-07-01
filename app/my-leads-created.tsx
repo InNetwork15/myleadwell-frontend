@@ -482,11 +482,18 @@ export default function MyLeadsCreatedAccordion() {
                                 <Text style={styles.title}>{lead.lead_name}</Text>
                                 <Text>{lead.state}, {lead.county}</Text>
                                 <Text>💰 Affiliate Prices:</Text>
-                                {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => (
+                                {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => {
+                                  // Ensure price is a valid number and not 0 or empty string
+                                  const priceDisplay =
+                                    typeof price === 'number' && !isNaN(price) && price > 0
+                                      ? `$${Number(price).toFixed(2)}`
+                                      : 'Not set';
+                                  return (
                                     <Text key={role} style={styles.priceDetail}>
-                                        {role}: {typeof price === 'number' && !isNaN(price) ? `$${price.toFixed(2)}` : 'Not set'}
+                                      {role}: {priceDisplay}
                                     </Text>
-                                ))}
+                                  );
+                                })}
                                 {lead.purchased_by && lead.purchased_by.length > 0 ? (
                                     <View style={styles.purchasedByContainer}>
                                         <Text style={styles.purchasedByLabel}>Purchased By:</Text>

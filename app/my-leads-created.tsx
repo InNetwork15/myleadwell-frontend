@@ -483,7 +483,7 @@ export default function MyLeadsCreatedAccordion() {
                                 <Text>{lead.state}, {lead.county}</Text>
                                 <Text>💰 Affiliate Prices:</Text>
                                 {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => {
-                                  // Ensure price is a valid number and not 0 or empty string
+                                  // Only show a price if it's a valid, positive number
                                   const priceDisplay =
                                     typeof price === 'number' && !isNaN(price) && price > 0
                                       ? `$${Number(price).toFixed(2)}`

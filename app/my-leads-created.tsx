@@ -264,7 +264,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             // Validate distribution method
-            if (!lead.distribution_method || !['JUMPBALL', 'NETWORK'].includes(lead.distribution_method)) {
+            if (!lead.distribution_method_by_role?.[activeTabs[leadId]] || !['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeTabs[leadId]])) {
                 console.error('❌ Missing or invalid distribution_method for lead:', leadId);
                 showToast('Distribution method must be JUMPBALL or NETWORK.', 'error');
                 return;
@@ -291,7 +291,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             // For NETWORK, ensure preferred providers are selected for enabled roles
-            if (lead.distribution_method === 'NETWORK') {
+            if (lead.distribution_method_by_role?.[activeTabs[leadId]] === 'NETWORK') {
                 for (const [role, enabled] of Object.entries(lead.role_enabled)) {
                     if (enabled) {
                         const providersForRole = (lead.preferred_providers_by_role ?? {})[role] || [];
@@ -305,7 +305,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-              distribution_method: lead.distribution_method || 'JUMPBALL',
+              distribution_method: lead.distribution_method_by_role || 'JUMPBALL',
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: lead.affiliate_prices_by_role || {},
@@ -357,13 +357,14 @@ export default function MyLeadsCreatedAccordion() {
     if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
-            (lead.lead_name && lead.lead_name.toLowerCase().includes(query)) ||
-            (lead.state && lead.state.toLowerCase().includes(query)) || // optional fallback
-            (lead.county && lead.county.toLowerCase().includes(query)) || // optional fallback
-            (Array.isArray(lead.service_areas) &&
-                lead.service_areas.some(area =>
-                    area.toLowerCase().includes(query)
-                ));
+          (lead.lead_name && lead.lead_name.toLowerCase().includes(query)) ||
+          (lead.state && lead.state.toLowerCase().includes(query)) ||
+          (lead.county && lead.county.toLowerCase().includes(query)) ||
+          (Array.isArray(lead.service_areas) &&
+            lead.service_areas.some(area =>
+              (area.state && area.state.toLowerCase().includes(query)) ||
+              (area.county && area.county.toLowerCase().includes(query))
+            ));
 
         if (!matchesSearch) {
             return false;
@@ -539,7 +540,7 @@ export default function MyLeadsCreatedAccordion() {
                                         <View style={styles.section}>
                                           <Text style={styles.label}>Distribution Method:</Text>
                                           <Picker
-                                            selectedValue={distribution}
+                                            selectedValue={distribution || ''}
                                             onValueChange={(val) => {
                                               setLeads((prev) =>
                                                 prev.map((l) =>
@@ -610,8 +611,14 @@ export default function MyLeadsCreatedAccordion() {
                                           >
                                             <Text style={isEnabled ? styles.enabled : styles.disabled}>
                                               {isEnabled ? '✅ Enabled' : '🚫 Disabled'}
+                                              {isLocked && '  🔒'}
                                             </Text>
                                           </TouchableOpacity>
+                                          {isLocked && (
+                                            <Text style={{ color: '#dc3545', fontSize: 13, marginBottom: 8 }}>
+                                              This role has already been purchased and cannot be edited.
+                                            </Text>
+                                          )}
 
                                           <Text style={styles.label}>Preferred Providers:</Text>
                                           {selectedProviders.map((id) => {

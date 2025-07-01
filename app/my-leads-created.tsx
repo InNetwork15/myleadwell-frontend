@@ -316,7 +316,11 @@ export default function MyLeadsCreatedAccordion() {
             console.log('🔍 Saving lead with payload:', payload);
 
             setSavingLeadId(leadId);
-            const response = await axios.put(`${API_BASE_URL}/leads/${leadId}/update`, payload, {
+
+            // Use lead.id if available, otherwise fallback to leadId
+            const apiLeadId = lead?.id || leadId;
+
+            const response = await axios.put(`${API_BASE_URL}/leads/${apiLeadId}/update`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

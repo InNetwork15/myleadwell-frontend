@@ -482,15 +482,16 @@ export default function MyLeadsCreatedAccordion() {
                                 <Text style={styles.title}>{lead.lead_name}</Text>
                                 <Text>{lead.state}, {lead.county}</Text>
                                 <Text>💰 Affiliate Prices:</Text>
-                                {Object.entries(lead.affiliate_prices_by_role || {}).map(([role, price]) => {
-                                  // Only show a price if it's a valid, positive number
-                                  const priceDisplay =
-                                    typeof price === 'number' && !isNaN(price) && price > 0
-                                      ? `$${Number(price).toFixed(2)}`
-                                      : 'Not set';
+                                {JOB_TITLES.map((role) => {
+                                  const rawAffiliatePrice = lead.affiliate_prices_by_role?.[role];
+                                  const hasAffiliatePrice = rawAffiliatePrice !== undefined && rawAffiliatePrice !== null;
+                                  const parsedAffiliatePrice = hasAffiliatePrice ? parseFloat(rawAffiliatePrice) : null;
                                   return (
                                     <Text key={role} style={styles.priceDetail}>
-                                      {role}: {priceDisplay}
+                                      {role}:{' '}
+                                      {parsedAffiliatePrice !== null && !isNaN(parsedAffiliatePrice)
+                                        ? `$${parsedAffiliatePrice.toFixed(2)}`
+                                        : 'Not set'}
                                     </Text>
                                   );
                                 })}

@@ -530,15 +530,14 @@ export default function MyLeadsCreatedAccordion() {
                                     {(() => {
                                       const isPurchased = (lead.purchased_by ?? []).some((provider) => provider.job_title === activeRole);
                                       const distribution = lead.distribution_method_by_role?.[activeRole] ?? '';
-                                      const price = lead.affiliate_prices_by_role?.[activeRole] ?? '';
+                                      const rawPrice = activeRole && lead.affiliate_prices_by_role?.[activeRole];
+                                      const affiliatePrice = rawPrice ? parseFloat(rawPrice) : 0;
                                       const note = lead.notes_by_role?.[activeRole] ?? '';
                                       const isEnabled = lead.role_enabled?.[activeRole] ?? false;
                                       const selectedProviders = (lead.preferred_providers_by_role?.[activeRole]) || [];
                                       const availableProviders = providers.filter(
                                         (p) => p.job_title === activeRole && !selectedProviders.includes(String(p.id))
                                       );
-
-                                      // Check if the role is locked (purchased)
                                       const isLocked = (lead.purchased_by ?? []).some(
                                         (p) => p.job_title?.toLowerCase() === activeRole.toLowerCase()
                                       );
@@ -574,7 +573,11 @@ export default function MyLeadsCreatedAccordion() {
                                           <TextInput
                                             style={[styles.input, { textAlign: 'left' }]}
                                             keyboardType="decimal-pad"
-                                            value={typeof price === 'number' && !isNaN(price) ? String(price) : ''}
+                                            value={
+                                              !isLocked
+                                                ? (affiliatePrice > 0 ? String(affiliatePrice) : '')
+                                                : undefined
+                                            }
                                             onChangeText={(val) => {
                                               const cleaned = val.replace(/[^0-9.]/g, '');
                                               const parsed = parseFloat(cleaned);
@@ -593,9 +596,18 @@ export default function MyLeadsCreatedAccordion() {
                                               );
                                             }}
                                             editable={!isLocked}
+                                            placeholder="Affiliate Price"
                                           />
+                                          {isLocked && (
+                                            <TextInput
+                                              style={[styles.input, { textAlign: 'left', backgroundColor: '#f1f1f1' }]}
+                                              value={affiliatePrice > 0 ? String(affiliatePrice) : ''}
+                                              editable={false}
+                                              placeholder="Affiliate Price"
+                                            />
+                                          )}
                                           <Text style={styles.helperText}>
-                                            Displaying: {typeof price === 'number' && !isNaN(price) ? `$${price.toFixed(2)}` : '$0.00'}
+                                            Displaying: ${affiliatePrice.toFixed(2)}
                                           </Text>
 
                                           <TouchableOpacity

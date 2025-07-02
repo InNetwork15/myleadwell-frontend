@@ -298,8 +298,8 @@ export default function MyLeadsCreatedAccordion() {
             // Validate affiliate prices for enabled roles
             for (const [role, enabled] of Object.entries(lead.role_enabled ?? {})) {
                 if (enabled) {
-                    const price = (lead.affiliate_prices_by_role?.[role] ?? 0);
-                    if (typeof price !== 'number' || price <= 0) {
+                    const price = lead.affiliate_prices_by_role?.[role];
+                    if (typeof price !== 'number' || price <= 0 || isNaN(price)) {
                         console.error(`❌ Invalid price for role ${role} in lead ${leadId}:`, price);
                         showToast(`Price for ${role} must be a positive number.`, 'error');
                         return;
@@ -597,6 +597,7 @@ export default function MyLeadsCreatedAccordion() {
                                                 : undefined
                                             }
                                             onChangeText={(val) => {
+                                              // Only allow numbers and decimals
                                               const cleaned = val.replace(/[^0-9.]/g, '');
                                               const parsed = parseFloat(cleaned);
                                               setLeads((prev) =>

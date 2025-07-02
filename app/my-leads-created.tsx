@@ -100,6 +100,7 @@ export default function MyLeadsCreatedAccordion() {
     const [showAvailableRoles, setShowAvailableRoles] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [providersLoading, setProvidersLoading] = useState(true);
+    const [jobTitle, setJobTitle] = useState('');
     const router = useRouter();
 
     const fetchLeads = async () => {
@@ -211,6 +212,22 @@ export default function MyLeadsCreatedAccordion() {
             setProvidersLoading(false);
         }
     };
+
+    // Fetch the user's job title on mount
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const res = await axios.get(`${API_BASE_URL}/my-profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setJobTitle(res.data.job_title); // 👈 set job title
+        } catch (err) {
+          console.error('Failed to load profile:', err);
+        }
+      };
+      fetchUser();
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -701,7 +718,7 @@ export default function MyLeadsCreatedAccordion() {
                                     <TouchableOpacity
                                         style={styles.saveButton}
                                         onPress={() => saveLead(lead.lead_id)}
-                                        disabled={savingLeadId === lead.lead_id}
+                                        disabled={savingLeadId === lead.lelead_id}
                                     >
                                         {savingLeadId === lead.lead_id ? (
                                             <ActivityIndicator size="small" color="#fff" />

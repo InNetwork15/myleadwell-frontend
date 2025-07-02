@@ -280,13 +280,17 @@ export default function MyLeadsCreatedAccordion() {
 
             // Validate affiliate prices for enabled roles
             for (const [role, enabled] of Object.entries(lead.role_enabled ?? {})) {
-                if (enabled) {
-                    const price = (lead.affiliate_prices_by_role?.[role] ?? 0);
-                    if (typeof price !== 'number' || price <= 0) {
-                        console.error(`❌ Invalid price for role ${role} in lead ${leadId}:`, price);
-                        showToast(`Price for ${role} must be a positive number.`, 'error');
-                        return;
-                    }
+                if (
+                  enabled &&
+                  !isPurchased(lead, role) && // ✅ only validate if not purchased
+                  (
+                    !lead.affiliate_prices_by_role?.[role] ||
+                    parseFloat(lead.affiliate_prices_by_role[role]) <= 0
+                  )
+                ) {
+                  console.error(`❌ Invalid price for role ${role} in lead ${leadId}:`, lead.affiliate_prices_by_role?.[role]);
+                  showToast(`Price for ${role} must be a positive number.`, 'error');
+                  return;
                 }
             }
 
@@ -529,7 +533,11 @@ export default function MyLeadsCreatedAccordion() {
                                     </Picker>
 
                                     {(() => {
-                                      const isPurchased = (lead.purchased_by ?? []).some((provider) => provider.job_title === activeRole);
+                                      const isPurchased = (lead: Lead, role: string): boolean => {
+                                        return (lead.purchased_by ?? []).some((provider) => provider.job_title === role);
+                                      };
+
+                                      const isPurchasedRole = isPurchased(lead, activeRole);
                                       const distribution = lead.distribution_method_by_role?.[activeRole] ?? '';
                                       const rawPrice = activeRole && lead.affiliate_prices_by_role?.[activeRole];
                                       const affiliatePrice = rawPrice ? parseFloat(rawPrice) : 0;

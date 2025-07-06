@@ -296,13 +296,17 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             // Sanitize affiliate prices for enabled roles
+            const activeRole = activeTabs[leadId] || JOB_TITLES[0];
+            const distributionForActiveRole =
+              lead.distribution_method_by_role?.[activeRole] || 'JUMPBALL';
+
+            // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
             Object.entries(lead.role_enabled || {}).forEach(([role, enabled]) => {
               if (enabled) {
                 const price = sanitizedPrices[role];
                 if (!price || price <= 0) {
-                  // fallback to default or existing value
-                  sanitizedPrices[role] = 6; // e.g., default price
+                  sanitizedPrices[role] = 6; // fallback default price
                 }
               }
             });
@@ -322,7 +326,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-              distribution_method: lead.distribution_method_by_role || 'JUMPBALL',
+              distribution_method: distributionForActiveRole,
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: sanitizedPrices,

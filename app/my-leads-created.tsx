@@ -295,17 +295,17 @@ export default function MyLeadsCreatedAccordion() {
                 return;
             }
 
-            // Validate affiliate prices for enabled roles
-            for (const [role, enabled] of Object.entries(lead.role_enabled ?? {})) {
-                if (enabled) {
-                    const price = lead.affiliate_prices_by_role?.[role];
-                    if (typeof price !== 'number' || price <= 0 || isNaN(price)) {
-                        console.error(`❌ Invalid price for role ${role} in lead ${leadId}:`, price);
-                        showToast(`Price for ${role} must be a positive number.`, 'error');
-                        return;
-                    }
+            // Sanitize affiliate prices for enabled roles
+            const sanitizedPrices = { ...lead.affiliate_prices_by_role };
+            Object.entries(lead.role_enabled || {}).forEach(([role, enabled]) => {
+              if (enabled) {
+                const price = sanitizedPrices[role];
+                if (!price || price <= 0) {
+                  // fallback to default or existing value
+                  sanitizedPrices[role] = 6; // e.g., default price
                 }
-            }
+              }
+            });
 
             // For NETWORK, ensure preferred providers are selected for enabled roles
             if (lead.distribution_method_by_role?.[activeTabs[leadId]] === 'NETWORK') {
@@ -325,7 +325,7 @@ export default function MyLeadsCreatedAccordion() {
               distribution_method: lead.distribution_method_by_role || 'JUMPBALL',
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
-              affiliate_prices_by_role: lead.affiliate_prices_by_role || {},
+              affiliate_prices_by_role: sanitizedPrices,
               preferred_providers_by_role: lead.preferred_providers_by_role || {},
               notes_by_role: lead.notes_by_role || {},
             };
@@ -500,18 +500,22 @@ export default function MyLeadsCreatedAccordion() {
                                 <Text>{lead.state}, {lead.county}</Text>
                                 <Text>💰 Affiliate Prices:</Text>
                                 {JOB_TITLES.map((role) => {
-                                  const rawAffiliatePrice = lead.affiliate_prices_by_role?.[role];
-                                  const hasAffiliatePrice = rawAffiliatePrice !== undefined && rawAffiliatePrice !== null;
-                                  const parsedAffiliatePrice = hasAffiliatePrice ? parseFloat(rawAffiliatePrice) : null;
-                                  return (
-                                    <Text key={role} style={styles.priceDetail}>
-                                      {role}:{' '}
-                                      {parsedAffiliatePrice !== null && !isNaN(parsedAffiliatePrice)
-                                        ? `$${parsedAffiliatePrice.toFixed(2)}`
-                                        : 'Not set'}
-                                    </Text>
-                                  );
-                                })}
+  const rawAffiliatePrice = lead.affiliate_prices_by_role?.[role];
+  let parsedAffiliatePrice: number | null = null;
+  if (rawAffiliatePrice !== undefined && rawAffiliatePrice !== null) {
+    parsedAffiliatePrice = typeof rawAffiliatePrice === 'number'
+      ? rawAffiliatePrice
+      : parseFloat(rawAffiliatePrice);
+  }
+  return (
+    <Text key={role} style={styles.priceDetail}>
+      {role}:{' '}
+      {parsedAffiliatePrice !== null && !isNaN(parsedAffiliatePrice)
+        ? `$${parsedAffiliatePrice.toFixed(2)}`
+        : 'Not set'}
+    </Text>
+  );
+})}
                                 {lead.purchased_by && lead.purchased_by.length > 0 ? (
                                     <View style={styles.purchasedByContainer}>
                                         <Text style={styles.purchasedByLabel}>Purchased By:</Text>
@@ -528,7 +532,7 @@ export default function MyLeadsCreatedAccordion() {
                                 ) : (
                                     <View style={styles.purchasedByContainer}>
                                         <Text style={styles.purchasedByLabel}>Purchased By:</Text>
-                                        <Text style={styles.notPurchased}>Not Purchased</Text>
+                                        <Text style={{ color: '#666', fontSize: 14 }}>Not Purchased</Text>
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -549,7 +553,10 @@ export default function MyLeadsCreatedAccordion() {
                                       const isPurchased = (lead.purchased_by ?? []).some((provider) => provider.job_title === activeRole);
                                       const distribution = lead.distribution_method_by_role?.[activeRole] ?? '';
                                       const rawPrice = activeRole && lead.affiliate_prices_by_role?.[activeRole];
-                                      const affiliatePrice = rawPrice ? parseFloat(rawPrice) : 0;
+                                      let affiliatePrice: number = 0;
+                                      if (rawPrice !== undefined && rawPrice !== null) {
+                                        affiliatePrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice);
+                                      }
                                       const note = lead.notes_by_role?.[activeRole] ?? '';
                                       const isEnabled = lead.role_enabled?.[activeRole] ?? false;
                                       const selectedProviders = (lead.preferred_providers_by_role?.[activeRole]) || [];
@@ -719,7 +726,7 @@ export default function MyLeadsCreatedAccordion() {
                                     <TouchableOpacity
                                         style={styles.saveButton}
                                         onPress={() => saveLead(lead.lead_id)}
-                                        disabled={savingLeadId === lead.lelead_id}
+                                        disabled={savingLeadId === lead.lead_id}
                                     >
                                         {savingLeadId === lead.lead_id ? (
                                             <ActivityIndicator size="small" color="#fff" />

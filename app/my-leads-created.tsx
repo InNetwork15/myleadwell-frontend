@@ -577,8 +577,10 @@ export default function MyLeadsCreatedAccordion() {
                                         <View style={styles.section}>
                                           <Text style={styles.label}>Distribution Method:</Text>
                                           <Picker
-                                            selectedValue={distribution || ''}
+                                            selectedValue={distribution || 'JUMPBALL'}
                                             onValueChange={(val) => {
+                                              // Ensure we never set an empty value
+                                              const validValue = val && ['NETWORK', 'JUMPBALL'].includes(val) ? val : 'JUMPBALL';
                                               setLeads((prev) =>
                                                 prev.map((l) =>
                                                   l.lead_id === lead.lead_id
@@ -586,7 +588,7 @@ export default function MyLeadsCreatedAccordion() {
                                                         ...l,
                                                         distribution_method_by_role: {
                                                           ...l.distribution_method_by_role,
-                                                          [activeRole]: val,
+                                                          [activeRole]: validValue,
                                                         },
                                                       }
                                                     : l
@@ -595,7 +597,6 @@ export default function MyLeadsCreatedAccordion() {
                                             }}
                                             enabled={!isLocked}
                                           >
-                                            <Picker.Item label="Select..." value="" />
                                             <Picker.Item label="NETWORK" value="NETWORK" />
                                             <Picker.Item label="JUMPBALL" value="JUMPBALL" />
                                           </Picker>

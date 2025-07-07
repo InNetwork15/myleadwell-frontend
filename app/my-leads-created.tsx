@@ -1020,10 +1020,7 @@ const styles = StyleSheet.create({
       fontWeight: '500',
     },
     helperText: {
-      color: '#666',
-      marginTop: 4,
-    },
-});    // End of new styles    },      fontWeight: '500',      color: '#fff',    activeRoleChipText: {    },      backgroundColor: '#007bff',    activeRoleChip: {    },      color: '#333',      fontSize: 14,    roleChipText: {    },      marginBottom: 8,      marginRight: 8,      paddingHorizontal: 12,      paddingVertical: 6,      borderRadius: 16,      backgroundColor: '#e9ecef',    roleChip: {    },      marginBottom: 16,      marginTop: 8,      flexWrap: 'wrap',      flexDirection: 'row',    roleChipsContainer: {    // New styles for role chips    },      marginBottom: 8,      marginTop: 4,      color: '#666',      fontSize: 14,      fontSize: 14,
+      fontSize: 14,
       color: '#666',
       marginTop: 4,
     },

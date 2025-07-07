@@ -298,11 +298,40 @@ export default function MyLeadsCreatedAccordion() {
             // Sanitize affiliate prices for enabled roles
             const activeRole = activeTabs[leadId] || JOB_TITLES[0];
 
-            // fallback default to 'JUMPBALL'
-            let distributionForActiveRole = lead.distribution_method_by_role?.[activeRole];
-            if (!['JUMPBALL', 'NETWORK'].includes(distributionForActiveRole)) {
-              distributionForActiveRole = 'JUMPBALL';
+            // ✅ Add debugging logs
+            console.log("activeRole:", activeRole);
+            console.log("lead.distribution_method_by_role:", lead.distribution_method_by_role);
+            console.log("lead.distribution_method_by_role[activeRole]:", lead.distribution_method_by_role?.[activeRole]);
+
+            // ✅ Initialize distribution_method_by_role if missing
+            if (!lead.distribution_method_by_role) {
+                lead.distribution_method_by_role = {};
             }
+            if (!lead.distribution_method_by_role[activeRole]) {
+                lead.distribution_method_by_role[activeRole] = 'JUMPBALL';
+                // Update the lead state
+                setLeads((prev) =>
+                    prev.map((l) =>
+                        l.lead_id === leadId
+                            ? {
+                                ...l,
+                                distribution_method_by_role: {
+                                    ...l.distribution_method_by_role,
+                                    [activeRole]: 'JUMPBALL',
+                                },
+                            }
+                            : l
+                    )
+                );
+            }
+
+            // fallback default to 'JUMPBALL'
+            const distributionForActiveRole =
+              ['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeRole])
+                ? lead.distribution_method_by_role[activeRole]
+                : 'JUMPBALL';
+
+            console.log("distributionForActiveRole:", distributionForActiveRole);
 
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
@@ -363,6 +392,8 @@ export default function MyLeadsCreatedAccordion() {
 
             // Use lead.id if available, otherwise fallback to leadId
             const apiLeadId = lead?.id || leadId;
+
+            console.log("🚀 ABOUT TO SEND axios.put with payload:", payload);
 
             const response = await axios.put(`${API_BASE_URL}/leads/${apiLeadId}/update`, payload, {
                 headers: { Authorization: `Bearer ${token}` },

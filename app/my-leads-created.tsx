@@ -331,16 +331,18 @@ export default function MyLeadsCreatedAccordion() {
 
             // ✅ Filter out purchased roles from the payload
             const purchasedRoles = (lead.purchased_by ?? []).map(provider => provider.job_title);
+            const isActiveRolePurchased = purchasedRoles.includes(activeRole);
             const unpurchasedRoles = Object.keys(lead.role_enabled || {}).filter(
               role => !purchasedRoles.includes(role)
             );
 
             console.log('🔍 Purchased roles:', purchasedRoles);
+            console.log('🔍 Active role purchased:', isActiveRolePurchased);
             console.log('🔍 Unpurchased roles:', unpurchasedRoles);
 
             // Build payload with only unpurchased roles
             const payload = {
-              distribution_method: distributionForActiveRole.toUpperCase(),
+              distribution_method: isActiveRolePurchased ? 'JUMPBALL' : distributionForActiveRole.toUpperCase(),
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: {},
               affiliate_prices_by_role: {},

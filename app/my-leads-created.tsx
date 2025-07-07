@@ -298,7 +298,9 @@ export default function MyLeadsCreatedAccordion() {
             // Sanitize affiliate prices for enabled roles
             const activeRole = activeTabs[leadId] || JOB_TITLES[0];
             const distributionForActiveRole =
-              lead.distribution_method_by_role?.[activeRole] || 'JUMPBALL';
+              ['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeRole])
+                ? lead.distribution_method_by_role[activeRole]
+                : 'JUMPBALL';
 
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };

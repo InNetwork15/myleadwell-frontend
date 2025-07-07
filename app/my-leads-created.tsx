@@ -329,14 +329,31 @@ export default function MyLeadsCreatedAccordion() {
                 }
             }
 
+            // ✅ Filter out purchased roles from the payload
+            const purchasedRoles = (lead.purchased_by ?? []).map(provider => provider.job_title);
+            const unpurchasedRoles = Object.keys(lead.role_enabled || {}).filter(
+              role => !purchasedRoles.includes(role)
+            );
+
+            console.log('🔍 Purchased roles:', purchasedRoles);
+            console.log('🔍 Unpurchased roles:', unpurchasedRoles);
+
+            // Build payload with only unpurchased roles
             const payload = {
-              distribution_method: distributionForActiveRole.toUpperCase(), // ensure uppercase and valid
+              distribution_method: distributionForActiveRole.toUpperCase(),
               distribution_method_by_role: lead.distribution_method_by_role || {},
-              role_enabled: lead.role_enabled || {},
-              affiliate_prices_by_role: sanitizedPrices,
-              preferred_providers_by_role: lead.preferred_providers_by_role || {},
-              notes_by_role: lead.notes_by_role || {},
+              role_enabled: {},
+              affiliate_prices_by_role: {},
+              preferred_providers_by_role: {},
+              notes_by_role: {}
             };
+
+            unpurchasedRoles.forEach(role => {
+              payload.role_enabled[role] = lead.role_enabled?.[role];
+              payload.affiliate_prices_by_role[role] = sanitizedPrices[role];
+              payload.preferred_providers_by_role[role] = lead.preferred_providers_by_role?.[role] || [];
+              payload.notes_by_role[role] = lead.notes_by_role?.[role] || '';
+            });
 
             console.log('🔍 Saving lead with payload:', payload);
 

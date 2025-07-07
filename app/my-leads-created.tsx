@@ -297,46 +297,8 @@ export default function MyLeadsCreatedAccordion() {
 
             // Sanitize affiliate prices for enabled roles
             const activeRole = activeTabs[leadId] || JOB_TITLES[0];
-
-            // ✅ Add debugging logs
-            console.log("activeRole:", activeRole);
-            console.log("lead.distribution_method_by_role:", lead.distribution_method_by_role);
-            console.log("lead.distribution_method_by_role[activeRole]:", lead.distribution_method_by_role?.[activeRole]);
-
-            // ✅ Initialize distribution_method_by_role if missing
-            if (!lead.distribution_method_by_role) {
-                lead.distribution_method_by_role = {};
-            }
-            if (!lead.distribution_method_by_role[activeRole]) {
-                lead.distribution_method_by_role[activeRole] = 'JUMPBALL';
-                // Update the lead state
-                setLeads((prev) =>
-                    prev.map((l) =>
-                        l.lead_id === leadId
-                            ? {
-                                ...l,
-                                distribution_method_by_role: {
-                                    ...l.distribution_method_by_role,
-                                    [activeRole]: 'JUMPBALL',
-                                },
-                            }
-                            : l
-                    )
-                );
-            }
-
-            // fallback default to 'JUMPBALL'
             const distributionForActiveRole =
-              ['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeRole])
-                ? lead.distribution_method_by_role[activeRole]
-                : 'JUMPBALL';
-
-            console.log("distributionForActiveRole:", distributionForActiveRole);
-
-            // ✅ Force a default if missing - ensure we always have a valid distribution method
-            if (!['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeRole])) {
-              lead.distribution_method_by_role[activeRole] = 'NETWORK';
-            }
+              lead.distribution_method_by_role?.[activeRole] || 'JUMPBALL';
 
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
@@ -350,7 +312,7 @@ export default function MyLeadsCreatedAccordion() {
             });
 
             // For NETWORK, ensure preferred providers are selected for enabled roles
-            if (distributionForActiveRole === 'NETWORK') {
+            if (lead.distribution_method_by_role?.[activeTabs[leadId]] === 'NETWORK') {
                 for (const [role, enabled] of Object.entries(lead.role_enabled)) {
                     if (enabled) {
                         const providersForRole = (lead.preferred_providers_by_role ?? {})[role] || [];
@@ -363,33 +325,14 @@ export default function MyLeadsCreatedAccordion() {
                 }
             }
 
-            // ✅ Filter out purchased roles from the payload
-            const purchasedRoles = (lead.purchased_by ?? []).map(provider => provider.job_title);
-            const isActiveRolePurchased = purchasedRoles.includes(activeRole);
-            const unpurchasedRoles = Object.keys(lead.role_enabled || {}).filter(
-              role => !purchasedRoles.includes(role)
-            );
-
-            console.log('🔍 Purchased roles:', purchasedRoles);
-            console.log('🔍 Active role purchased:', isActiveRolePurchased);
-            console.log('🔍 Unpurchased roles:', unpurchasedRoles);
-
-            // Build payload with only unpurchased roles
             const payload = {
-              distribution_method: lead.distribution_method_by_role[activeRole] ?? 'NETWORK',
-              distribution_method_by_role: lead.distribution_method_by_role,
-              role_enabled: {},
-              affiliate_prices_by_role: {},
-              preferred_providers_by_role: {},
-              notes_by_role: {}
+              distribution_method: distributionForActiveRole,
+              distribution_method_by_role: lead.distribution_method_by_role || {},
+              role_enabled: lead.role_enabled || {},
+              affiliate_prices_by_role: sanitizedPrices,
+              preferred_providers_by_role: lead.preferred_providers_by_role || {},
+              notes_by_role: lead.notes_by_role || {},
             };
-
-            unpurchasedRoles.forEach(role => {
-              payload.role_enabled[role] = lead.role_enabled?.[role];
-              payload.affiliate_prices_by_role[role] = sanitizedPrices[role];
-              payload.preferred_providers_by_role[role] = lead.preferred_providers_by_role?.[role] || [];
-              payload.notes_by_role[role] = lead.notes_by_role?.[role] || '';
-            });
 
             console.log('🔍 Saving lead with payload:', payload);
 
@@ -397,12 +340,6 @@ export default function MyLeadsCreatedAccordion() {
 
             // Use lead.id if available, otherwise fallback to leadId
             const apiLeadId = lead?.id || leadId;
-
-            console.log("🚀 Saving lead", leadId);
-            console.log("activeRole:", activeRole);
-            console.log("lead.distribution_method_by_role:", lead.distribution_method_by_role);
-            console.log("lead.distribution_method_by_role[activeRole]:", lead.distribution_method_by_role?.[activeRole]);
-            console.log("🚀 ABOUT TO SEND axios.put with payload:", payload);
 
             const response = await axios.put(`${API_BASE_URL}/leads/${apiLeadId}/update`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -638,10 +575,8 @@ export default function MyLeadsCreatedAccordion() {
                                         <View style={styles.section}>
                                           <Text style={styles.label}>Distribution Method:</Text>
                                           <Picker
-                                            selectedValue={distribution || 'JUMPBALL'}
+                                            selectedValue={distribution || ''}
                                             onValueChange={(val) => {
-                                              // Ensure we never set an empty value
-                                              const validValue = val && ['NETWORK', 'JUMPBALL'].includes(val) ? val : 'JUMPBALL';
                                               setLeads((prev) =>
                                                 prev.map((l) =>
                                                   l.lead_id === lead.lead_id
@@ -649,7 +584,7 @@ export default function MyLeadsCreatedAccordion() {
                                                         ...l,
                                                         distribution_method_by_role: {
                                                           ...l.distribution_method_by_role,
-                                                          [activeRole]: validValue,
+                                                          [activeRole]: val,
                                                         },
                                                       }
                                                     : l
@@ -658,6 +593,7 @@ export default function MyLeadsCreatedAccordion() {
                                             }}
                                             enabled={!isLocked}
                                           >
+                                            <Picker.Item label="Select..." value="" />
                                             <Picker.Item label="NETWORK" value="NETWORK" />
                                             <Picker.Item label="JUMPBALL" value="JUMPBALL" />
                                           </Picker>

@@ -333,6 +333,11 @@ export default function MyLeadsCreatedAccordion() {
 
             console.log("distributionForActiveRole:", distributionForActiveRole);
 
+            // ✅ Force a default if missing - ensure we always have a valid distribution method
+            if (!['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeRole])) {
+              lead.distribution_method_by_role[activeRole] = 'NETWORK';
+            }
+
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
             Object.entries(lead.role_enabled || {}).forEach(([role, enabled]) => {
@@ -371,8 +376,8 @@ export default function MyLeadsCreatedAccordion() {
 
             // Build payload with only unpurchased roles
             const payload = {
-              distribution_method: isActiveRolePurchased ? 'JUMPBALL' : distributionForActiveRole.toUpperCase(),
-              distribution_method_by_role: lead.distribution_method_by_role || {},
+              distribution_method: lead.distribution_method_by_role[activeRole] ?? 'NETWORK',
+              distribution_method_by_role: lead.distribution_method_by_role,
               role_enabled: {},
               affiliate_prices_by_role: {},
               preferred_providers_by_role: {},

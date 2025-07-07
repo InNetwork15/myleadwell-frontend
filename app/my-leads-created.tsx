@@ -302,6 +302,12 @@ export default function MyLeadsCreatedAccordion() {
                 ? lead.distribution_method_by_role[activeRole]
                 : 'JUMPBALL';
 
+            // ✅ Add safeguard to prevent saving with invalid distribution method
+            if (!['JUMPBALL', 'NETWORK'].includes(distributionForActiveRole)) {
+              showToast('Distribution method must be JUMPBALL or NETWORK.', 'error');
+              return;
+            }
+
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
             Object.entries(lead.role_enabled || {}).forEach(([role, enabled]) => {
@@ -1014,7 +1020,10 @@ const styles = StyleSheet.create({
       fontWeight: '500',
     },
     helperText: {
-      fontSize: 14,
+      color: '#666',
+      marginTop: 4,
+    },
+});    // End of new styles    },      fontWeight: '500',      color: '#fff',    activeRoleChipText: {    },      backgroundColor: '#007bff',    activeRoleChip: {    },      color: '#333',      fontSize: 14,    roleChipText: {    },      marginBottom: 8,      marginRight: 8,      paddingHorizontal: 12,      paddingVertical: 6,      borderRadius: 16,      backgroundColor: '#e9ecef',    roleChip: {    },      marginBottom: 16,      marginTop: 8,      flexWrap: 'wrap',      flexDirection: 'row',    roleChipsContainer: {    // New styles for role chips    },      marginBottom: 8,      marginTop: 4,      color: '#666',      fontSize: 14,      fontSize: 14,
       color: '#666',
       marginTop: 4,
     },

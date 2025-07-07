@@ -393,6 +393,10 @@ export default function MyLeadsCreatedAccordion() {
             // Use lead.id if available, otherwise fallback to leadId
             const apiLeadId = lead?.id || leadId;
 
+            console.log("🚀 Saving lead", leadId);
+            console.log("activeRole:", activeRole);
+            console.log("lead.distribution_method_by_role:", lead.distribution_method_by_role);
+            console.log("lead.distribution_method_by_role[activeRole]:", lead.distribution_method_by_role?.[activeRole]);
             console.log("🚀 ABOUT TO SEND axios.put with payload:", payload);
 
             const response = await axios.put(`${API_BASE_URL}/leads/${apiLeadId}/update`, payload, {

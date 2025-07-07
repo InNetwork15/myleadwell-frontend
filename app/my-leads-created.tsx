@@ -297,15 +297,11 @@ export default function MyLeadsCreatedAccordion() {
 
             // Sanitize affiliate prices for enabled roles
             const activeRole = activeTabs[leadId] || JOB_TITLES[0];
-            const distributionForActiveRole =
-              ['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeRole])
-                ? lead.distribution_method_by_role[activeRole]
-                : 'JUMPBALL';
 
-            // ✅ Add safeguard to prevent saving with invalid distribution method
+            // fallback default to 'JUMPBALL'
+            let distributionForActiveRole = lead.distribution_method_by_role?.[activeRole];
             if (!['JUMPBALL', 'NETWORK'].includes(distributionForActiveRole)) {
-              showToast('Distribution method must be JUMPBALL or NETWORK.', 'error');
-              return;
+              distributionForActiveRole = 'JUMPBALL';
             }
 
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
@@ -320,7 +316,7 @@ export default function MyLeadsCreatedAccordion() {
             });
 
             // For NETWORK, ensure preferred providers are selected for enabled roles
-            if (lead.distribution_method_by_role?.[activeTabs[leadId]] === 'NETWORK') {
+            if (distributionForActiveRole === 'NETWORK') {
                 for (const [role, enabled] of Object.entries(lead.role_enabled)) {
                     if (enabled) {
                         const providersForRole = (lead.preferred_providers_by_role ?? {})[role] || [];
@@ -334,7 +330,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-              distribution_method: distributionForActiveRole,
+              distribution_method: distributionForActiveRole.toUpperCase(), // ensure uppercase and valid
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: sanitizedPrices,

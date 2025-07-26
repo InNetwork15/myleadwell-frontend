@@ -62,8 +62,7 @@ interface Lead {
     affiliate_name: string;
     purchased_by?: { job_title: string; first_name: string; last_name: string }[];
     role_enabled?: { [key: string]: boolean };
-    distribution_method: 'JUMPBALL' | 'NETWORK' | string;
-    distribution_method_by_role?: { [key: string]: string };
+    distribution_method_by_role?: { [key: string]: 'JUMPBALL' | 'NETWORK' | string };
     preferred_provider_ids?: number[];
     status?: string;
     provider_price?: number;
@@ -142,7 +141,7 @@ export default function MyLeadsCreatedAccordion() {
     service_areas: lead.service_areas || [],
 
     affiliate_name: lead.affiliate_name || 'Unknown',
-    distribution_method: lead.distribution_method || null,
+    distribution_method_by_role: lead.distribution_method_by_role || null,
     distribution_method_by_role:
         lead.distribution_method_by_role ||
         JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 'JUMPBALL' }), {}),
@@ -282,7 +281,7 @@ export default function MyLeadsCreatedAccordion() {
 
             // Validate distribution method
             if (!lead.distribution_method_by_role?.[activeTabs[leadId]] || !['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeTabs[leadId]])) {
-                console.error('❌ Missing or invalid distribution_method for lead:', leadId);
+                console.error('❌ Missing or invalid distribution_method_by_role for lead:', leadId);
                 showToast('Distribution method must be JUMPBALL or NETWORK.', 'error');
                 return;
             }
@@ -330,7 +329,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-              distribution_method: distributionForActiveRole, // Now guaranteed to be uppercase
+              distribution_method_by_role: distributionForActiveRole, // Now guaranteed to be uppercase
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: sanitizedPrices,

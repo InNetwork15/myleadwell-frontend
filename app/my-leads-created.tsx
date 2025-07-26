@@ -341,13 +341,31 @@ export default function MyLeadsCreatedAccordion() {
                 }
             }
 
-            const payload = {
-              distribution_method_by_role: lead.distribution_method_by_role,
-              role_enabled: lead.role_enabled || {},
-              affiliate_prices_by_role: sanitizedPrices,
-              preferred_providers_by_role: lead.preferred_providers_by_role || {},
-              notes_by_role: lead.notes_by_role || {},
-            };
+            // Only send enabled roles in these objects
+const enabledRoles = Object.keys(lead.role_enabled || {}).filter(role => lead.role_enabled[role]);
+const filtered_distribution_method_by_role = {};
+const filtered_affiliate_prices_by_role = {};
+const filtered_preferred_providers_by_role = {};
+const filtered_notes_by_role = {};
+
+enabledRoles.forEach(role => {
+  if (lead.distribution_method_by_role?.[role])
+    filtered_distribution_method_by_role[role] = lead.distribution_method_by_role[role];
+  if (lead.affiliate_prices_by_role?.[role])
+    filtered_affiliate_prices_by_role[role] = lead.affiliate_prices_by_role[role];
+  if (lead.preferred_providers_by_role?.[role])
+    filtered_preferred_providers_by_role[role] = lead.preferred_providers_by_role[role];
+  if (lead.notes_by_role?.[role])
+    filtered_notes_by_role[role] = lead.notes_by_role[role];
+});
+
+const payload = {
+  distribution_method_by_role: filtered_distribution_method_by_role,
+  role_enabled: lead.role_enabled || {},
+  affiliate_prices_by_role: filtered_affiliate_prices_by_role,
+  preferred_providers_by_role: filtered_preferred_providers_by_role,
+  notes_by_role: filtered_notes_by_role,
+};
 
             console.log('🔍 Saving lead with payload:', payload);
             console.log('🔍 Distribution methods:', lead.distribution_method_by_role);

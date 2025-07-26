@@ -278,19 +278,16 @@ export default function MyLeadsCreatedAccordion() {
                 return;
             }
 
-            // ✅ 1. Initialize distribution_method_by_role for Every Lead
-            if (!lead.distribution_method_by_role || typeof lead.distribution_method_by_role !== "object") {
+            // ✅ Initialize distribution_method_by_role if not present or not an object
+            if (!lead.distribution_method_by_role || typeof lead.distribution_method_by_role !== 'object') {
                 lead.distribution_method_by_role = {};
             }
-
-            // ✅ 2. Ensure every enabled role has a valid distribution method
-            for (const [role, enabled] of Object.entries(lead.role_enabled || {})) {
+            // ✅ Ensure every enabled role has a value
+            Object.entries(lead.role_enabled || {}).forEach(([role, enabled]) => {
                 if (enabled && !["JUMPBALL", "NETWORK"].includes((lead.distribution_method_by_role[role] || "").toUpperCase())) {
-                    // Set default if missing
-                    lead.distribution_method_by_role[role] = "JUMPBALL";
-                    console.log(`✅ Set default distribution method for ${role}: JUMPBALL`);
+                    lead.distribution_method_by_role[role] = "JUMPBALL"; // Default, or set to "NETWORK" if you prefer
                 }
-            }
+            });
 
             // ✅ 3. Validate that at least one role is enabled
             const hasEnabledRole = Object.values(lead.role_enabled ?? {}).some(enabled => enabled);

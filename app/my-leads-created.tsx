@@ -297,8 +297,12 @@ export default function MyLeadsCreatedAccordion() {
 
             // Sanitize affiliate prices for enabled roles
             const activeRole = activeTabs[leadId] || JOB_TITLES[0];
+            
+            // ✅ Force uppercase to match backend validation
             const distributionForActiveRole =
-              lead.distribution_method_by_role?.[activeRole] || 'JUMPBALL';
+              (lead.distribution_method_by_role?.[activeRole] || 'JUMPBALL').toUpperCase();
+
+            console.log("distributionForActiveRole (uppercase):", distributionForActiveRole);
 
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
@@ -312,7 +316,7 @@ export default function MyLeadsCreatedAccordion() {
             });
 
             // For NETWORK, ensure preferred providers are selected for enabled roles
-            if (lead.distribution_method_by_role?.[activeTabs[leadId]] === 'NETWORK') {
+            if (distributionForActiveRole === 'NETWORK') {
                 for (const [role, enabled] of Object.entries(lead.role_enabled)) {
                     if (enabled) {
                         const providersForRole = (lead.preferred_providers_by_role ?? {})[role] || [];
@@ -326,7 +330,7 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-              distribution_method: distributionForActiveRole,
+              distribution_method: distributionForActiveRole, // Now guaranteed to be uppercase
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: sanitizedPrices,

@@ -278,14 +278,21 @@ export default function MyLeadsCreatedAccordion() {
                 return;
             }
 
-            // Validate distribution method
-            if (!lead.distribution_method_by_role?.[activeTabs[leadId]] || !['JUMPBALL', 'NETWORK'].includes(lead.distribution_method_by_role?.[activeTabs[leadId]])) {
-                console.error('❌ Missing or invalid distribution_method_by_role for lead:', leadId);
-                showToast('Distribution method must be JUMPBALL or NETWORK.', 'error');
-                return;
+            // ✅ 1. Initialize distribution_method_by_role for Every Lead
+            if (!lead.distribution_method_by_role || typeof lead.distribution_method_by_role !== "object") {
+                lead.distribution_method_by_role = {};
             }
 
-            // Validate that at least one role is enabled
+            // ✅ 2. Ensure every enabled role has a valid distribution method
+            for (const [role, enabled] of Object.entries(lead.role_enabled || {})) {
+                if (enabled && !["JUMPBALL", "NETWORK"].includes((lead.distribution_method_by_role[role] || "").toUpperCase())) {
+                    // Set default if missing
+                    lead.distribution_method_by_role[role] = "JUMPBALL";
+                    console.log(`✅ Set default distribution method for ${role}: JUMPBALL`);
+                }
+            }
+
+            // ✅ 3. Validate that at least one role is enabled
             const hasEnabledRole = Object.values(lead.role_enabled ?? {}).some(enabled => enabled);
             if (!hasEnabledRole) {
                 console.error('❌ No roles enabled for lead:', leadId);
@@ -293,15 +300,27 @@ export default function MyLeadsCreatedAccordion() {
                 return;
             }
 
+            // ✅ 4. Update the Save Function's Validation
+            for (const [role, enabled] of Object.entries(lead.role_enabled || {})) {
+                if (enabled) {
+                    const method = (lead.distribution_method_by_role?.[role] || "").toUpperCase();
+                    if (!["JUMPBALL", "NETWORK"].includes(method)) {
+                        showToast(`Distribution method for ${role} must be JUMPBALL or NETWORK`, 'error');
+                        return;
+                    }
+                }
+            }
+
+            // Update the lead state with corrected distribution methods
+            setLeads((prev) =>
+                prev.map((l) =>
+                    l.lead_id === leadId ? { ...l, distribution_method_by_role: lead.distribution_method_by_role } : l
+                )
+            );
+
             // Sanitize affiliate prices for enabled roles
             const activeRole = activeTabs[leadId] || JOB_TITLES[0];
             
-            // ✅ Force uppercase to match backend validation
-            const distributionForActiveRole =
-              (lead.distribution_method_by_role?.[activeRole] || 'JUMPBALL').toUpperCase();
-
-            console.log("distributionForActiveRole (uppercase):", distributionForActiveRole);
-
             // sanitize affiliate_prices_by_role to make sure all enabled roles have valid prices
             const sanitizedPrices = { ...lead.affiliate_prices_by_role };
             Object.entries(lead.role_enabled || {}).forEach(([role, enabled]) => {
@@ -314,21 +333,19 @@ export default function MyLeadsCreatedAccordion() {
             });
 
             // For NETWORK, ensure preferred providers are selected for enabled roles
-            if (distributionForActiveRole === 'NETWORK') {
-                for (const [role, enabled] of Object.entries(lead.role_enabled)) {
-                    if (enabled) {
-                        const providersForRole = (lead.preferred_providers_by_role ?? {})[role] || [];
-                        if (providersForRole.length === 0) {
-                            console.error(`❌ No preferred providers for enabled role ${role} in lead ${leadId}`);
-                            showToast(`At least one preferred provider must be selected for ${role} in NETWORK distribution.`, 'error');
-                            return;
-                        }
+            for (const [role, enabled] of Object.entries(lead.role_enabled || {})) {
+                if (enabled && lead.distribution_method_by_role[role] === 'NETWORK') {
+                    const providersForRole = (lead.preferred_providers_by_role ?? {})[role] || [];
+                    if (providersForRole.length === 0) {
+                        console.error(`❌ No preferred providers for enabled role ${role} in lead ${leadId}`);
+                        showToast(`At least one preferred provider must be selected for ${role} in NETWORK distribution.`, 'error');
+                        return;
                     }
                 }
             }
 
             const payload = {
-              distribution_method_by_role: lead.distribution_method_by_role || {},
+              distribution_method_by_role: lead.distribution_method_by_role,
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: sanitizedPrices,
               preferred_providers_by_role: lead.preferred_providers_by_role || {},
@@ -336,16 +353,13 @@ export default function MyLeadsCreatedAccordion() {
             };
 
             console.log('🔍 Saving lead with payload:', payload);
+            console.log('🔍 Distribution methods:', lead.distribution_method_by_role);
 
             setSavingLeadId(leadId);
 
             // Use lead.id if available, otherwise fallback to leadId
             const apiLeadId = lead?.id || leadId;
 
-            console.log("🚀 Saving lead", leadId);
-            console.log("activeRole:", activeRole);
-            console.log("lead.distribution_method_by_role:", lead.distribution_method_by_role);
-            console.log("lead.distribution_method_by_role[activeRole]:", lead.distribution_method_by_role?.[activeRole]);
             console.log("🚀 ABOUT TO SEND axios.put with payload:", payload);
 
             const response = await axios.put(`${API_BASE_URL}/leads/${apiLeadId}/update`, payload, {
@@ -582,8 +596,10 @@ export default function MyLeadsCreatedAccordion() {
                                         <View style={styles.section}>
                                           <Text style={styles.label}>Distribution Method:</Text>
                                           <Picker
-                                            selectedValue={distribution || ''}
+                                            selectedValue={distribution || 'JUMPBALL'}
                                             onValueChange={(val) => {
+                                              // ✅ Ensure we never set an invalid value
+                                              const validValue = ['NETWORK', 'JUMPBALL'].includes(val) ? val : 'JUMPBALL';
                                               setLeads((prev) =>
                                                 prev.map((l) =>
                                                   l.lead_id === lead.lead_id
@@ -591,7 +607,7 @@ export default function MyLeadsCreatedAccordion() {
                                                         ...l,
                                                         distribution_method_by_role: {
                                                           ...l.distribution_method_by_role,
-                                                          [activeRole]: val,
+                                                          [activeRole]: validValue,
                                                         },
                                                       }
                                                     : l
@@ -600,9 +616,8 @@ export default function MyLeadsCreatedAccordion() {
                                             }}
                                             enabled={!isLocked}
                                           >
-                                            <Picker.Item label="Select..." value="" />
-                                            <Picker.Item label="NETWORK" value="NETWORK" />
                                             <Picker.Item label="JUMPBALL" value="JUMPBALL" />
+                                            <Picker.Item label="NETWORK" value="NETWORK" />
                                           </Picker>
 
                                           <Text style={styles.label}>Affiliate Price:</Text>

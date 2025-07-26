@@ -141,7 +141,6 @@ export default function MyLeadsCreatedAccordion() {
     service_areas: lead.service_areas || [],
 
     affiliate_name: lead.affiliate_name || 'Unknown',
-    distribution_method_by_role: lead.distribution_method_by_role || null,
     distribution_method_by_role:
         lead.distribution_method_by_role ||
         JOB_TITLES.reduce((acc, role) => ({ ...acc, [role]: 'JUMPBALL' }), {}),
@@ -329,7 +328,6 @@ export default function MyLeadsCreatedAccordion() {
             }
 
             const payload = {
-              distribution_method_by_role: distributionForActiveRole, // Now guaranteed to be uppercase
               distribution_method_by_role: lead.distribution_method_by_role || {},
               role_enabled: lead.role_enabled || {},
               affiliate_prices_by_role: sanitizedPrices,
@@ -343,6 +341,12 @@ export default function MyLeadsCreatedAccordion() {
 
             // Use lead.id if available, otherwise fallback to leadId
             const apiLeadId = lead?.id || leadId;
+
+            console.log("🚀 Saving lead", leadId);
+            console.log("activeRole:", activeRole);
+            console.log("lead.distribution_method_by_role:", lead.distribution_method_by_role);
+            console.log("lead.distribution_method_by_role[activeRole]:", lead.distribution_method_by_role?.[activeRole]);
+            console.log("🚀 ABOUT TO SEND axios.put with payload:", payload);
 
             const response = await axios.put(`${API_BASE_URL}/leads/${apiLeadId}/update`, payload, {
                 headers: { Authorization: `Bearer ${token}` },

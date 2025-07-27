@@ -1,49 +1,107 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '../utils/config';
 
-export default function ForgotPasswordScreen() {
+const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
-  const navigation = useNavigation();
+  const router = useRouter();
 
-  const handleReset = async () => {
-    if (!email) return Alert.alert('Please enter your email.');
-    // send request to backend
+  const handleResetPassword = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      Alert.alert('Please enter your email address');
+      return;
+    }
+
     try {
-      const res = await fetch('https://myleadwell-backend.onrender.com/api/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const response = await axios.post(`${API_BASE_URL}/api/forgot-password`, {
+        email: normalizedEmail,
       });
-      const data = await res.json();
-      Alert.alert(data.message || 'Check your email for reset link');
-    } catch (err) {
-      Alert.alert('Error sending reset link. Try again.');
+
+      const { message } = response.data;
+      Alert.alert('Success', message || 'Check your email for the reset link');
+      setTimeout(() => router.push('/'), 100);
+    } catch (error) {
+      console.error('❌ Forgot Password Error:', error?.response?.data || error.message);
+      Alert.alert('Error', 'Unable to send reset link. Please try again.');
     }
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-white px-6">
-      <View className="w-full max-w-md bg-gray-100 rounded-2xl p-6 shadow-lg">
-        <Text className="text-2xl font-bold text-center mb-4 text-blue-600">Forgot Password</Text>
-        <Text className="text-base text-center mb-6 text-gray-700">
-          Enter your email to receive a reset link
-        </Text>
-        <TextInput
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
-          placeholder="Email address"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TouchableOpacity
-          onPress={handleReset}
-          className="bg-blue-500 py-3 rounded-xl mt-2 shadow-sm"
-        >
-          <Text className="text-white text-center font-semibold text-base">Send Reset Link</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Reset Your Password</Text>
+      <Text style={styles.subtitle}>Enter your email to receive a password reset link.</Text>
+
+      <TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        style={styles.input}
+      />
+
+      <TouchableOpacity onPress={handleResetPassword} style={styles.button}>
+        <Text style={styles.buttonText}>Send Reset Link</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push('/LoginScreen')} style={styles.secondaryButton}>
+        <Text style={styles.secondaryButtonText}>Back to Login</Text>
+      </TouchableOpacity>
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  secondaryButton: {
+    padding: 10,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
+
+export default ForgotPasswordScreen;

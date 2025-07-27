@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '../utils/config';
+import Toast from 'react-native-toast-message'; // ✅ Add Toast import
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +13,11 @@ const ForgotPasswordScreen = () => {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail) {
-      Alert.alert('Please enter your email address');
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Email',
+        text2: 'Please enter your email address',
+      });
       return;
     }
 
@@ -21,12 +26,31 @@ const ForgotPasswordScreen = () => {
         email: normalizedEmail,
       });
 
-      const { message } = response.data;
-      Alert.alert('Success', message || 'Check your email for the reset link');
-      setTimeout(() => router.push('/'), 100);
-    } catch (error) {
+      if (response.data?.success) {
+        Toast.show({
+          type: 'success',
+          text1: '✅ Email Sent',
+          text2: `Password reset link sent to ${normalizedEmail}`,
+        });
+
+        // Redirect after successful request
+        setTimeout(() => router.push('/login'), 2000);
+      } else {
+        throw new Error(response.data?.error || 'Unknown error');
+      }
+    } catch (error: any) {
       console.error('❌ Forgot Password Error:', error?.response?.data || error.message);
-      Alert.alert('Error', 'Unable to send reset link. Please try again.');
+
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        'Unable to send reset link. Please try again.';
+
+      Toast.show({
+        type: 'error',
+        text1: 'Reset Failed',
+        text2: errorMessage,
+      });
     }
   };
 
@@ -48,9 +72,12 @@ const ForgotPasswordScreen = () => {
         <Text style={styles.buttonText}>Send Reset Link</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push('/LoginScreen')} style={styles.secondaryButton}>
+      <TouchableOpacity onPress={() => router.push('/login')} style={styles.secondaryButton}>
         <Text style={styles.secondaryButtonText}>Back to Login</Text>
       </TouchableOpacity>
+
+      {/* ✅ Add Toast component */}
+      <Toast />
     </View>
   );
 };

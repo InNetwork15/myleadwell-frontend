@@ -75,7 +75,10 @@ export default function SignupScreen() {
     };
 
     const handleSignup = async () => {
-        if (!validateEmail(email)) {
+        // ✅ Normalize email
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if (!validateEmail(normalizedEmail)) {
             Toast.show({
                 type: 'error',
                 text1: 'Invalid Email',
@@ -83,6 +86,7 @@ export default function SignupScreen() {
             });
             return;
         }
+
         if (roles.includes('Provider')) {
             if (!job_title) {
                 Toast.show({ type: 'error', text1: 'Missing Job Title', text2: 'Please select a job title.' });
@@ -97,22 +101,26 @@ export default function SignupScreen() {
                 return;
             }
         }
+
         try {
+            // ✅ Clean payload structure
             const payload = {
+                email: normalizedEmail,
+                password,
                 first_name,
                 last_name,
-                email,
                 phone,
-                password,
                 roles: roles.map((r) => r.toLowerCase()),
                 job_title: roles.includes('Provider') ? job_title : '',
                 states: selectedStates,
                 service_areas: serviceAreas,
                 affiliate_link: customRef.trim() || null,
             };
+
             console.log('📦 Payload to submit:', payload);
 
             const response = await axios.post(`${API_BASE_URL}/signup`, payload);
+            
             if (response.data?.success) {
                 Toast.show({
                     type: 'success',
@@ -120,7 +128,7 @@ export default function SignupScreen() {
                     text2: 'Check your email to verify your account.',
                 });
                 setTimeout(() => {
-                    router.replace({ pathname: '/EmailVerification', params: { email } });
+                    router.replace({ pathname: '/EmailVerification', params: { email: normalizedEmail } });
                 }, 1500);
             } else {
                 Toast.show({

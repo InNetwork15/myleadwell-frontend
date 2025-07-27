@@ -9,7 +9,7 @@ const ResetPasswordScreen = () => {
 
   const handleReset = async () => {
     try {
-      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/reset-password`, {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/reset-password`, {
         token,
         newPassword: password,
       });

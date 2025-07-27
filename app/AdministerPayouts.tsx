@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Platform } from 'react-native';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/config';
 import Toast from 'react-native-toast-message';
@@ -41,41 +41,52 @@ export default function AdministerPayouts() {
     }
   };
 
+  const runPayouts = async () => {
+    setLoading(true);
+    const token = await AsyncStorage.getItem('token');
+    try {
+      console.log('🔄 Running payouts for', previewLeads.length, 'leads');
+      const response = await axios.post(`${API_BASE_URL}/admin/process-affiliate-payouts`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Toast.show({
+        type: 'success',
+        text1: `✅ Payouts processed`,
+        text2: `${response.data.processed} leads were paid`,
+      });
+      fetchPreviewLeads();
+      fetchHistory();
+    } catch (error) {
+      console.error('❌ Error processing payouts:', error);
+      Alert.alert('Error', error?.response?.data?.error || 'An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePayouts = async () => {
     console.log("⚡ Button pressed!");
-    Alert.alert(
-      'Confirm Payouts',
-      `Are you sure you want to process payouts for ${previewLeads.length} leads?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes',
-          onPress: async () => {
-            console.log("⚡ Alert confirmation!");
-            setLoading(true);
-            const token = await AsyncStorage.getItem('token');
-            try {
-              console.log('🔄 Running payouts for', previewLeads.length, 'leads');
-              const response = await axios.post(`${API_BASE_URL}/admin/process-affiliate-payouts`, {}, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              Toast.show({
-                type: 'success',
-                text1: `✅ Payouts processed`,
-                text2: `${response.data.processed} leads were paid`,
-              });
-              fetchPreviewLeads();
-              fetchHistory();
-            } catch (error) {
-              console.error('❌ Error processing payouts:', error);
-              Alert.alert('Error', error?.response?.data?.error || 'An error occurred.');
-            } finally {
-              setLoading(false);
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to process payouts for ${previewLeads.length} leads?`)) {
+        console.log("⚡ Web confirmation!");
+        await runPayouts();
+      }
+    } else {
+      Alert.alert(
+        'Confirm Payouts',
+        `Are you sure you want to process payouts for ${previewLeads.length} leads?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Yes',
+            onPress: async () => {
+              console.log("⚡ Alert confirmation!");
+              await runPayouts();
             }
-          },
-        },
-      ]
-    );
+          }
+        ]
+      );
+    }
   };
 
   return (

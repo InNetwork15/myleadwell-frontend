@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
-    StyleSheet, ScrollView
+    StyleSheet, ScrollView, ActivityIndicator
 } from 'react-native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
-import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
 import Toast from 'react-native-toast-message';
 import { useRouter } from 'expo-router';
+import { STATE_ABBREVIATIONS, ABBREVIATION_TO_STATE } from '../utils/stateAbbreviations';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://myleadwell-backend.onrender.com';
 
@@ -19,24 +19,18 @@ export default function SignupScreen() {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [roles, setRoles] = useState<string[]>([]);
-    const [selectedState, setSelectedState] = useState('');
-    const [states, setStates] = useState<string[]>([]);
-    const [countiesByState, setCountiesByState] = useState<{ [key: string]: string[] }>({});
-    const [counties, setCounties] = useState<string[]>([]);
     const [job_title, setJobTitle] = useState('');
     const [customRef, setCustomRef] = useState('');
 
+    const [availableStates, setAvailableStates] = useState<string[]>([]);
+    const [countiesByState, setCountiesByState] = useState<{ [key: string]: string[] }>({});
+    const [selectedStates, setSelectedStates] = useState<string[]>([]);
+    const [serviceAreas, setServiceAreas] = useState<{ state: string; county: string }[]>([]);
+    const [loadingCounties, setLoadingCounties] = useState(true);
+
     useEffect(() => {
-        interface RecordFields {
-            ste_name?: string;
-            coty_name_long?: string;
-        }
-
-        interface Record {
-            fields?: RecordFields;
-        }
-
         const fetchCounties = async () => {
+            setLoadingCounties(true);
             try {
                 const res = await axios.get(
                     'https://public.opendatasoft.com/api/records/1.0/search/',
@@ -48,37 +42,30 @@ export default function SignupScreen() {
                         },
                     }
                 );
+                const records = res.data?.records || [];
+                const byState: Record<string, string[]> = {};
 
-                const records: Record[] = res.data?.records || [];
-                const byState: { [key: string]: string[] } = {};
-
-                records.forEach((record: Record) => {
+                records.forEach((record: { fields?: { ste_name?: string; coty_name_long?: string } }) => {
                     const fullState = record.fields?.ste_name?.trim();
                     const state = fullState ? STATE_ABBREVIATIONS[fullState] : undefined;
                     const county = record.fields?.coty_name_long?.trim();
-
                     if (!state || !county) return;
-
-                    if (!byState[state]) {
-                        byState[state] = [];
-                    }
-
-                    if (!byState[state].includes(county)) {
-                        byState[state].push(county);
-                    }
+                    if (!byState[state]) byState[state] = [];
+                    if (!byState[state].includes(county)) byState[state].push(county);
                 });
 
                 Object.keys(byState).forEach((state) => {
-                    byState[state] = byState[state].sort();
+                    byState[state] = byState[state].sort((a, b) => a.localeCompare(b));
                 });
-
                 setCountiesByState(byState);
-                setStates(Object.keys(byState).sort());
-            } catch (error) {
-                console.error('❌ Failed to fetch counties', error);
+                setAvailableStates(Object.keys(byState).sort());
+            } catch (err) {
+                console.error("❌ County fetch failed", err);
+                Toast.show({ type: 'error', text1: 'Failed to load county list' });
+            } finally {
+                setLoadingCounties(false);
             }
         };
-
         fetchCounties();
     }, []);
 
@@ -96,25 +83,20 @@ export default function SignupScreen() {
             });
             return;
         }
-
-        if (roles.includes('Provider') && !job_title) {
-            Toast.show({
-                type: 'error',
-                text1: 'Missing Job Title',
-                text2: 'Please select a job title to continue.',
-            });
-            return;
+        if (roles.includes('Provider')) {
+            if (!job_title) {
+                Toast.show({ type: 'error', text1: 'Missing Job Title', text2: 'Please select a job title.' });
+                return;
+            }
+            if (selectedStates.length === 0) {
+                Toast.show({ type: 'error', text1: 'Missing State', text2: 'Select at least one state.' });
+                return;
+            }
+            if (serviceAreas.length === 0) {
+                Toast.show({ type: 'error', text1: 'Missing Service Area', text2: 'Select at least one county.' });
+                return;
+            }
         }
-
-        if (roles.includes('Provider') && !selectedState) {
-            Toast.show({
-                type: 'error',
-                text1: 'Missing State',
-                text2: 'Please select a state to continue.',
-            });
-            return;
-        }
-
         try {
             const payload = {
                 first_name,
@@ -122,44 +104,23 @@ export default function SignupScreen() {
                 email,
                 phone,
                 password,
-                roles: roles.map((r) => (r === 'Provider' ? 'provider' : 'affiliate')),
+                roles: roles.map((r) => r.toLowerCase()),
                 job_title: roles.includes('Provider') ? job_title : '',
-                states: selectedState ? [selectedState] : [],
-                // ✅ Convert counties to expected object format:
-                service_areas: counties.map(county => ({ state: selectedState, county })),
+                states: selectedStates,
+                service_areas: serviceAreas,
                 affiliate_link: customRef.trim() || null,
             };
+            console.log('📦 Payload to submit:', payload);
 
-            console.log('📦 Payload to submit:', JSON.stringify(payload, null, 2));
-
-            const retry = async (fn: () => Promise<any>, retries: number = 3, delay: number = 1000) => {
-                for (let i = 0; i < retries; i++) {
-                    try {
-                        return await fn();
-                    } catch (err) {
-                        if (i === retries - 1) throw err;
-                        await new Promise(res => setTimeout(res, delay));
-                    }
-                }
-            };
-
-            const response = await retry(() => axios.post(`${API_BASE_URL}/signup`, payload));
-
-            console.log('✅ Signup response:', response.data);
-
+            const response = await axios.post(`${API_BASE_URL}/signup`, payload);
             if (response.data?.success) {
                 Toast.show({
                     type: 'success',
                     text1: '✅ Account Created',
                     text2: 'Check your email to verify your account.',
                 });
-
                 setTimeout(() => {
-                    console.log("🔁 navigating to email verification...");
-                    router.replace({
-                        pathname: '/EmailVerification',
-                        params: { email },
-                    });
+                    router.replace({ pathname: '/EmailVerification', params: { email } });
                 }, 1500);
             } else {
                 Toast.show({
@@ -168,33 +129,17 @@ export default function SignupScreen() {
                     text2: response.data.message || 'Unknown error occurred',
                 });
             }
-        } catch (error) {
-            let errorMessage = 'Failed to register. Try again.';
-            if (axios.isAxiosError(error)) {
-                errorMessage =
-                    error.response?.data?.message ||
-                    error.response?.data?.error ||
-                    error.message ||
-                    'Failed to register. Try again.';
-            }
-            console.error('❌ Signup error:', errorMessage);
-            Toast.show({
-                type: 'error',
-                text1: 'Signup Error',
-                text2: errorMessage,
-            });
+        } catch (error: any) {
+            let errorMessage = error.response?.data?.message || error.message || 'Failed to register. Try again.';
+            Toast.show({ type: 'error', text1: 'Signup Error', text2: errorMessage });
         }
     };
 
-    const navigateToLogin = () => {
-        console.log("🔁 navigating to Login...");
-        router.push('/login');
-    };
+    const navigateToLogin = () => router.push('/login');
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Create Account</Text>
-
             <TextInput style={styles.input} placeholder="First Name" value={first_name} onChangeText={setFirstName} />
             <TextInput style={styles.input} placeholder="Last Name" value={last_name} onChangeText={setLastName} />
             <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
@@ -209,11 +154,7 @@ export default function SignupScreen() {
                         <TouchableOpacity
                             key={r}
                             style={[styles.roleButton, { backgroundColor: selected ? '#007bff' : '#ccc' }]}
-                            onPress={() => {
-                                setRoles((prev) =>
-                                    selected ? prev.filter(role => role !== r) : [...prev, r]
-                                );
-                            }}
+                            onPress={() => setRoles(selected ? roles.filter(role => role !== r) : [...roles, r])}
                         >
                             <Text style={{ color: '#fff' }}>{r}</Text>
                         </TouchableOpacity>
@@ -227,7 +168,7 @@ export default function SignupScreen() {
                     <View style={styles.pickerWrapper}>
                         <Picker
                             selectedValue={job_title}
-                            onValueChange={(val) => setJobTitle(val)}
+                            onValueChange={setJobTitle}
                             style={styles.picker}
                         >
                             <Picker.Item label="Select a job title" value="" />
@@ -239,40 +180,108 @@ export default function SignupScreen() {
                         </Picker>
                     </View>
 
-                    <Text style={styles.label}>State</Text>
-                    <View style={styles.pickerWrapper}>
-                        <Picker
-                            selectedValue={selectedState}
-                            onValueChange={(val) => {
-                                setSelectedState(val);
-                                setCounties([]);
-                            }}
-                            style={styles.picker}
-                        >
-                            <Picker.Item label="Select a state" value="" />
-                            {states.map((state) => (
-                                <Picker.Item key={state} label={ABBREVIATION_TO_STATE[state] || state} value={state} />
-                            ))}
-                        </Picker>
+                    <Text style={styles.label}>States</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                        {availableStates.map((state) => {
+                            const isSelected = selectedStates.includes(state);
+                            return (
+                                <TouchableOpacity
+                                    key={state}
+                                    onPress={() => {
+                                        if (isSelected) {
+                                            setSelectedStates(selectedStates.filter(s => s !== state).sort());
+                                            setServiceAreas(serviceAreas.filter(area => area.state !== state));
+                                        } else {
+                                            setSelectedStates([...new Set([...selectedStates, state])].sort());
+                                        }
+                                    }}
+                                    style={{
+                                        backgroundColor: isSelected ? '#007bff' : '#eee',
+                                        borderRadius: 20,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 6,
+                                        margin: 4,
+                                    }}
+                                >
+                                    <Text style={{ color: isSelected ? '#fff' : '#000' }}>{ABBREVIATION_TO_STATE[state] || state}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
 
-                    <Text style={styles.label}>Service Area Counties</Text>
-                    {countiesByState[selectedState]?.map((county) => {
-                        const isSelected = counties.includes(county);
-                        return (
-                            <TouchableOpacity
-                                key={county}
-                                style={[styles.countyItem, { backgroundColor: isSelected ? '#28a745' : '#eee' }]}
-                                onPress={() => {
-                                    setCounties((prev) =>
-                                        isSelected ? prev.filter(c => c !== county) : [...prev, county]
-                                    );
-                                }}
-                            >
-                                <Text style={{ color: isSelected ? '#fff' : '#000' }}>{county}</Text>
-                            </TouchableOpacity>
-                        );
-                    })}
+                    {/* County Selection */}
+                    <Text style={styles.label}>Service Areas (Counties)</Text>
+                    {loadingCounties ? (
+                        <ActivityIndicator />
+                    ) : selectedStates.length > 0 ? (
+                        selectedStates.map((state) => (
+                            <View key={state}>
+                                <Text style={styles.label}>{ABBREVIATION_TO_STATE[state] || state} Counties</Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        const all = countiesByState[state] || [];
+                                        const newAreas = all.filter(c => !serviceAreas.some(a => a.county === c && a.state === state))
+                                            .map(c => ({ state, county: c }));
+                                        setServiceAreas([...serviceAreas, ...newAreas]);
+                                    }}
+                                >
+                                    <Text style={{ color: 'green', fontWeight: 'bold', marginBottom: 6 }}>
+                                        🗺️ Add All Counties in {ABBREVIATION_TO_STATE[state] || state}
+                                    </Text>
+                                </TouchableOpacity>
+                                <View style={styles.pickerWrapper}>
+                                    <Picker
+                                        selectedValue=""
+                                        onValueChange={(itemValue) => {
+                                            if (itemValue && !serviceAreas.some(area => area.county === itemValue && area.state === state)) {
+                                                setServiceAreas([...serviceAreas, { state, county: itemValue }]);
+                                            }
+                                        }}
+                                        style={styles.picker}
+                                    >
+                                        <Picker.Item label="Select a County" value="" />
+                                        {countiesByState[state]?.map((county) => (
+                                            <Picker.Item key={county} label={county} value={county} />
+                                        ))}
+                                    </Picker>
+                                </View>
+                            </View>
+                        ))
+                    ) : (
+                        <Text style={{ color: '#666', marginTop: 5 }}>Please select at least one state</Text>
+                    )}
+
+                    <Text style={styles.label}>Selected Service Areas:</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                        {serviceAreas
+                            .slice()
+                            .sort((a, b) =>
+                                a.state === b.state
+                                    ? a.county.localeCompare(b.county)
+                                    : a.state.localeCompare(b.state)
+                            )
+                            .map((area, index) => (
+                                <View
+                                    key={`${area.state}-${area.county}-${index}`}
+                                    style={{
+                                        backgroundColor: '#ddd',
+                                        borderRadius: 20,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 5,
+                                        margin: 4,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Text>{area.county}</Text>
+                                    <TouchableOpacity
+                                        onPress={() => setServiceAreas(serviceAreas.filter(a => !(a.county === area.county && a.state === area.state)))}
+                                    >
+                                        <Text style={{ marginLeft: 8, color: 'red' }}>✕</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                    </View>
                 </>
             )}
 
@@ -328,11 +337,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     picker: { height: 48, width: '100%' },
-    countyItem: {
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 6,
-    },
     signupButton: {
         backgroundColor: '#28a745',
         padding: 14,
@@ -355,3 +359,4 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
 });
+

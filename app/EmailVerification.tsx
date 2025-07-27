@@ -10,22 +10,25 @@ export default function EmailVerification() {
 
   const handleResend = async () => {
     try {
+      if (!email) throw new Error('Email is missing from URL');
+
       const res = await axios.post(`${API_BASE_URL}/resend-verification`, { email });
+
       if (res.data?.success) {
         Toast.show({
           type: 'success',
           text1: '✅ Email Sent',
-          text2: `We re-sent the email to ${email}`,
+          text2: `Verification email re-sent to ${email}`,
         });
       } else {
-        throw new Error(res.data?.message || 'Unknown error');
+        throw new Error(res.data?.message || 'Failed to resend email');
       }
     } catch (err) {
       console.error('❌ Resend error:', err);
       Toast.show({
         type: 'error',
         text1: 'Failed to Resend',
-        text2: err.message || 'Could not resend email',
+        text2: err.message || 'Unexpected error occurred',
       });
     }
   };
@@ -36,7 +39,7 @@ export default function EmailVerification() {
         ✅ Account Created!
       </Text>
       <Text style={{ fontSize: 16, textAlign: 'center', marginBottom: 24 }}>
-        We’ve sent a verification link to <Text style={{ fontWeight: '600' }}>{email}</Text>.
+        We’ve sent a verification link to <Text style={{ fontWeight: '600' }}>{email}</Text>.{'\n'}
         Please check your inbox and confirm to activate your account.
       </Text>
 

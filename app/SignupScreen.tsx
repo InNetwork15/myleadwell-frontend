@@ -124,8 +124,9 @@ export default function SignupScreen() {
                 password,
                 roles: roles.map((r) => (r === 'Provider' ? 'provider' : 'affiliate')),
                 job_title: roles.includes('Provider') ? job_title : '',
-                states: selectedState ? [selectedState] : [], // ✅ convert to array
-                service_areas: counties,
+                states: selectedState ? [selectedState] : [],
+                // ✅ Convert counties to expected object format:
+                service_areas: counties.map(county => ({ state: selectedState, county })),
                 affiliate_link: customRef.trim() || null,
             };
 

@@ -72,6 +72,12 @@ const LoginScreen = () => {
         secureTextEntry
         style={styles.input}
       />
+      
+      {/* ✅ Add Forgot Password link */}
+      <TouchableOpacity onPress={() => router.push('/ForgotPasswordScreen')}>
+        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity onPress={handleLogin} style={styles.button}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
@@ -102,6 +108,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
+  },
+  // ✅ Add style for forgot password link
+  forgotPasswordText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'right',
+    marginTop: 10,
+    marginBottom: 20,
   },
   button: {
     backgroundColor: '#007AFF',

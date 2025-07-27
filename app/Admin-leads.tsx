@@ -52,7 +52,6 @@ type Lead = {
   notified_providers?: string;
   join_network?: boolean;
   agreed_to_terms?: boolean;
-  selected_gift_card?: string;
   [key: string]: any;
 };
 
@@ -81,7 +80,6 @@ const LEAD_STATUSES = [
 ];
 const DISTRIBUTION_METHODS = ['NETWORK', 'JUMPBALL'];
 const BOOLEAN_OPTIONS = ['true', 'false'];
-const GIFT_CARD_OPTIONS = ['visa', 'amazon', 'mastercard', 'none'];
 const JOB_TITLES = [
   'Real Estate Agent',
   'Loan Originator',
@@ -102,7 +100,6 @@ export default function AdminLeadsScreen(): JSX.Element {
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
   const [editedLead, setEditedLead] = useState<any>(null);
   const [newLeadStatus, setNewLeadStatus] = useState<string | null>(null);
-  const [giftCardStatus, setGiftCardStatus] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: { [section: string]: boolean } }>({});
   const [activeProviders, setActiveProviders] = useState<Provider[]>([]);
   const [providerNames, setProviderNames] = useState<{ [key: string]: string }>({});
@@ -180,24 +177,7 @@ export default function AdminLeadsScreen(): JSX.Element {
     fetchActiveProviders();
   }, [statusFilter, stateFilter, affiliateFilter]);
 
-  useEffect(() => {
-    if (expandedLeadId) {
-      const fetchGiftCardStatus = async () => {
-        try {
-          const token = await AsyncStorage.getItem('token');
-          const res = await axios.get(`${API_BASE_URL}/admin/leads/${expandedLeadId}/gift-card-status`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setGiftCardStatus(res.data.status);
-        } catch (err) {
-          console.error('Error fetching gift card status:', err);
-          setGiftCardStatus('error');
-        }
-      };
-      fetchGiftCardStatus();
-    }
-  }, [expandedLeadId]);
-
+  
   const refreshLeads = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -1124,32 +1104,6 @@ export default function AdminLeadsScreen(): JSX.Element {
                             ))}
                           </Picker>
                         </View>
-                      </View>
-                      <View style={styles.field}>
-                        <Text style={styles.label}>SELECTED GIFT CARD</Text>
-                        <View style={styles.pickerContainer}>
-                          <Picker
-                            selectedValue={editedLead.selected_gift_card ?? lead.selected_gift_card ?? 'none'}
-                            onValueChange={(itemValue) =>
-                              setEditedLead((prev: any) => ({ ...prev, selected_gift_card: itemValue }))
-                            }
-                            style={styles.picker}
-                          >
-                            {GIFT_CARD_OPTIONS.map((option) => (
-                              <Picker.Item key={option} label={option} value={option} />
-                            ))}
-                          </Picker>
-                        </View>
-                      </View>
-                      <View style={styles.field}>
-                        <Text style={styles.label}>GIFT CARD STATUS</Text>
-                        <Text style={styles.value}>
-                          {giftCardStatus ? (
-                            <StatusBadge status={giftCardStatus} type={giftCardStatus} />
-                          ) : (
-                            '—'
-                          )}
-                        </Text>
                       </View>
                     </View>
                   )}

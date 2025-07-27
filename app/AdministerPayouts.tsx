@@ -42,6 +42,7 @@ export default function AdministerPayouts() {
   };
 
   const handlePayouts = async () => {
+    console.log("⚡ Button pressed!");
     Alert.alert(
       'Confirm Payouts',
       `Are you sure you want to process payouts for ${previewLeads.length} leads?`,
@@ -50,6 +51,7 @@ export default function AdministerPayouts() {
         {
           text: 'Yes',
           onPress: async () => {
+            console.log("⚡ Alert confirmation!");
             setLoading(true);
             const token = await AsyncStorage.getItem('token');
             try {

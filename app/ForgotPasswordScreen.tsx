@@ -17,7 +17,7 @@ const ForgotPasswordScreen = () => {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/forgot-password`, {
+      const response = await axios.post(`${API_BASE_URL}/forgot-password`, {
         email: normalizedEmail,
       });
 

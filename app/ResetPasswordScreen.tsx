@@ -38,7 +38,7 @@ const ResetPasswordScreen = () => {
       });
 
       Alert.alert('Success', 'Your password has been reset.');
-      router.replace('/LoginScreen');
+      router.replace('/login');
     } catch (error: any) {
       console.error('Reset failed:', error?.response?.data || error.message);
       Alert.alert('Error', 'Reset failed. Link may be expired or invalid.');

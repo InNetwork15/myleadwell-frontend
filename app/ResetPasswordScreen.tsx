@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 
 const ResetPasswordScreen = () => {
-  const { token } = useLocalSearchParams();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const [token, setToken] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (params?.token) {
+      setToken(params.token.toString());
+      console.log('✅ Token from URL:', params.token);
+    } else {
+      console.warn('❌ No token found in URL params');
+    }
+  }, [params]);
 
   const handleReset = async () => {
     if (!password || password.length < 6) {
@@ -15,17 +25,22 @@ const ResetPasswordScreen = () => {
       return;
     }
 
+    if (!token) {
+      Alert.alert('Error', 'Invalid or missing reset token.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/reset-password`, {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/reset-password`, {
         token,
         newPassword: password,
       });
 
-      Alert.alert('Success', 'Your password has been reset!');
+      Alert.alert('Success', 'Your password has been reset.');
       router.replace('/LoginScreen');
     } catch (error: any) {
-      console.error(error);
+      console.error('Reset failed:', error?.response?.data || error.message);
       Alert.alert('Error', 'Reset failed. Link may be expired or invalid.');
     } finally {
       setLoading(false);
@@ -42,7 +57,11 @@ const ResetPasswordScreen = () => {
         onChangeText={setPassword}
         style={styles.input}
       />
-      <Button title={loading ? 'Resetting...' : 'Reset Password'} onPress={handleReset} disabled={loading} />
+      <Button
+        title={loading ? 'Resetting...' : 'Reset Password'}
+        onPress={handleReset}
+        disabled={loading}
+      />
     </View>
   );
 };

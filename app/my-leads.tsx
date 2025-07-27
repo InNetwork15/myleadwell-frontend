@@ -43,6 +43,7 @@ export default function MyLeadsScreen() {
     provider_revenue?: string | number;
     last_updated?: string | null;
     purchase_status?: string;
+    purchased_at?: string; // ✅ Add this field
   }
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -51,7 +52,17 @@ export default function MyLeadsScreen() {
   const [sortOrder, setSortOrder] = useState('recent');
   const [loading, setLoading] = useState(false);
   const [savingLeadId, setSavingLeadId] = useState<string | null>(null);
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation();
+
+  // ✅ Returns true if within 72 hours (3 days) of purchase
+  const canMarkIneligible = (lead: Lead) => {
+    if (!lead || !lead.purchased_at) return true; // allow if no timestamp
+    const purchasedDate = new Date(lead.purchased_at);
+    const now = new Date();
+    const diffMs = now.getTime() - purchasedDate.getTime();
+    const hours = diffMs / (1000 * 60 * 60);
+    return hours <= 72;
+  };
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -71,6 +82,7 @@ export default function MyLeadsScreen() {
         provider_revenue: lead.provider_revenue || '',
         last_updated: lead.last_updated || null,
         purchase_status: lead.purchase_status || lead.status || 'new',
+        purchased_at: lead.purchased_at || lead.created_at, // ✅ Add purchased timestamp
       }));
 
       setLeads(leadsWithProperData);
@@ -103,7 +115,7 @@ export default function MyLeadsScreen() {
     Alert.alert('ℹ️ Status Changed', `Status for lead ${leadId} changed to ${newStatus}`);
   };
 
-  const handleSaveStatus = async (lead: { lead_id: string; purchase_id?: string }, newStatus: string, provider_revenue: string | number | undefined) => {
+  const handleSaveStatus = async (lead: { lead_id: string; purchase_id?: string; purchased_at?: string }, newStatus: string, provider_revenue: string | number | undefined) => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('Missing token');
@@ -118,7 +130,24 @@ export default function MyLeadsScreen() {
         return;
       }
 
-      setSavingLeadId(lead.lead_id); // ✅ Show saving indicator for this lead
+      // ✅ Block Save if Trying to Save Ineligible After 72 Hours
+      if (newStatus === 'ineligible' && lead.purchased_at) {
+        const purchasedDate = new Date(lead.purchased_at);
+        const now = new Date();
+        const diffMs = now.getTime() - purchasedDate.getTime();
+        const hours = diffMs / (1000 * 60 * 60);
+        if (hours > 72) {
+          Toast.show({
+            type: 'error',
+            text1: '❌ Status Change Not Allowed',
+            text2: 'Cannot mark as ineligible after 72 hours.',
+            position: 'top',
+          });
+          return;
+        }
+      }
+
+      setSavingLeadId(lead.lead_id);
 
       const res = await axios.patch(
         `${API_BASE_URL}/lead-purchases/${lead.purchase_id}/status`,
@@ -187,7 +216,7 @@ export default function MyLeadsScreen() {
         });
       }
     } finally {
-      setSavingLeadId(null); // ✅ Hide saving indicator
+      setSavingLeadId(null);
     }
   };
   
@@ -260,12 +289,23 @@ export default function MyLeadsScreen() {
               >
                 <Picker.Item label="New" value="new" />
                 <Picker.Item label="Attempted Contact" value="attempted-contact" />
-                <Picker.Item label="Ineligible" value="ineligible" />
+                {canMarkIneligible(lead) ? (
+                  <Picker.Item label="Ineligible" value="ineligible" />
+                ) : (
+                  <Picker.Item label="Ineligible (locked)" value="ineligible" enabled={false} />
+                )}
                 <Picker.Item label="In Progress" value="in-progress" />
                 <Picker.Item label="Closed Sale Made" value="closed-sale-made" />
                 <Picker.Item label="Closed No Sale" value="closed-no-sale" />
               </Picker>
             </View>
+
+            {/* ✅ Show time remaining for ineligible option */}
+            {!canMarkIneligible(lead) && (
+              <Text style={styles.timeWarning}>
+                ⚠️ Ineligible option locked (72+ hours since purchase)
+              </Text>
+            )}
 
             {/* (3) Revenue label and input on one line, only when closed-sale-made */}
             {statusByLead[lead.lead_id] === 'closed-sale-made' && (
@@ -381,5 +421,11 @@ const styles = StyleSheet.create({
     color: '#007bff', // Blue text
     fontWeight: '600',
     fontSize: 16,
+  },
+  timeWarning: {
+    color: '#dc3545',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });

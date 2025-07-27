@@ -53,6 +53,7 @@ export default function AdministerPayouts() {
             setLoading(true);
             const token = await AsyncStorage.getItem('token');
             try {
+              console.log('🔄 Running payouts for', previewLeads.length, 'leads');
               const response = await axios.post(`${API_BASE_URL}/admin/process-affiliate-payouts`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
               });

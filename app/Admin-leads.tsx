@@ -126,9 +126,12 @@ export default function AdminLeadsScreen(): JSX.Element {
         });
 
         console.log('✅ Admin Leads:', res.data);
+        
+        // ✅ 100% bulletproof ID mapping
         setLeads(res.data.map((lead: any) => ({
           ...lead,
-          lead_status: lead.status, // This lets you keep using lead.lead_status everywhere else if you want
+          id: lead.id || lead.lead_id || lead._id, // fallback if needed
+          lead_status: lead.status,
         })));
 
         const providerMap: { [key: string]: string } = {};
@@ -369,10 +372,22 @@ export default function AdminLeadsScreen(): JSX.Element {
   };
 
   const handleSave = async (leadId: string) => {
+    console.log('💾 handleSave called with leadId:', leadId, editedLead);
+    
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('Missing token');
+      }
+
+      if (!leadId) {
+        console.error('❌ leadId is undefined or null');
+        Toast.show({
+          type: 'error',
+          text1: 'Save Failed',
+          text2: 'Lead ID is missing.',
+        });
+        return;
       }
 
       if (!editedLead || Object.keys(editedLead).length === 0) {
@@ -395,6 +410,9 @@ export default function AdminLeadsScreen(): JSX.Element {
         }
       });
 
+      console.log('🔍 About to save lead with URL:', `${API_BASE_URL}/admin/leads/${leadId}`);
+      console.log('🔍 Payload:', payload);
+
       await axios.put(`${API_BASE_URL}/admin/leads/${leadId}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -405,10 +423,15 @@ export default function AdminLeadsScreen(): JSX.Element {
         text2: 'Lead updated successfully.',
       });
 
+      // ✅ Refresh with bulletproof ID mapping
       const res = await axios.get(`${API_BASE_URL}/admin/leads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setLeads(res.data);
+      setLeads(res.data.map((lead: any) => ({
+        ...lead,
+        id: lead.id || lead.lead_id || lead._id, // fallback if needed
+        lead_status: lead.status,
+      })));
       setEditedLead(null);
       setExpandedLeadId(null);
       setExpandedSections((prev) => {
@@ -637,6 +660,7 @@ export default function AdminLeadsScreen(): JSX.Element {
           <View key={lead.id} style={styles.card}>
             <Pressable
               onPress={() => {
+                console.log('🔍 Expanding lead with ID:', lead.id); // Debug log
                 setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id);
                 setEditedLead({});
                 setNewLeadStatus(lead.lead_status || 'pending');
@@ -644,7 +668,7 @@ export default function AdminLeadsScreen(): JSX.Element {
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.title}>
-                  {lead.lead_name} — <StatusBadge status={lead.lead_status || 'pending'} type={lead.lead_status || 'pending'} />
+                  {lead.lead_name} (ID: {lead.id}) — <StatusBadge status={lead.lead_status || 'pending'} type={lead.lead_status || 'pending'} />
                   {(lead.purchases?.length ?? 0) > 0 && (
                     <>
                       {' (Purchase: '}
@@ -1131,8 +1155,14 @@ export default function AdminLeadsScreen(): JSX.Element {
                   )}
                 </View>
 
-                <TouchableOpacity onPress={() => handleSave(lead.id)} style={styles.saveButton}>
-                  <Text style={styles.saveText}>💾 Save</Text>
+                <TouchableOpacity 
+                  onPress={() => {
+                    console.log('🔍 Save button pressed for lead ID:', lead.id); // Debug log
+                    handleSave(lead.id);
+                  }} 
+                  style={styles.saveButton}
+                >
+                  <Text style={styles.saveText}>💾 Save (ID: {lead.id})</Text>
                 </TouchableOpacity>
               </View>
             )}

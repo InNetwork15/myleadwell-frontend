@@ -1,34 +1,35 @@
+// app/verify.tsx
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { View, Text } from 'react-native';
 import axios from 'axios';
 
 export default function VerifyEmailScreen() {
-  const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const email = params.get("email");
+  const router = useRouter();
+  const { email } = useLocalSearchParams();
 
   useEffect(() => {
     if (!email) {
-      navigate("/login");
+      router.replace('/login');
       return;
     }
 
     const verify = async () => {
       try {
-        await axios.post("https://your-backend-url.com/verify-email", { email });
+        await axios.post('https://your-backend-url.com/verify-email', { email });
       } catch (err) {
-        console.error("Verification failed", err);
+        console.error('Verification failed:', err);
       } finally {
-        navigate("/login");
+        router.replace('/login');
       }
     };
 
     verify();
-  }, [email, navigate]);
+  }, [email]);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>Verifying your email...</h2>
-    </div>
+    <View style={{ marginTop: 50, alignItems: 'center' }}>
+      <Text>Verifying your email...</Text>
+    </View>
   );
 }

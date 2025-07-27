@@ -1,8 +1,8 @@
 // app/verify.tsx
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import axios from 'axios';
+import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
